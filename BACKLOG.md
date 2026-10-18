@@ -10,8 +10,8 @@ B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	102	126
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	127	151
 B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	152	172
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	IN_PROGRESS	Low	173	201
-CONSTRAINTS	-	-	-	202	210
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	173	211
+CONSTRAINTS	-	-	-	212	220
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -171,7 +171,7 @@ Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
 - **Closeout:** (pending)
 
 <!-- BACKLOG:ITEM:B6 -->
-## B6. SonarCloud quality gate: triage findings on vendored scanner config + scripts — **IN PROGRESS**
+## B6. SonarCloud quality gate: triage findings on vendored scanner config + scripts — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -197,7 +197,17 @@ Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
   - 2026-10-18 — status → IN PROGRESS; all 34 issues triaged and classified
   - 2026-10-18 — WI 2 complete: 20/20 transitions applied via `POST https://sonarcloud.io/api/issues/do_transition` (param `transition`; values `falsepositive`/`wontfix`; each HTTP 200 with justification comment). The earlier 404s were endpoint/param-name misses (`dotransition`/`transitionKey`), not a missing endpoint. Project state after: 14 open issues (all code smells in vendored scripts — left open per triage), **0 open vulnerabilities**.
   - 2026-10-18 — WI 3–4 complete: `sonar-project.properties` added (`sonar.exclusions=.gitleaks-defaults.toml` + provenance comment); LLT-0007 (red-drill protocol) + LLT-0008 (SonarCloud vendored-config FPs, S8707 on local CLIs, limited API subset) recorded; `manage_lessons.py check` green (8 lessons).
-  - 2026-10-18 — WI 5: work commit pushed; awaiting SonarCloud re-analysis + green check for closeout evidence
+  - 2026-10-18 — WI 5–6 complete: work commit `8267c48` pushed; on that commit `SonarCloud Code Analysis` = **success** (check run 117677306462), `quality` + `security` = success (workflow run 39128051807); status → DONE
+- **Closeout (2026-10-18, DONE):**
+  - **Version:** none (triage/config deliverable; no algorithm doc).
+  - **Commits:** `8267c48` `fix(quality): exclude vendored scanner config from SonarCloud analysis` (lands `sonar-project.properties`, LLT-0007/0008, B6 progress).
+  - **CI:** workflow run 39128051807 on `8267c48` — `quality` (job 117677232960) + `security` (job 117677233103) = success; external `SonarCloud Code Analysis` check (run 117677306462) = **success** (was failing on every commit since `307c419`).
+  - **Acceptance (before→after):**
+    - `SonarCloud Code Analysis` check: failure ("Security Rating on New Code required ≥ A", since `307c419`) → **success** on `8267c48`.
+    - Open issues: 34 (20 vulnerabilities: 16× BLOCKER `secrets:S6334` in `.gitleaks-defaults.toml` + 4× MAJOR `pythonsecurity:S8707` in `scripts/`) → **14 (0 vulnerabilities)**; all 20 transitioned with justification comments via `POST /api/issues/do_transition` (param `transition`; values `falsepositive`×16, `wontfix`×4; each HTTP 200); the 14 remaining are code smells in vendored scripts, left open per triage decision.
+    - `sonar-project.properties` committed at repo root: `sonar.exclusions=.gitleaks-defaults.toml` + provenance comment (prevents re-flagging on future analyses).
+    - `make gate` green locally (18 tests) before push; pre-commit gate green on commit.
+  - **Notes:** the endpoint 404s in the session handoff were a name miss — the working call is `POST https://sonarcloud.io/api/issues/do_transition` with `issue=<key>`, `transition=falsepositive|wontfix`, `comment=<text>` (recorded in LLT-0008).
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
