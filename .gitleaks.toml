@@ -1,11 +1,26 @@
-title = "SecureTrace gitleaks config"
+# SecureTrace gitleaks config.
+#
+# IMPORTANT: a gitleaks custom config does NOT merge with the built-in rule
+# set — a config without [[rules]] is a scanner with zero rules (verified
+# against gitleaks v8.30.1; see LESSONS_LEARNED.md LLT-0004). So we vendor
+# the official v8.30.1 default config and extend it, instead of relying on
+# gitleaks' built-ins.
+[extend]
+path = ".gitleaks-defaults.toml"
 
+# Allowlist policy: paths only, never content.
+# A content-regex allowlist (e.g. matching variable names like FAKE_KEY) is a
+# bypass path: a real secret can be smuggled in under a fixture-like name.
+# Path-scoped allowlists keep real code strict while letting test fixtures
+# hold obviously-fake credentials. See LESSONS_LEARNED.md (LLT-0004).
 [allowlist]
 description = "paths that legitimately contain non-live material"
 paths = [
   # Lockfiles: pinned hashes of public packages, not credentials.
   '''.*\.lock''',
+  # Test fixtures may hold obviously-fake credentials by design.
+  '''^tests/''',
+  # The gitleaks configs themselves define sample secret patterns in rule
+  # regexes (gitleaks' own repo allowlists its own config the same way).
+  '''.gitleaks(-defaults)?\.toml''',
 ]
-
-[allowlist.rule.fixture-keys]
-regex = '''(?i)(mock|fake|dummy|placeholder|xxx+|example|sample)[-_ ]?(key|token|secret|password)'''
