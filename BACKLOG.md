@@ -2,15 +2,16 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	14
-HEADER	-	-	-	16	22
-QUEUE	-	-	-	23	31
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	32	71
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	72	100
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	101	125
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	126	150
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	151	171
-CONSTRAINTS	-	-	-	172	180
+INDEX_BLOCK	-	-	-	3	15
+HEADER	-	-	-	17	23
+QUEUE	-	-	-	24	32
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	33	72
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	73	101
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	102	126
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	127	151
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	152	172
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	IN_PROGRESS	Low	173	201
+CONSTRAINTS	-	-	-	202	210
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -168,6 +169,35 @@ Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
 - **Ordering:** last — after B4 so releases ship RMF bundles; independent of B3.
 - **Progress:** —
 - **Closeout:** (pending)
+
+<!-- BACKLOG:ITEM:B6 -->
+## B6. SonarCloud quality gate: triage findings on vendored scanner config + scripts — **IN PROGRESS**
+
+- **Source:** agent (proposed — flagged to user per G8)
+- **Requested:** 2026-10-18
+- **Priority:** High
+- **Request (verbatim):** proposal — "the SonarCloud Code Analysis check (external GitHub App, not part of our workflow) has been failing on main since 307c419: 16 BLOCKER false positives (secrets:S6334) on sample tokens inside the vendored `.gitleaks-defaults.toml`, plus 4 MAJOR pythonsecurity:S8707 findings on the vendored scripts' CLI arguments; triage the findings, add a durable exclusion so the vendored scanner rule definitions are never re-flagged, and record lessons"
+- **Problem / evidence:** check run on `4b1646a`: `SonarCloud Code Analysis: failure` — failed condition "Security Rating on New Code (required ≥ A)". 34 open issues: 16× BLOCKER `secrets:S6334` in `.gitleaks-defaults.toml` (sample tokens inside rule definitions — false positives; the file IS the scanner's rule set, same reason gitleaks' own repo allowlists its config path); 4× MAJOR `pythonsecurity:S8707` (backlog_index.py:209,231; algorithm_index.py:122,144 — CLI path arguments of local tools); 14× code smells in vendored scripts (not failing the gate). Contractual CI checks `quality` + `security` remain green.
+- **Chosen approach:** transition the 16 FPs to `falsepositive` and the 4 S8707 findings to `won'tfix` via the SonarCloud API with justifying comments (no code changes to the vendored skill scripts — they must stay in sync with the skill); add `sonar-project.properties` excluding `.gitleaks-defaults.toml` so future analyses cannot re-flag the vendored rule definitions; record lessons (red-drill protocol + SonarCloud findings).
+- **Work items (in order):**
+  1. This backlog entry
+  2. Triage all 34 open issues (FP / won'tfix with justification comments; leave code smells open)
+  3. Add `sonar-project.properties` (exclusion + provenance comment)
+  4. Lessons: LLT-0007 (red-drill protocol, from handoff) + LLT-0008 (SonarCloud flags vendored scanner rule definitions / S8707 on local CLI tools)
+  5. Push (triggers SonarCloud re-analysis); confirm check green + `make gate` green
+  6. Closeout with evidence
+- **Blast radius:** `sonar-project.properties` (new file), `LESSONS_LEARNED.md`, `BACKLOG.md`; SonarCloud issue states (external system); NO changes to `src/` or `scripts/`.
+- **Acceptance criteria:**
+  - `SonarCloud Code Analysis` check = success on the latest main commit
+  - zero open BLOCKER/MAJOR vulnerabilities project-wide (all transitioned with justification)
+  - `sonar-project.properties` committed; `.gitleaks-defaults.toml` excluded from analysis
+  - `make gate` green locally and `quality` + `security` green in CI
+- **Ordering:** before the Dependabot PR merges (each merge pushes to main and triggers re-analysis — triage must be in place first).
+- **Progress:**
+  - 2026-10-18 — status → IN PROGRESS; all 34 issues triaged and classified
+  - 2026-10-18 — WI 2 complete: 20/20 transitions applied via `POST https://sonarcloud.io/api/issues/do_transition` (param `transition`; values `falsepositive`/`wontfix`; each HTTP 200 with justification comment). The earlier 404s were endpoint/param-name misses (`dotransition`/`transitionKey`), not a missing endpoint. Project state after: 14 open issues (all code smells in vendored scripts — left open per triage), **0 open vulnerabilities**.
+  - 2026-10-18 — WI 3–4 complete: `sonar-project.properties` added (`sonar.exclusions=.gitleaks-defaults.toml` + provenance comment); LLT-0007 (red-drill protocol) + LLT-0008 (SonarCloud vendored-config FPs, S8707 on local CLIs, limited API subset) recorded; `manage_lessons.py check` green (8 lessons).
+  - 2026-10-18 — WI 5: work commit pushed; awaiting SonarCloud re-analysis + green check for closeout evidence
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
