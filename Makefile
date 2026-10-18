@@ -26,13 +26,16 @@ setup: ## Fresh clone: create .venv, install pinned deps, package (editable), wi
 	git config core.hooksPath hooks
 	@echo "✓ setup complete — git hooks wired to hooks/"
 
-setup-ci: ## CI variant: venv already exists, install pinned deps only
+setup-ci: ## CI variant: create .venv if absent, then install pinned deps
+	@test -d $(VENV) || python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install --require-hashes -r requirements-dev.txt
 
 lock: ## Regenerate pinned lockfiles from the .in manifests (needs network)
-	$(VENV)/bin/pip-compile --strip-extras --generate-hashes -o requirements.txt requirements.in
-	$(VENV)/bin/pip-compile --strip-extras --generate-hashes -o requirements-dev.txt requirements-dev.in
+	# --allow-unsafe pins pip/setuptools with hashes; without it they stay
+	# "unsafe" and unpinned, which breaks pip install --require-hashes on clean runners.
+	$(VENV)/bin/pip-compile --strip-extras --allow-unsafe --generate-hashes -o requirements.txt requirements.in
+	$(VENV)/bin/pip-compile --strip-extras --allow-unsafe --generate-hashes -o requirements-dev.txt requirements-dev.in
 
 format: ## Format code (ruff)
 	$(RUFF) format src tests scripts
