@@ -5,12 +5,12 @@ id	title	status	priority	start_line	end_line
 INDEX_BLOCK	-	-	-	3	14
 HEADER	-	-	-	16	22
 QUEUE	-	-	-	23	31
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	IN_PROGRESS	Low	32	63
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	OPEN	Low	64	87
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	88	112
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	113	137
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	138	158
-CONSTRAINTS	-	-	-	159	167
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	32	71
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	72	100
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	101	125
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	126	150
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	151	171
+CONSTRAINTS	-	-	-	172	180
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -18,19 +18,19 @@ CONSTRAINTS	-	-	-	159	167
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B1 → B2 → B3 → B4 → B5 | **In progress:** B1 | **Done:** — | **Updated:** 2026-10-18
+**Queue:** B3 → B4 → B5 | **In progress:** — | **Done:** B1, B2 | **Updated:** 2026-10-18
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B1** (High) — bootstrap the workspace: venv, repo, skills docs, CI/CD, gates, skeleton — this session
-2. **B2** (High) — research DoW software lifecycle (RMF) + Software Acquisition Pathway into `docs/dow-requirements.md`
-3. **B3** (Medium) — core CLI: backlog / lessons / algorithms tooling as the `securetrace` package API
-4. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
-5. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+1. **B3** (Medium) — core CLI: backlog / lessons / algorithms tooling as the `securetrace` package API
+2. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
+3. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+
+Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
-## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **IN PROGRESS**
+## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
 
 - **Source:** user
 - **Requested:** 2026-10-18
@@ -59,10 +59,18 @@ Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a t
 - **Ordering:** first — everything else depends on the gates and the repo.
 - **Progress:**
   - 2026-10-18 — status → IN PROGRESS; WI 2, 4 done (venv, skeleton, tests incl. skill-script roundtrip tests)
-- **Closeout:** (pending)
+  - 2026-10-18 — WI 3, 5, 6, 7, 8 done (skill docs, hooks + `make gate`, CI/CD + dependabot, README/ARCHITECTURE, repo created, main pushed, CI green)
+  - 2026-10-18 — WI 9–10: CI red drill (run 39120001804 red on throwaway branch, restored green), local gate proofs a/b/c, branch protection set; status → DONE
+- **Closeout (2026-10-18, DONE):**
+  - **Version:** none (no algorithm work, no releases).
+  - **Commits:** `f7904a0` (bootstrap: gates, hooks, CI, skeleton, docs), `c2961e1` (CI venv + full-history checkout + setuptools pin), `307c419` (gitleaks config was a zero-rule no-op; vendored official v8.30.1 defaults + path-scoped allowlist), `3881a89` (pip-audit flag fix).
+  - **CI:** `quality` + `security` green on main — runs 39117820614, 39120374470. Red drill: run 39120001804 failed **as expected** on throwaway branch `gateproof/ci-red-drill` (B011 `assert False` caught by quality; pre-fix pip-audit flag caught by security); PR #5 closed unmerged, remote branch deleted.
+  - **Local gate proofs (each blocked, HEAD unchanged):** (a) stale BACKLOG index → blocked at docs-check ("index STALE"); (b) unused `import os` → blocked at ruff (F401); (c) staged PEM private key → blocked by gitleaks (rule `private-key`) after the LLT-0004 fix; PEM fixture under `tests/` correctly allowed by path allowlist.
+  - **Acceptance:** `make gate` green (18 tests); public repo `mirph-glitch42/SecureTrace` with main pushed and CI green; pre-commit/pre-push/commit-msg hooks committed and proven; branch protection on main: required checks `quality` + `security` (strict/branch-up-to-date), 1 approving review, force-push and deletions disabled (verified via API GET); BACKLOG/LESSONS/INDEX `--check` green.
+  - **Lessons:** LLT-0001…LLT-0006 recorded, incl. high-severity LLT-0004 (gitleaks no-op config).
 
 <!-- BACKLOG:ITEM:B2 -->
-## B2. Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md — **OPEN**
+## B2. Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md — **DONE**
 
 - **Source:** user
 - **Requested:** 2026-10-18
@@ -83,7 +91,12 @@ Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a t
 - **Ordering:** after B1's repo/gates exist so the doc lands through the pipeline; before B4 (which builds what it specifies). B3 independent.
 - **Progress:**
   - 2026-10-18 — research pass complete (findings in session handoff; sources: DoDI 8510.01, DoDI 5000.87, DoD SWP+RMF integration guidance, DoW CTO SE-SWP paper Jan 2026, DISA RMF KS, 32 CFR 111, NIST SSDF)
-- **Closeout:** (pending)
+  - 2026-10-18 — `docs/dow-requirements.md` written, cross-linked (WI 2–5 done); status → DONE
+- **Closeout (2026-10-18, DONE):**
+  - **Version:** none (documentation deliverable).
+  - **Commits:** `f7904a0` (initial landing of `docs/dow-requirements.md`).
+  - **CI:** green on main — runs 39117820614, 39120374470 (doc lands through the pipeline).
+  - **Acceptance:** `docs/dow-requirements.md` cites 8 primary sources (≥ 6 required) with URLs + access date 2026-10-18: DoDI 8510.01 (RMF, incl. the **Assess Only** construct — SecureTrace's core design input), DoDI 5000.87 (Software Acquisition Pathway: application vs embedded, DA decision-memorandum, semi-annual reporting), DoD SWP+RMF integration guidance (≤6-month increments, cATO, Planning/Execution phases, reciprocity), DoW CTO SE-SWP paper (Jan 2026 — current practice), DAU SWP portal, RMF KS (`rmfks.osd.mil`), NIST SP 800-218 (SSDF), 32 CFR 111 (NSS); "What SecureTrace must produce" mapping table ties each requirement to B1/B3/B4/B5; cross-linked from README.md and ARCHITECTURE.md.
 
 <!-- BACKLOG:ITEM:B3 -->
 ## B3. Core CLI: backlog/lessons/algorithm tooling as securetrace package API — **OPEN**
