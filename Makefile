@@ -74,7 +74,7 @@ secret-scan: ## Secret scan of full history (pre-push / CI gate)
 	$(GITLEAKS) detect --redact --no-banner --config .gitleaks.toml -v
 
 dependency-audit: ## Audit pinned dependencies; fails on any known vulnerability
-	$(PIP_AUDIT) -r requirements-dev.txt --progress-bar=off
+	$(PIP_AUDIT) -r requirements-dev.txt --progress-spinner=off
 
 sbom: ## Generate CycloneDX SBOM from locked requirements
 	mkdir -p dist
