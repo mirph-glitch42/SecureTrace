@@ -1,0 +1,11 @@
+title = "SecureTrace gitleaks config"
+
+[allowlist]
+description = "paths that legitimately contain non-live material"
+paths = [
+  # Lockfiles: pinned hashes of public packages, not credentials.
+  '''.*\.lock''',
+]
+
+[allowlist.rule.fixture-keys]
+regex = '''(?i)(mock|fake|dummy|placeholder|xxx+|example|sample)[-_ ]?(key|token|secret|password)'''

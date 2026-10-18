@@ -1,0 +1,3 @@
+# Marker: securetrace ships type information (PEP 561).
+# The skeleton modules are type-annotated; this marker is load-bearing for
+# downstream consumers once the public API lands (backlog B3).

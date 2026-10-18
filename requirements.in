@@ -1,0 +1,5 @@
+# Production dependencies — none at the skeleton stage (stdlib only).
+#
+# DevSecOps dependency-security guard: any package added here must carry a
+# one-line justification (what it replaces, why this option wins), be pinned
+# in requirements.txt by `make lock`, and pass `make dependency-audit`.

@@ -1,0 +1,167 @@
+# Backlog
+
+<!-- INDEX:BEGIN format=tsv version=1 -->
+id	title	status	priority	start_line	end_line
+INDEX_BLOCK	-	-	-	3	14
+HEADER	-	-	-	16	22
+QUEUE	-	-	-	23	31
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	IN_PROGRESS	Low	32	63
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	OPEN	Low	64	87
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	88	112
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	113	137
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	138	158
+CONSTRAINTS	-	-	-	159	167
+<!-- INDEX:END -->
+
+<!-- BACKLOG:HEADER -->
+## Status
+
+Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
+
+**Queue:** B1 → B2 → B3 → B4 → B5 | **In progress:** B1 | **Done:** — | **Updated:** 2026-10-18
+
+<!-- BACKLOG:QUEUE -->
+## Queue (execution order)
+
+1. **B1** (High) — bootstrap the workspace: venv, repo, skills docs, CI/CD, gates, skeleton — this session
+2. **B2** (High) — research DoW software lifecycle (RMF) + Software Acquisition Pathway into `docs/dow-requirements.md`
+3. **B3** (Medium) — core CLI: backlog / lessons / algorithms tooling as the `securetrace` package API
+4. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
+5. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+
+<!-- BACKLOG:ITEM:B1 -->
+## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **IN PROGRESS**
+
+- **Source:** user
+- **Requested:** 2026-10-18
+- **Priority:** High
+- **Request (verbatim):** "using @DevSecOps, @Pragmatic Programmer, @Learned Lesson Tracker, @Algorithm Records Keeper, @Backlog Manager, configure my workspace to start working on a project titled 'SecureTrace'… set up a project-global venv at .venv in the root of the workspace… Use the attached GitHub token to create a new public repository called SecureTrace… Configure all skill required documents. Configure CI/CD pipeline. add local pre-commit checks for all document configuration/staleness as appropriate per skill… MIT license… create a skeleton directory structure… Retrieve current software lifecycle requirements from the appropriate DoW websites. include research into THE SOFTWARE ACQUISITION PATHWAY"
+- **Problem / evidence:** empty workspace; no gates, no repo, no skill-managed documents; work cannot start with defensible quality gates.
+- **Chosen approach:** canonical pragmatic-programmer layout (Makefile, hooks/, tests mirror src), DevSecOps gates (pre-commit: format/lint/docs/secret-scan/changed-tests; pre-push: full suite; commit-msg: Conventional Commits), GitHub Actions pinned by SHA, vendored skill scripts under `scripts/` so CI and hooks do not depend on machine-local skill paths.
+- **Work items (in order):**
+  1. This backlog entry (done with this file)
+  2. `.venv` + pinned deps (ruff, pytest, pip-tools, pip-audit, cyclonedx-bom, build) with hashed lockfiles
+  3. Skill documents: BACKLOG.md, LESSONS_LEARNED.md, `algorithms/INDEX.md`
+  4. Skeleton package `src/securetrace/` + 1:1 smoke tests
+  5. Git hooks (`hooks/`, `core.hooksPath`) + `make gate`
+  6. CI workflow (quality + security jobs) + dependabot + release workflow
+  7. README, ARCHITECTURE.md, `docs/dow-requirements.md` (from B2 research)
+  8. First commit, push to new public `mirph-glitch42/SecureTrace`, CI green
+  9. Gate proof (local block + CI red on throwaway branch) + branch protection
+  10. Closeout with evidence
+- **Blast radius:** the whole workspace (it is empty); nothing must leak (no tokens, no PII) — gitleaks + review.
+- **Acceptance criteria:**
+  - `make gate` passes locally with all five gate stages green
+  - public repo `mirph-glitch42/SecureTrace` exists; `main` pushed; first CI run green
+  - pre-commit demonstrably blocks (a) a lint/format/doc-staleness failure and (b) a secret; CI demonstrably red then restored green on a throwaway branch
+  - branch protection: required `quality` + `security` checks, 1 approval, no force-push
+  - BACKLOG/LESSONS/INDEX documents pass their `--check` scripts
+- **Ordering:** first — everything else depends on the gates and the repo.
+- **Progress:**
+  - 2026-10-18 — status → IN PROGRESS; WI 2, 4 done (venv, skeleton, tests incl. skill-script roundtrip tests)
+- **Closeout:** (pending)
+
+<!-- BACKLOG:ITEM:B2 -->
+## B2. Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md — **OPEN**
+
+- **Source:** user
+- **Requested:** 2026-10-18
+- **Priority:** High
+- **Request (verbatim):** "Retrieve current software lifecycle requirements from the appropriate DoW websites. include research into THE SOFTWARE ACQUISITION PATHWAY"
+- **Problem / evidence:** SecureTrace's value proposition (RMF package deliverables built as an agent builds software) must be grounded in current DoD/DoW policy (DoDI 8510.01 RMF, DoDI 5000.87 SWP, NIST SSDF) so B3/B4 build the right artifacts.
+- **Chosen approach:** single authoritative `docs/dow-requirements.md` with dated source URLs (DoDI 8510.01, DoDI 5000.87, DoD SWP+RMF integration guidance, cATO/Assess-Only constructs, DISA KS, 32 CFR 111, NIST SP 800-37/800-218), a "what SecureTrace must produce" mapping table, and an access date.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Verify current policy text/URLs (web research, done 2026-10-18 — findings captured in handoff notes)
+  3. Write `docs/dow-requirements.md` (requirements, SWP planning/execution phases, Assess-Only evidence bundle, source table)
+  4. Cross-link from ARCHITECTURE.md + README
+  5. Closeout with evidence
+- **Blast radius:** `docs/` only (new file) + one line each in README/ARCHITECTURE.
+- **Acceptance criteria:**
+  - `docs/dow-requirements.md` exists, cites ≥ 6 primary sources with URLs + access date, and contains a SecureTrace deliverable mapping table
+  - every cited URL was retrieved successfully on the access date
+- **Ordering:** after B1's repo/gates exist so the doc lands through the pipeline; before B4 (which builds what it specifies). B3 independent.
+- **Progress:**
+  - 2026-10-18 — research pass complete (findings in session handoff; sources: DoDI 8510.01, DoDI 5000.87, DoD SWP+RMF integration guidance, DoW CTO SE-SWP paper Jan 2026, DISA RMF KS, 32 CFR 111, NIST SSDF)
+- **Closeout:** (pending)
+
+<!-- BACKLOG:ITEM:B3 -->
+## B3. Core CLI: backlog/lessons/algorithm tooling as securetrace package API — **OPEN**
+
+- **Source:** agent (proposed — flagged to user per G8)
+- **Requested:** 2026-10-18
+- **Priority:** Medium
+- **Request (verbatim):** proposal — "migrate the vendored skill scripts (backlog_index.py, manage_lessons.py, algorithm_index.py) into a typed `securetrace` package API + `securetrace` console entry point with subcommands (backlog check/sync, lessons add/check, algorithms check), preserving the exact index formats so existing hooks and CI keep working"
+- **Problem / evidence:** the three gate scripts live in `scripts/` and are invoked ad hoc; users of SecureTrace (agents and humans) need one importable, testable CLI instead of copy-pasted scripts.
+- **Chosen approach:** keep `scripts/` as thin entry points (or reimplement the core in the package and keep the scripts as wrappers) so existing Makefile/hooks/CI are untouched; TDD per subcommand; index formats are frozen by the existing roundtrip tests.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Design doc cycle via `@algorithm-records-keeper` where non-trivial (parsing/indexing are simple — likely a short design note suffices)
+  3. Tests RED for `securetrace.backlog`, `securetrace.lessons`, `securetrace.algorithms`
+  4. Implementation GREEN; `securetrace` console script gains subcommands
+  5. `make gate` + CI green; update ARCHITECTURE.md module map
+  6. Closeout with evidence
+- **Blast radius:** `src/securetrace/{backlog,lessons,algorithms}`, `tests/`, console entry; `scripts/` behavior must not change.
+- **Acceptance criteria:**
+  - `securetrace backlog check|sync <file>`, `securetrace lessons …`, `securetrace algorithms …` subcommands exist and pass tests
+  - existing `make docs-check` continues to pass unchanged
+  - new public functions 100% docstring + type-annotated; `ruff`/`pytest` green
+- **Ordering:** after B1 (needs gates); independent of B2; B4 builds on it.
+- **Progress:** —
+- **Closeout:** (pending)
+
+<!-- BACKLOG:ITEM:B4 -->
+## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **OPEN**
+
+- **Source:** agent (proposed — flagged to user per G8)
+- **Requested:** 2026-10-18
+- **Priority:** Medium
+- **Request (verbatim):** proposal — "build the 'Assess Only' RMF evidence bundle incrementally from CI state (gate results, dependency audits, SBOM, algorithm records, lessons) and emit SSP/SAP/SAR/POA&M scaffolds per docs/dow-requirements.md"
+- **Problem / evidence:** DoD RMF requires SSP/SAP/SAR/POA&M; the SWP guidance expects continuous (Assess Only / cATO-style) evidence. Hand-writing these per release is exactly what SecureTrace automates.
+- **Chosen approach:** `securetrace rmf` subpackage: collect artifacts (SBOM, audit reports, gate logs, algorithm registry, lessons) into a dated evidence bundle; render the four deliverables from templates; B2's mapping table drives which evidence feeds which section.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Doc cycle (design + algorithm records where non-trivial)
+  3. Evidence collector (deterministic, stdlib-only) with tests RED→GREEN
+  4. SSP/SAP/SAR/POA&M renderers with golden-file tests
+  5. End-to-end: run on SecureTrace itself, bundle lands in `artifacts/rmf/<date>/` (gitignored or LFS-decided)
+  6. Closeout with evidence
+- **Blast radius:** new `src/securetrace/rmf/` + `tests/rmf/` + one Makefile target; no changes to existing modules.
+- **Acceptance criteria:**
+  - `make rmf-bundle` (or `securetrace rmf build`) produces the four deliverables + evidence manifest with zero network access
+  - deterministic: two runs on the same tree produce byte-identical outputs
+  - every control cited in the SAR maps to at least one evidence file (asserted in tests)
+- **Ordering:** after B2 (spec) and B3 (tooling); before B5 (release should ship bundles).
+- **Progress:** —
+- **Closeout:** (pending)
+
+<!-- BACKLOG:ITEM:B5 -->
+## B5. Release hardening: keyless signing + provenance for release artifacts — **OPEN**
+
+- **Source:** agent (proposed — flagged to user per G8)
+- **Requested:** 2026-10-18
+- **Priority:** Low
+- **Request (verbatim):** proposal — "add Sigstore cosign keyless signing + SBOM/provenance attestations to release.yml so published wheels/sdists carry verifiable provenance (DevSecOps dependency-security guidance)"
+- **Problem / evidence:** unsigned PyPI artifacts are unauditable; DoW-facing users will expect supply-chain evidence.
+- **Chosen approach:** cosign keyless (OIDC via GitHub Actions), `cosign sign-blob` on wheel/sdist, `slsa-provenance` or `sigstore` provenance attestation; verify step in CI.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Design note + pin cosign action SHAs
+  3. Wire into release.yml (sign → attest → verify)
+  4. Tag a test release, verify signatures with `cosign verify`
+  5. Closeout with evidence
+- **Blast radius:** `.github/workflows/release.yml` only.
+- **Acceptance criteria:** published artifacts have verifiable keyless signatures; verify step fails on tampered artifact (test on throwaway branch).
+- **Ordering:** last — after B4 so releases ship RMF bundles; independent of B3.
+- **Progress:** —
+- **Closeout:** (pending)
+
+<!-- BACKLOG:CONSTRAINTS -->
+## Standing constraints
+
+- All changes gate on `make gate` locally and CI (`quality` + `security`) — no bypass, ever.
+- No secrets or PII in the repo (gitleaks in pre-commit + CI; the GitHub PAT is never committed or echoed).
+- Versions are assigned at completion only (G6) — never planned.
+- Agent-proposed items stay flagged (G8) until the user accepts or amends them.
+- Dependency changes only via pinned, hashed lockfiles (`pip-compile --generate-hashes`).
+- `algorithms/` holds algorithm *documents*; `src/securetrace/algorithms/` holds code — do not mix.

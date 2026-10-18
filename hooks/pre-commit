@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# SecureTrace pre-commit gate.
+# Kept in sync with the Makefile `gate` target and the quality job in
+# .github/workflows/ci.yml — add a stage here, there, and in CI in the same change.
+#
+# Stages (fast → slow):
+#   1. format-check   ruff format --check on src/tests/scripts
+#   2. lint           ruff check on src/tests/scripts
+#   3. docs-check     BACKLOG.md / LESSONS_LEARNED.md / algorithms/*.md indexes fresh + valid
+#   4. secrets        gitleaks over staged changes
+#   5. tests          fast subset: tests for changed modules (full suite runs on pre-push/CI)
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+if [ ! -x .venv/bin/python ]; then
+  echo "✗ .venv not found — run 'make setup' (or 'make setup-ci' on CI)." >&2
+  exit 1
+fi
+
+step() { printf '\n▶ %s\n' "$1"; }
+
+step "1/5 format-check (ruff format --check)"
+make -s format-check
+
+step "2/5 lint (ruff check)"
+make -s lint
+
+step "3/5 docs-check (backlog / lessons / algorithms)"
+make -s docs-check
+
+step "4/5 secret-scan-staged (gitleaks)"
+make -s secret-scan-staged
+
+step "5/5 test-changed (tests for changed modules)"
+make -s test-changed
+
+printf '\n✓ pre-commit gate green\n'

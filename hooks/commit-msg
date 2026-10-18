@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# SecureTrace commit-msg gate: enforce Conventional Commits.
+# Accepted: <type>(<scope>)?: <subject>   with an optional '!' before the ':'
+# Types:    feat fix docs style refactor perf test build ci chore revert
+set -euo pipefail
+
+msg_file="$1"
+subject=""
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+    '' | '#'*) continue ;;
+  esac
+  subject="$line"
+  break
+done < "$msg_file"
+
+re='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]*\))?!?: [^ ].*$'
+
+if [[ "$subject" =~ $re ]]; then
+  exit 0
+fi
+
+{
+  echo "✗ commit message does not follow Conventional Commits:"
+  echo "    $subject"
+  echo ""
+  echo "  Expected: <type>(<scope>)?: <subject>"
+  echo "  Types:    feat | fix | docs | style | refactor | perf | test | build | ci | chore | revert"
+  echo "  Examples: 'feat(rmf): add evidence collector'"
+  echo "            'fix(backlog): tolerate missing optional fields'"
+  echo "            'ci: pin actions to SHAs'"
+} >&2
+exit 1

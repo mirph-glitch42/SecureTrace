@@ -1,0 +1,74 @@
+# SecureTrace — agentic tooling for secure, traceable software development.
+# This project manages backlogs, lessons, algorithm records, CI/CD gates, and
+# DoW software RMF package deliverables for programming agents.
+
+[build-system]
+# hatchling chosen over setuptools: zero-config src-layout support,
+# maintained, and the least-privilege default (no implicit data copying).
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "securetrace"
+version = "0.1.0"
+description = "Agentic tooling for secure, traceable software development: deterministic backlogs, lessons learned, algorithm records, CI/CD gates, and DoW RMF package deliverables."
+readme = "README.md"
+requires-python = ">=3.12"
+# MIT (latest) — see LICENSE.
+license = { text = "MIT" }
+authors = [{ name = "SecureTrace Contributors" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Topic :: System :: Software Distribution",
+]
+# No runtime dependencies at the skeleton stage (stdlib only). Any future
+# addition must carry a one-line justification per the DevSecOps
+# dependency-security guard (see requirements.in).
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mirph-glitch42/SecureTrace"
+Repository = "https://github.com/mirph-glitch42/SecureTrace"
+
+[project.scripts]
+# CLI entrypoint (skeleton; real subcommands land with backlog B3).
+securetrace = "securetrace.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/securetrace"]
+
+# --- ruff (format + lint; the single style gate for src/tests/scripts) ---
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+extend-exclude = [".venv", "algorithms", "docs"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "C4",   # flake8-comprehensions
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["securetrace"]
+
+# --- pytest ---
+[tool.pytest.ini_options]
+# src-layout: make the package importable in tests without installing it
+# (works identically in CI, where make setup-ci installs deps only).
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["error"]

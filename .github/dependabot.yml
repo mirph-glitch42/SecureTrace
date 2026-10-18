@@ -1,0 +1,25 @@
+# SecureTrace dependabot configuration.
+#
+# pip: updates the manifests (requirements*.in). Regenerate the hashed
+# lockfiles with `make lock` before merging (CI installs with --require-hashes,
+# so a stale lockfile will fail the build and surface the mismatch loudly).
+# github-actions: updates SHA-pinned actions in .github/workflows/.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    groups:
+      pip-tools:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"

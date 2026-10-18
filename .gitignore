@@ -1,0 +1,25 @@
+# Python build/test artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Project-global virtual environment (lives at repo root, never committed)
+.venv/
+
+# Secrets — real env files never enter the repo (see .env.example)
+.env
+.env.*
+!.env.example
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# OS / IDE noise
+.DS_Store
+.idea/
+.vscode/
