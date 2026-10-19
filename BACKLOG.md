@@ -4,14 +4,14 @@
 id	title	status	priority	start_line	end_line
 INDEX_BLOCK	-	-	-	3	15
 HEADER	-	-	-	17	23
-QUEUE	-	-	-	24	32
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	33	72
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	73	101
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	OPEN	Low	102	126
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	127	151
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	152	172
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	173	211
-CONSTRAINTS	-	-	-	212	220
+QUEUE	-	-	-	24	31
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	32	71
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	72	100
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	101	139
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	140	164
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	165	185
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	186	224
+CONSTRAINTS	-	-	-	225	233
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -19,16 +19,15 @@ CONSTRAINTS	-	-	-	212	220
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B3 → B4 → B5 | **In progress:** — | **Done:** B1, B2 | **Updated:** 2026-10-18
+**Queue:** B4 → B5 | **In progress:** — | **Done:** B1, B2, B3, B6 | **Updated:** 2026-10-18
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B3** (Medium) — core CLI: backlog / lessons / algorithms tooling as the `securetrace` package API
-2. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
-3. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+1. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
+2. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
 
-Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
+Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (SonarCloud triage) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
 ## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
@@ -100,7 +99,7 @@ Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
   - **Acceptance:** `docs/dow-requirements.md` cites 8 primary sources (≥ 6 required) with URLs + access date 2026-10-18: DoDI 8510.01 (RMF, incl. the **Assess Only** construct — SecureTrace's core design input), DoDI 5000.87 (Software Acquisition Pathway: application vs embedded, DA decision-memorandum, semi-annual reporting), DoD SWP+RMF integration guidance (≤6-month increments, cATO, Planning/Execution phases, reciprocity), DoW CTO SE-SWP paper (Jan 2026 — current practice), DAU SWP portal, RMF KS (`rmfks.osd.mil`), NIST SP 800-218 (SSDF), 32 CFR 111 (NSS); "What SecureTrace must produce" mapping table ties each requirement to B1/B3/B4/B5; cross-linked from README.md and ARCHITECTURE.md.
 
 <!-- BACKLOG:ITEM:B3 -->
-## B3. Core CLI: backlog/lessons/algorithm tooling as securetrace package API — **OPEN**
+## B3. Core CLI: backlog/lessons/algorithm tooling as securetrace package API — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -121,8 +120,22 @@ Done: **B1** (bootstrap), **B2** (DoW research) — see their closeouts.
   - existing `make docs-check` continues to pass unchanged
   - new public functions 100% docstring + type-annotated; `ruff`/`pytest` green
 - **Ordering:** after B1 (needs gates); independent of B2; B4 builds on it.
-- **Progress:** —
-- **Closeout:** (pending)
+- **Progress:**
+  - 2026-10-18: started. Ex-post-facto declared (before writing the docs) for two algorithms, pinned to `ad0fc9f`: `line-index-sync` (`scripts/backlog_index.py:L51-L237`, `scripts/algorithm_index.py:L38-L150`, shared delta core) and `lessons-record` (`scripts/manage_lessons.py:L81-L674`) — documentation before code, per @algorithm-records-keeper.
+  - 2026-10-18: design fixed — core logic moves into typed package APIs (`securetrace.{backlog,lessons,algorithms}`); `scripts/*.py` become thin wrappers preserving the exact CLI surface, exit codes (0/1/2), and stdout messages; `securetrace` CLI gains `backlog {check,sync}`, `lessons {init,add,sync,check,next-id}`, `algorithms {check,sync}`. TDD: package tests RED first, then GREEN.
+  - 2026-10-18 — WI 2 done: two algorithm records backfilled with the *verified pinned* behavior (quirks documented, not fixed — skill anti-abuse rule): `algorithms/line-index-sync.md` (DEV(7) bulleted-priority quirk + DEV(8) final-line scan-window off-by-one) and `algorithms/lessons-record.md` (L13c: malformed Supersedes fires both guards, in order); both registered in `algorithms/INDEX.md` (v0.1.0, `backfilled`, pinned to `ad0fc9f`); LLT-0009…LLT-0012 recorded from the verification.
+  - 2026-10-18 — WI 3–4 done: GREEN — typed package core + `securetrace` subcommands implemented; `scripts/{backlog_index,manage_lessons,algorithm_index}.py` are now thin wrappers over `securetrace.cli` (exact CLI surface, messages, exit codes preserved); 131 tests pass; `make gate` ✓.
+  - 2026-10-18 — WI 5: ARCHITECTURE.md module map updated; work commits `c3a3f17`…`63c64d3` pushed; on `63c64d3` `quality` + `security` = success and `SonarCloud Code Analysis` = success after triaging 2 new `S8707` findings (see Closeout); status → DONE
+- **Closeout (2026-10-18, DONE):**
+  - **Version:** none (no release). The two algorithm docs are v0.1.0 **backfills** pinned to `ad0fc9f` (status `backfilled`, per @algorithm-records-keeper); no new algorithm version was assigned.
+  - **Commits:** `c3a3f17` `docs(algorithms)` backfill of `line-index-sync` + `lessons-record` (quirks verified against the pinned scripts, documented, not fixed); `2a0e981` `docs(lessons)` LLT-0009…LLT-0012; `971f4ee` `test(cli)` behavioral tests (25 backlog tests incl. the new DEV(8) pin, 13c double-guard pin, CLI surface); `c030082` `feat(cli)` package core + `securetrace` subcommands + thin `scripts/` wrappers; `63c64d3` `docs(architecture)` module map. (Closeout lands in `docs(backlog): close B3`.)
+  - **CI (workflow run 39196887061 on `63c64d3`):** `quality` (check 117881474317) + `security` (check 117881474086) = success; `SonarCloud Code Analysis` (check 117881569725) = success **after triage** — the analysis initially failed on 2 new MAJOR `pythonsecurity:S8707` (`src/securetrace/cli.py:56,71`); both transitioned to `wontfix` with justification via `POST /api/issues/do_transition` (LLT-0008 call pattern; same class as the 4 B6 findings: local CLI tools whose caller already has full filesystem access). Project state: 25 open issues, all code smells, **0 open vulnerabilities**.
+  - **Acceptance (before→after):**
+    - Subcommands: none → `securetrace backlog {check,sync}`, `securetrace lessons {init,add,sync,check,next-id}`, `securetrace algorithms {check,sync}`; every surface (messages, exit codes 0/1/2) covered by `tests/test_cli.py`.
+    - Tests: 18 (at B6 closeout) → **131 passed**; `ruff format`/`ruff check` clean; `make gate` ✓ (format, lint, docs, compileall, test).
+    - `make docs-check` unchanged and green: BACKLOG.md index OK (10 entries), LESSONS_LEARNED.md valid (12 lessons), both algorithm docs' indexes OK (8 entries each).
+    - Frozen `scripts/` surface preserved: `tests/scripts/test_skill_scripts.py` roundtrips still pass; quirks DEV(7)/DEV(8) and L13c encoded in tests + algorithm docs + LLT-0009/LLT-0012 (documented, not fixed — deferred to a doc-first change with its own backlog item).
+  - **Lessons:** LLT-0009 (high), LLT-0010 (medium), LLT-0011 (low), LLT-0012 (medium) recorded.
 
 <!-- BACKLOG:ITEM:B4 -->
 ## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **OPEN**
