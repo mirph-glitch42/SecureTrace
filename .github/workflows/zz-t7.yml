@@ -1,0 +1,13 @@
+name: ZZT7
+
+on:
+  workflow_dispatch:
+
+permissions:
+  attestations: write
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi

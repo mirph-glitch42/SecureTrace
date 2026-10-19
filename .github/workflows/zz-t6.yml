@@ -1,0 +1,13 @@
+name: ZZT6
+
+on:
+  workflow_dispatch:
+
+permissions:
+  attestations: read
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi

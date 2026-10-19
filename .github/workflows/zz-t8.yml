@@ -1,0 +1,13 @@
+name: ZZT8
+
+on:
+  workflow_dispatch:
+
+permissions:
+  security-events: read
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi
