@@ -156,8 +156,8 @@ make package ─▶ dist/*.whl, dist/*.tar.gz ─┬─▶ cosign sign-blob ─�
   against the Sigstore release key before use); `actions/attest` @ commit
   `1e69f48acb82d1966a394da916b4c1698aa569d6` (v4, provenance mode,
   multi-subject). Least privilege:
-  `permissions: contents: write, id-token: write, attestations: read,
-  attestations: write`.
+  `permissions: contents: write, id-token: write, attestations: write`
+  (a scope may appear only once in the mapping; `write` covers `read`).
 - **Consumer recipe** (stock tools, no SecureTrace dependency):
   1. `gh release verify v0.1.0` — release is immutable + valid release
      attestation present; prints all attested asset digests.
