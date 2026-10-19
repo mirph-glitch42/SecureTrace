@@ -12,6 +12,7 @@ concurrency:
 permissions:
   contents: write
   id-token: write
+  attestations: read
   attestations: write
 
 env:
@@ -60,14 +61,19 @@ jobs:
             cosign sign-blob "$f" --bundle "${f}.sigstore.json" --yes
           done
 
-      # GitHub-native SLSA v1 provenance attestation (free for public repos);
-      # writes <artifact>.jsonl next to each artifact.
-      - name: Attest provenance (GitHub SLSA v1)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          gh attestation dist/*.whl dist/*.tar.gz
+      # GitHub-native SLSA v1 provenance attestation (free for public repos):
+      # one signed attestation covering both artifacts, stored in the GitHub
+      # attestation registry (keyed by digest) and also saved locally.
+      - name: Attest provenance (SLSA v1, actions/attest)
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+
+      - name: Publish attestation bundle alongside artifacts
+        run: cp "${{ steps.attest.outputs.bundle-path }}" dist/attestation-bundle.json
 
       # Fail fast BEFORE any release is created: the signing certificate must
       # be bound to exactly this workflow file on exactly this tag.
@@ -82,7 +88,8 @@ jobs:
           done
 
       # ...and the provenance attestation must be signed by exactly this
-      # workflow (fully anchored SAN match, gh CLI policy).
+      # workflow (fully anchored SAN match, gh CLI policy). Online lookup by
+      # artifact digest in the GitHub attestation registry.
       - name: Verify provenance (SLSA v1, signer-workflow pinned)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +97,7 @@ jobs:
           set -euo pipefail
           for f in dist/*.whl dist/*.tar.gz; do
             gh attestation verify "$f" \
-              --bundle "${f}.jsonl" \
+              -R mirph-glitch42/SecureTrace \
               --signer-workflow "mirph-glitch42/SecureTrace/.github/workflows/release.yml"
           done
       # --------------------------------------------------------------------------
@@ -104,7 +111,7 @@ jobs:
             dist/*.tar.gz
             dist/sbom.json
             dist/*.sigstore.json
-            dist/*.jsonl
+            dist/attestation-bundle.json
           retention-days: 365
 
       - name: Create GitHub release
@@ -114,11 +121,24 @@ jobs:
           set -euo pipefail
           gh release create "${GITHUB_REF_NAME}" \
             --title "SecureTrace ${GITHUB_REF_NAME}" \
-            --notes "Automated release from main. Assets: sdist, wheel, CycloneDX SBOM, Sigstore keyless signature bundles, SLSA v1 provenance attestations. Verification recipe in ARCHITECTURE.md §5." \
+            --notes "Automated immutable release. Assets: sdist, wheel, CycloneDX SBOM, Sigstore keyless signature bundles, SLSA v1 provenance attestation bundle. Consumer verification: gh release verify / gh release verify-asset — full recipe in ARCHITECTURE.md §5." \
             --prerelease \
-            --verify \
+            --verify-tag \
             dist/*.whl \
             dist/*.tar.gz \
             dist/sbom.json \
             dist/*.sigstore.json \
-            dist/*.jsonl
+            dist/attestation-bundle.json
+
+      # Consumer-side proof, run as a real consumer would (in-pipeline):
+      # the release carries a valid signed release attestation and every
+      # locally built artifact exactly matches the published release assets.
+      - name: Verify published release (consumer-side proof)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release verify "${GITHUB_REF_NAME}"
+          for f in dist/*.whl dist/*.tar.gz; do
+            gh release verify-asset "${GITHUB_REF_NAME}" "$f"
+          done
