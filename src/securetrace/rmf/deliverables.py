@@ -441,83 +441,73 @@ def _related_docs() -> list[str]:
 
 def render_ssp(evidence: Evidence) -> str:
     """Render the System Security Plan (pure function of ``evidence``)."""
-    lines: list[str] = []
-    lines.append("# System Security Plan (SSP)")
-    lines.append("")
-    lines.append('SecureTrace "Assess Only" RMF deliverable — SSP scaffold. Generated offline')
-    lines.append("from repository state by `securetrace rmf build`; `manifest.json` binds this")
-    lines.append("document to the exact evidence bytes.")
-    lines.append("")
-    lines.append("## 1. System overview")
-    lines.append("")
-    lines.append("SecureTrace is agentic tooling for secure, traceable software development:")
-    lines.append("deterministic backlogs, lessons learned, algorithm records, CI/CD gates, and")
-    lines.append("DoW RMF package deliverables (see `docs/dow-requirements.md`).")
-    lines.append("")
-    lines.append(
+    lines: list[str] = [
+        "# System Security Plan (SSP)",
+        "",
+        'SecureTrace "Assess Only" RMF deliverable — SSP scaffold. Generated offline',
+        "from repository state by `securetrace rmf build`; `manifest.json` binds this",
+        "document to the exact evidence bytes.",
+        "",
+        "## 1. System overview",
+        "",
+        "SecureTrace is agentic tooling for secure, traceable software development:",
+        "deterministic backlogs, lessons learned, algorithm records, CI/CD gates, and",
+        "DoW RMF package deliverables (see `docs/dow-requirements.md`).",
+        "",
         f"Assessed at git HEAD `{evidence.git_head}`; control catalog v{evidence.catalog_version}; "
-        f"evidence corpus: {len(evidence.corpus)} file(s)."
-    )
-    lines.append("")
-    lines.append("## 2. Work and quality records")
-    lines.append("")
+        f"evidence corpus: {len(evidence.corpus)} file(s).",
+        "",
+    ]
+    lines.extend(["## 2. Work and quality records", ""])
     lines.extend(_records_lines(evidence))
-    lines.append("")
-    lines.append("## 3. Control baseline")
-    lines.append("")
+    lines.extend(["", "## 3. Control baseline", ""])
     lines.extend(_baseline_table(evidence))
-    lines.append("")
-    lines.append("## 4. Supply chain")
-    lines.append("")
+    lines.extend(["", "## 4. Supply chain", ""])
     by_id = {control.spec.control_id: control for control in evidence.controls}
     for cid in ("SC-01", "SC-02", "SB-01"):
         control = by_id[cid]
         state = "satisfied" if control.satisfied else "not satisfied"
         lines.append(f"- {control.spec.title}: {state} ({_evidence_cell(control.evidence)})")
-    lines.append("")
-    lines.append("## 5. Related documents")
-    lines.append("")
+    lines.extend(["", "## 5. Related documents", ""])
     lines.extend(_related_docs())
     return "\n".join(lines) + "\n"
 
 
 def render_sap(evidence: Evidence) -> str:
     """Render the System and Security Assessment Plan (pure function of ``evidence``)."""
-    lines: list[str] = []
-    lines.append("# System and Security Assessment Plan (SAP)")
-    lines.append("")
-    lines.append("Defines how the control baseline in `SSP.md` §3 is assessed: fully local and")
-    lines.append("offline, from the evidence corpus below (no network access, no wall clock).")
-    lines.append("")
-    lines.append("## 1. Purpose and scope")
-    lines.append("")
-    lines.append(
+    lines: list[str] = [
+        "# System and Security Assessment Plan (SAP)",
+        "",
+        "Defines how the control baseline in `SSP.md` §3 is assessed: fully local and",
+        "offline, from the evidence corpus below (no network access, no wall clock).",
+        "",
+        "## 1. Purpose and scope",
+        "",
         f"Assess the repository at git HEAD `{evidence.git_head}` against the "
-        f"{len(evidence.controls)}-control baseline using only the corpus files listed in §4."
-    )
-    lines.append("")
-    lines.append("## 2. Control selection")
-    lines.append("")
-    lines.append("| Control | Title | Method |")
-    lines.append("|---|---|---|")
+        f"{len(evidence.controls)}-control baseline using only the corpus files listed in §4.",
+        "",
+        "## 2. Control selection",
+        "",
+        "| Control | Title | Method |",
+        "|---|---|---|",
+    ]
     for control in evidence.controls:
         lines.append(
             f"| {control.spec.control_id} | {control.spec.title} | {control.spec.method} |"
         )
-    lines.append("")
-    lines.append("## 3. Assessment method")
-    lines.append("")
-    lines.append("- Collect: hash (SHA-256) and line-count every corpus file; parse the process")
-    lines.append("  state (backlog, lessons, algorithm records) with the SecureTrace B3 cores.")
-    lines.append("- Evaluate: a control is SATISFIED iff every evidence file it cites is present")
-    lines.append("  and any live checker (backlog index, lessons record, per-doc index) passes.")
-    lines.append("- Render: the SSP/SAP/SAR/POA&M are pure renderings of the snapshot;")
-    lines.append("  `manifest.json` binds every corpus file and document to its SHA-256.")
-    lines.append("")
-    lines.append("## 4. Evidence corpus")
-    lines.append("")
-    lines.append("| Path | Lines | SHA-256 |")
-    lines.append("|---|---|---|")
+    lines.extend(["", "## 3. Assessment method", ""])
+    lines.extend(
+        [
+            "- Collect: hash (SHA-256) and line-count every corpus file; parse the process",
+            "  state (backlog, lessons, algorithm records) with the SecureTrace B3 cores.",
+            "- Evaluate: a control is SATISFIED iff every evidence file it cites is present",
+            "  and any live checker (backlog index, lessons record, per-doc index) passes.",
+            "- Render: the SSP/SAP/SAR/POA&M are pure renderings of the snapshot;",
+            "  `manifest.json` binds every corpus file and document to its SHA-256.",
+        ]
+    )
+    lines.extend(["", "## 4. Evidence corpus", ""])
+    lines.extend(["| Path | Lines | SHA-256 |", "|---|---|---|"])
     for entry in evidence.corpus:
         lines.append(f"| `{entry.path}` | {entry.lines} | {entry.sha256} |")
     return "\n".join(lines) + "\n"
@@ -527,66 +517,64 @@ def render_sar(evidence: Evidence) -> str:
     """Render the Security Assessment Report (pure function of ``evidence``)."""
     satisfied = _satisfied_count(evidence)
     total = len(evidence.controls)
-    lines: list[str] = []
-    lines.append("# Security Assessment Report (SAR)")
-    lines.append("")
-    lines.append("## 1. Summary")
-    lines.append("")
-    lines.append(f"- Controls assessed: {total}")
-    lines.append(f"- Satisfied: {satisfied}")
-    lines.append(f"- Not satisfied: {total - satisfied}")
-    lines.append(f"- Git HEAD: `{evidence.git_head}`")
-    lines.append("")
-    lines.append("## 2. Control results")
-    lines.append("")
-    lines.append("| Control | Title | Evidence | Result |")
-    lines.append("|---|---|---|---|")
+    lines: list[str] = [
+        "# Security Assessment Report (SAR)",
+        "",
+        "## 1. Summary",
+        "",
+        f"- Controls assessed: {total}",
+        f"- Satisfied: {satisfied}",
+        f"- Not satisfied: {total - satisfied}",
+        f"- Git HEAD: `{evidence.git_head}`",
+        "",
+        "## 2. Control results",
+        "",
+        "| Control | Title | Evidence | Result |",
+        "|---|---|---|---|",
+    ]
     for control in evidence.controls:
         result = "SATISFIED" if control.satisfied else "NOT SATISFIED"
         lines.append(
             f"| {control.spec.control_id} | {control.spec.title} "
             f"| {_evidence_cell(control.evidence)} | {result} |"
         )
-    lines.append("")
-    lines.append("## 3. SAR invariant")
-    lines.append("")
-    lines.append("Every control cited above maps to at least one evidence file (spec invariant I2;")
-    lines.append("asserted by the test suite). Evidence files are byte-identical copies under")
-    lines.append("`evidence/`; `manifest.json` records their SHA-256.")
-    lines.append("")
-    lines.append("## 4. Findings")
-    lines.append("")
+    lines.extend(["", "## 3. SAR invariant", ""])
+    lines.extend(
+        [
+            "Every control cited above maps to at least one evidence file (spec invariant I2;",
+            "asserted by the test suite). Evidence files are byte-identical copies under",
+            "`evidence/`; `manifest.json` records their SHA-256.",
+        ]
+    )
+    lines.extend(["", "## 4. Findings", ""])
     lines.append("See `POAM.md` for the plan of action and milestones.")
     return "\n".join(lines) + "\n"
 
 
 def render_poam(evidence: Evidence) -> str:
     """Render the Plan of Action and Milestones (pure function of ``evidence``)."""
-    lines: list[str] = []
-    lines.append("# Plan of Action and Milestones (POA&M)")
-    lines.append("")
-    lines.append("## 1. Findings")
-    lines.append("")
+    lines: list[str] = [
+        "# Plan of Action and Milestones (POA&M)",
+        "",
+        "## 1. Findings",
+        "",
+    ]
     findings = [control for control in evidence.controls if not control.satisfied]
     if not findings:
         lines.append("None — all controls satisfied.")
     else:
-        lines.append("| # | Control | Finding | Remediation |")
-        lines.append("|---|---|---|---|")
+        lines.extend(["| # | Control | Finding | Remediation |", "|---|---|---|---|"])
         for number, control in enumerate(findings, start=1):
             lines.append(
                 f"| {number} | {control.spec.control_id} | {_finding(control)} | "
                 f"{control.spec.remediation} |"
             )
-    lines.append("")
-    lines.append("## 2. Milestones (open backlog items)")
-    lines.append("")
+    lines.extend(["", "## 2. Milestones (open backlog items)", ""])
     backlog = evidence.backlog
     if backlog is None or not backlog.open_items:
         lines.append("none")
     else:
-        lines.append("| Item | Title | Status |")
-        lines.append("|---|---|---|")
+        lines.extend(["| Item | Title | Status |", "|---|---|---|"])
         for item_id, title, status in backlog.open_items:
             lines.append(f"| {item_id} | {title} | {status} |")
     return "\n".join(lines) + "\n"
