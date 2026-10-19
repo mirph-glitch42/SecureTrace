@@ -10,19 +10,23 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	26
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	28	41
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	42	55
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	56	69
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	70	83
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	84	97
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	98	111
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	112	125
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	126	139
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	140	153
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	154	167
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	168	181
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	182	195
+LLT_INDEX_BLOCK	—	—	—	—	—	11	30
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	32	45
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	46	59
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	60	73
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	74	87
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	88	101
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	102	115
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	116	129
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	130	143
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	144	157
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	158	171
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	172	185
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	186	199
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	200	213
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	214	227
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	228	241
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	242	255
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -192,3 +196,59 @@ LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	t
 - **Supersedes:** —
 - **Prevention:** When writing behavioral tests for parsers with bounded scan windows, verify the window endpoints against the pinned implementation empirically with edge-position fixtures (first/last line of a section); do not assume 'the section contains the line' implies 'the window scans the line'.
 - **References:** —
+
+<!-- LLT:ENTRY:LLT-0013 -->
+## LLT-0013 — Golden files generated inside the repo bake the real git HEAD into the manifest
+
+- **Recorded:** 2026-10-19
+- **Category:** testing
+- **Severity:** medium
+- **Status:** active
+- **Context:** B4: generating golden SSP/SAP/SAR/POAM renderings for tests/rmf. The golden manifest includes a git_head field derived from the fixture tree.
+- **Pitfall:** Generating goldens from a fixture tree inside a git checkout bakes the enclosing repo's real HEAD SHA into the manifest; the goldens then mismatch on any other checkout/CI because the sentinel never triggers. The first golden set failed exactly this way.
+- **Solution:** Copy the fixture out of the repo (e.g. /tmp) and generate goldens from that out-of-repo copy so git_head degrades to the documented 'no-git' sentinel. The committed goldens assert git_head == 'no-git'.
+- **Supersedes:** —
+- **Prevention:** Generate golden fixtures only from an out-of-repo copy; keep a test asserting the 'no-git' sentinel in the golden manifest.
+- **References:** tests/fixtures/rmf/golden/; algorithms/rmf-evidence-bundle.md (C1 determinism)
+
+<!-- LLT:ENTRY:LLT-0014 -->
+## LLT-0014 — Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** high
+- **Status:** active
+- **Context:** B4: adding the 'rmf build' subcommand to the securetrace CLI dispatch in src/securetrace/__main__.py.
+- **Pitfall:** Reading args.rmf_command unconditionally at dispatch time crashes every non-rmf subcommand (e.g. 'algorithms check') because the attribute only exists on the namespace when the rmf subparser matched. Two dispatch regression tests caught it.
+- **Solution:** Guard dispatch with 'args.command == "rmf"' before touching the sub-command attribute; keep regression tests pinning each sibling subcommand's dispatch.
+- **Supersedes:** —
+- **Prevention:** In argparse dispatch, only touch args.<sub> after confirming args.command == '<parent>'; add a dispatch regression test per sibling subcommand when adding a subcommand.
+- **References:** src/securetrace/__main__.py; tests/test_cli.py (dispatch tests)
+
+<!-- LLT:ENTRY:LLT-0015 -->
+## LLT-0015 — Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit
+
+- **Recorded:** 2026-10-19
+- **Category:** testing
+- **Severity:** high
+- **Status:** active
+- **Context:** B4: fixture tests/fixtures/rmf/mini-repo/dist/sbom.json is the SB-01 control's evidence file in the 21-file corpus.
+- **Pitfall:** The root .gitignore 'dist/' rule matches the fixture's nested dist/ directory, so git add -A silently skipped the file. Local tests passed (file present on disk) but CI resolved the corpus to 20 files and 6 golden-dependent tests failed (run 39219696994).
+- **Solution:** Add explicit negation rules after 'dist/' (!tests/fixtures/rmf/mini-repo/dist/ then !tests/fixtures/rmf/mini-repo/dist/sbom.json), commit the file, verify with git check-ignore -v and git ls-files. Fixed in 0541d2f; CI run 39224391744 green.
+- **Supersedes:** —
+- **Prevention:** Bare directory ignore rules (dist/, build/, artifacts/) can shadow nested test fixtures: after adding a fixture, verify tracking with git check-ignore -v <path> and git ls-files; prefer negation rules over moving the fixture out of its contract path.
+- **References:** .gitignore; tests/fixtures/rmf/mini-repo/dist/sbom.json; commit 0541d2f
+
+<!-- LLT:ENTRY:LLT-0016 -->
+## LLT-0016 — zsh globbing and strict JSON parsing silently break curl API polling loops
+
+- **Recorded:** 2026-10-19
+- **Category:** environment
+- **Severity:** medium
+- **Status:** active
+- **Context:** Polling GitHub Actions run status via curl + python in zsh after pushes.
+- **Pitfall:** Two silent failures: (1) an unquoted URL containing '?' is glob-expanded by zsh ('no matches found'), curl never runs, and the loop keeps re-reading a stale response file for minutes reporting no error; (2) GitHub API JSON can contain raw control characters, so strict json.loads raises and a polling loop swallows the failure. Both produced long silent no-op poll loops.
+- **Solution:** Quote every URL in zsh; parse API responses with json.load(f, strict=False); use a fresh response path per iteration (or verify freshness) so stale files are never mistaken for live status.
+- **Supersedes:** —
+- **Prevention:** Always quote URLs in shell commands; json.load(strict=False) for GitHub API responses; assert a live-only field per poll iteration.
+- **References:** GitHub REST API; LLT-0003 (zsh word splitting)
