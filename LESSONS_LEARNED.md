@@ -10,15 +10,19 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	22
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	24	37
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	38	51
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	52	65
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	66	79
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	80	93
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	94	107
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	108	121
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	122	135
+LLT_INDEX_BLOCK	—	—	—	—	—	11	26
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	28	41
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	42	55
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	56	69
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	70	83
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	84	97
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	98	111
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	112	125
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	126	139
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	140	153
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	154	167
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	168	181
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	182	195
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -131,4 +135,60 @@ LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API i
 - **Solution:** Exclude vendored scanner configs in sonar-project.properties (sonar.exclusions=.gitleaks-defaults.toml) as the durable fix, AND triage the findings via API with justification comments: 16 -> falsepositive, 4 -> wontfix. Working transition call: POST https://sonarcloud.io/api/issues/do_transition with params issue=<key>, transition=falsepositive|wontfix, comment=<justification> — note the param is 'transition' (not 'transitionKey') and takes bare values like 'falsepositive' (not 'setfalsepositive').
 - **Supersedes:** —
 - **Prevention:** Before scripting SonarCloud API calls, verify the endpoint name and parameter names against a live 400-response (the error message enumerates allowed values). When vendoring tool configs that contain sample secrets, add them to both the local scanner allowlist and sonar-project.properties, and triage with documented justification rather than code changes.
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0009 -->
+## LLT-0009 — Priority regex silently misses bulleted `- **Priority:** X` lines
+
+- **Recorded:** 2026-10-18
+- **Category:** tooling
+- **Severity:** high
+- **Status:** active
+- **Context:** Verifying scripts/backlog_index.py (vendored from the backlog-manager skill) for the B3 ex-post-facto backfill: testing what happens to a backlog item's row priority when the file uses the bulleted priority form.
+- **Pitfall:** PRIORITY_RE is ^\s*\*\*Priority:\*\*\s*(.+?)\s*$ — it matches only lines that START with **Priority:**. The bulleted form `- **Priority:** High` (used by this repo's BACKLOG.md and by the skill's own references/item-anatomy.md) never matches, so the row priority silently falls back to `Low` and an out-of-vocabulary value on a bulleted line (e.g. `- **Priority:** Urgent`) is NOT rejected. Only the unbulleted form (the skill's references/example-backlog.md) is parsed and vocabulary-checked.
+- **Solution:** Verified all three cases (P9a/P9b/P9c) against the pinned script and documented the behavior as DEV(7) in algorithms/line-index-sync.md with test rows. For new backlogs, either write priority on an unbulleted line (the form the parser actually reads) or accept `Low` as the row value. The vendored script is logic-identical to the skill original (diffed; line-wrapping only), so this is the skill's own behavior; a fix is a separate doc-first change with its own backlog item (B3 preserves it as pinned).
+- **Supersedes:** —
+- **Prevention:** Treat 'document the pinned behavior' as the default in ex-post-facto backfills; never fix the algorithm during backfill (skill anti-abuse rule).
+- **References:** algorithms/line-index-sync.md DEV(7) and tests 9a-9c; scripts/backlog_index.py parse_priority; skill backlog-manager references/item-anatomy.md vs references/example-backlog.md
+
+<!-- LLT:ENTRY:LLT-0010 -->
+## LLT-0010 — Lessons-index staleness covers geometry + indexed fields, not body content
+
+- **Recorded:** 2026-10-18
+- **Category:** testing
+- **Severity:** medium
+- **Status:** active
+- **Context:** Mapping verified behavior of scripts/manage_lessons.py (B3 backfill) for the lessons-record algorithm document: which edits make `check` report the index stale.
+- **Pitfall:** Assuming every edit to an entry invalidates the index is wrong in one direction: the index records only line ranges plus six fields (title/category/severity/status/recorded). Rewriting Context/Pitfall/Solution on the same line does NOT trigger staleness (`check` exit 0 — verified L19d), so the record can silently drift from its prose. A line-count change (L19a) or an indexed-field change (L19c) DOES trigger staleness (exit 1). Also DATE_RE is format-only: `--recorded 2026-99-99` is accepted, `2026-1-1` rejected (L7a/L7b).
+- **Solution:** Documented as DEV(3)/DEV(4) in algorithms/lessons-record.md with verified test rows L7a/L19a/L19c/L19d. Treat same-line body edits as the wording fixes guard G7 allows in place; rely on `check` (exit 1) as the drift detector for geometry and indexed fields, which is exactly what the docs-check gate runs.
+- **Supersedes:** —
+- **Prevention:** After editing a lesson entry's body, re-run `manage_lessons.py check` in the same session; do not assume `check` catches prose edits — it intentionally does not.
+- **References:** algorithms/lessons-record.md DEV(3)/DEV(4) and test rows L7a/L19a/L19c/L19d; scripts/manage_lessons.py expected_index_rows/index_is_fresh
+
+<!-- LLT:ENTRY:LLT-0011 -->
+## LLT-0011 — Universal-newline reads make CRLF handling differ from code appearance
+
+- **Recorded:** 2026-10-18
+- **Category:** environment
+- **Severity:** low
+- **Status:** active
+- **Context:** Verifying CRLF behavior of the vendored skill scripts (backlog/lessons index) during the B3 backfill: determining whether CRLF files break check/sync and which code line is responsible.
+- **Pitfall:** Reasoning about `splitlines()` vs `split("\n")` to predict CRLF behavior is a red herring: `Path.read_text()`/`open().read()` (text mode) apply universal newlines, so CRLF becomes LF AT READ TIME, before any splitting. The observable behavior is: a fresh `check`/`sync` exits 0 and performs no write, so an on-disk CRLF file survives byte-identical; any actual write (add, stale sync) emits LF. The splitter choice only matters on already-normalized strings.
+- **Solution:** Verified with byte-level checks (L20a/L20b): CRLF file passes `check`; `sync` prints 'already current' and leaves the bytes untouched; `add`/stale-`sync` normalize to LF. Documented as DEV(5) in algorithms/line-index-sync.md (test P12) and algorithms/lessons-record.md (L20a/L20b); the B3 package port keeps text-mode reads, so behavior is unchanged.
+- **Supersedes:** —
+- **Prevention:** Measure line endings with `read_bytes()`, never `read_text()`; when predicting script behavior on CRLF input, start from 'universal newlines at read time', not from the line-splitting code.
+- **References:** algorithms/line-index-sync.md DEV(5) and test 12; algorithms/lessons-record.md DEV(5) and L20a/L20b
+
+<!-- LLT:ENTRY:LLT-0012 -->
+## LLT-0012 — backlog scan window excludes the final line of a section (off-by-one)
+
+- **Recorded:** 2026-10-18
+- **Category:** tooling
+- **Severity:** medium
+- **Status:** active
+- **Context:** B3 GREEN phase: three tests that put an unbulleted '**Priority:** X' line on the LAST line of a fixture file failed against the faithful port of scripts/backlog_index.py. Verified empirically against the pinned script (git show HEAD:scripts/backlog_index.py): build_rows calls parse_item_heading/parse_priority with (start-1, stop-1), so the 0-indexed window lines[start-1 : stop-1] excludes the section's last line - for the final section, the file's last line. A fixture with the priority line last indexed as Low with exit 0 even for the out-of-vocabulary value 'Urgent'.
+- **Pitfall:** The last line of every section body (the file's last line for the final section) is never scanned for the item heading or the priority value. Consequences: (1) an unbulleted '**Priority:** X' on the last line is silently indexed as Low - even an out-of-vocabulary value is NOT rejected (exit 0); (2) a '## <ID>. <title> - **STATUS**' heading on the last line is not parsed. Root cause: build_rows passes stop-1 as the exclusive stop of a window that should include stop. The quirk is latent in typical files because sections normally end with a blank line before the next marker, so it rarely bites.
+- **Solution:** B3 mirrors the pinned behavior exactly (skill anti-abuse: document actual behavior, do not fix the algorithm during backfill). Fixed the test fixtures to place a body line after the priority line, and added test_priority_on_final_line_not_scanned_quirk pinning the last-line behavior (out-of-vocab value on the last line -> row Low, no error). Documented as DEV(8) in algorithms/line-index-sync.md section 2.5. A proper fix (include the last line in the scan window) is a separate doc-first change, out of B3 scope.
+- **Supersedes:** —
+- **Prevention:** When writing behavioral tests for parsers with bounded scan windows, verify the window endpoints against the pinned implementation empirically with edge-position fixtures (first/last line of a section); do not assume 'the section contains the line' implies 'the window scans the line'.
 - **References:** —
