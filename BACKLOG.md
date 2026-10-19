@@ -4,14 +4,14 @@
 id	title	status	priority	start_line	end_line
 INDEX_BLOCK	-	-	-	3	15
 HEADER	-	-	-	17	23
-QUEUE	-	-	-	24	31
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	32	71
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	72	100
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	101	139
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	IN_PROGRESS	Low	140	165
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	166	186
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	187	225
-CONSTRAINTS	-	-	-	226	234
+QUEUE	-	-	-	24	30
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	31	70
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	180	200
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	201	239
+CONSTRAINTS	-	-	-	240	248
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -19,15 +19,14 @@ CONSTRAINTS	-	-	-	226	234
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B4 → B5 | **In progress:** B4 | **Done:** B1, B2, B3, B6 | **Updated:** 2026-10-18
+**Queue:** B5 | **In progress:** — | **Done:** B1, B2, B3, B4, B6 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B4** (Medium) — RMF deliverable builder: SSP/SAP/SAR/POA&M evidence bundles from CI state
-2. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+1. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
 
-Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (SonarCloud triage) — see their closeouts.
+Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B6** (SonarCloud triage) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
 ## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
@@ -138,7 +137,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (Sona
   - **Lessons:** LLT-0009 (high), LLT-0010 (medium), LLT-0011 (low), LLT-0012 (medium) recorded.
 
 <!-- BACKLOG:ITEM:B4 -->
-## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **IN PROGRESS**
+## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -161,7 +160,22 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (Sona
 - **Ordering:** after B2 (spec) and B3 (tooling); before B5 (release should ship bundles).
 - **Progress:**
   - 2026-10-18 — status → IN PROGRESS (accepted via "complete queue items"); design fixed: `securetrace.rmf.deliverables` with a fixed 11-control catalog (ST/SC/CI/QA/REL/SB), an explicit evidence corpus (no directory walks), checkers reusing the B3 cores (`backlog_index`, `lessons.record`, `algorithms.registry`), pure SSP/SAP/SAR/POA&M renderers, canonical manifest.json; `package()` is time-free — the date lives only in the caller-supplied bundle directory name (determinism acceptance)
-- **Closeout:** (pending)
+  - 2026-10-18 — WI 2 done: spec of record `algorithms/rmf-evidence-bundle.md` v0.1.0 + registry row in `algorithms/INDEX.md`; WI 3–4 started: core collector + 4 renderers with 12 tests in `tests/rmf/test_deliverables.py` (ST-03 failing — `_algo_doc_paths` wrongly counted `algorithms/INDEX.md`)
+  - 2026-10-19 — WI 3–4 done: ST-03 fixed (registry excluded from per-doc checks); goldens generated from an out-of-repo fixture copy (`git_head: "no-git"`, LLT-0013); spec v0.2.0 (new §5.3 CLI contract, renumbered §5.4–5.6, test case 9); CLI `run_rmf_build` + guarded `rmf` dispatch (LLT-0014 regression) + `rmf-bundle` Makefile target + `artifacts/` gitignore; 5 new CLI tests; 146 tests green, `make gate` green
+  - 2026-10-19 — WI 5 done: E2E on SecureTrace itself — `make sbom` + `make rmf-bundle` → `artifacts/rmf/2026-10-19/`, **11/11 controls SATISFIED**, 23-file corpus, real git HEAD; SAR/manifest sanity-checked
+  - 2026-10-19 — work commit `cbcef42` pushed; CI run 39219696994 RED (quality job: 6 golden-dependent test failures)
+  - 2026-10-19 — root cause: fixture `tests/fixtures/rmf/mini-repo/dist/sbom.json` was never committed — the repo-level `dist/` gitignore rule shadowed the fixture's nested `dist/` (present on local disk, absent on CI → corpus 20 vs 21); fixed with `.gitignore` negation + committing the file (LLT-0015); `make gate` green (146 tests)
+  - 2026-10-19 — fix commit `0541d2f` pushed; CI run 39224391744: `quality` + `security` = success; `SonarCloud Code Analysis` initially failed on 7 new vulnerabilities (6× S8707 + 1× S8705 in `rmf/deliverables.py`, local-CLI class per LLT-0008) → all 7 triaged `wontfix` with justification; all three checks = **success**; status → DONE
+- **Closeout (2026-10-19, DONE):**
+  - **Version:** none (new `securetrace.rmf` subpackage; spec of record `algorithms/rmf-evidence-bundle.md` v0.2.0, registry state `implemented`).
+  - **Commits:** `cbcef42` (B4: spec v0.1.0→v0.2.0, `src/securetrace/rmf/deliverables.py` core, `securetrace rmf build` CLI, `rmf-bundle` Makefile target, 21-file fixture + 5 goldens, 12 core + 5 CLI tests), `0541d2f` (fixture `dist/sbom.json` hidden by `dist/` gitignore — negation rules + commit), `ec92ac5` (LLT-0013..0016).
+  - **CI:** run 39224391744 on `0541d2f` — `quality` + `security` = success; external `SonarCloud Code Analysis` = **success** after triaging 7 new vulnerabilities to `wontfix` with justification (6× `pythonsecurity:S8707` in `collect_evidence()`/`package()`, 1× `pythonsecurity:S8705` on the fixed-list `git rev-parse HEAD` call — local-CLI class, LLT-0008 precedent). First red: run 39219696994 — 6 golden-dependent failures, root cause and fix above.
+  - **Acceptance (before→after):**
+    - Test suite: 131 → **146** (−2 old smoke, +12 core `tests/rmf/`, +5 CLI `rmf` section); `make gate` green locally (format-check / lint / docs-check / build / test).
+    - `securetrace rmf build .` and `make rmf-bundle` run with zero network access on SecureTrace itself: `artifacts/rmf/2026-10-19/` with **11/11 controls SATISFIED**, 23-file corpus, real git HEAD; SSP/SAP/SAR/POA&M + canonical `manifest.json`.
+    - Determinism: two runs on the same tree are byte-identical (golden + determinism tests); SAR invariant — every control maps to ≥1 corpus file — asserted in tests.
+    - CLI contract pinned by tests: success → `{outdir}: RMF bundle written ({n} of {m} controls satisfied)` exit 0; missing repo / uncreatable outdir → `securetrace: {msg}` exit 2; default outdir `artifacts/rmf/<YYYY-MM-DD>` (date only in CLI/Makefile — core stays clock-free).
+  - **Lessons:** LLT-0013 (golden HEAD baking), LLT-0014 (unguarded argparse sub-command attribute), LLT-0015 (`dist/` gitignore shadowed a fixture — the CI root cause), LLT-0016 (zsh glob + strict-JSON polling loops).
 
 <!-- BACKLOG:ITEM:B5 -->
 ## B5. Release hardening: keyless signing + provenance for release artifacts — **OPEN**
