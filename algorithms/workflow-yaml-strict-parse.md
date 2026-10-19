@@ -5,11 +5,11 @@ id	start_line	end_line
 INDEX_BLOCK	3	13
 METADATA	15	36
 THEORY	37	77
-PSEUDOCODE	78	132
-WALKTHROUGH	133	161
-IMPLEMENTATION	162	207
-TESTS	208	231
-REFERENCES	232	238
+PSEUDOCODE	78	133
+WALKTHROUGH	134	162
+IMPLEMENTATION	163	208
+TESTS	209	232
+REFERENCES	233	239
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,14 +19,14 @@ REFERENCES	232	238
 |---|---|
 | Name | Workflow-YAML Strict Parse (duplicate mapping-key detection for CI workflows) |
 | Slug | workflow-yaml-strict-parse |
-| Version | 0.1.0 |
-| Status | draft |
+| Version | 0.2.0 |
+| Status | implemented |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-19 |
 | Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-19): initial draft (document-before-code, B8) |
+| Status history | 0.1.0 (2026-10-19): initial draft (document-before-code, B8)<br>0.2.0 (2026-10-19): implemented — `scripts/check_workflow_yaml.py` (B8 WI 4); wired into Makefile `workflow-check`, pre-commit stage 4, and the CI quality step (B8 WI 5) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
-| Implementation location | — (filled when the implementation lands, B8) |
+| Implementation location | `scripts/check_workflow_yaml.py` (strict-parse core + CLI); wired via Makefile `workflow-check`, pre-commit stage 4, and the CI quality step |
 | Time complexity | O(N) per file (N = YAML node count) — one parse pass, duplicate scan linear in pairs |
 | Space complexity | O(N) — PyYAML node tree + one per-mapping `seen` set (freed on unwind) |
 | Determinism | deterministic |
@@ -85,7 +85,7 @@ none — documented before implementation.
 #                 or "parse error: <first line of the YAML error>"
 
 DuplicateKeyError (a kind of YAMLError)
-  fields: key, line   # the colliding key; 1-based line of that key node
+  fields: label, line  # display label of the colliding key (its source text); 1-based line of that key node
 
 class StrictLoader extends SafeLoader:
   # PyYAML invokes this exactly once per mapping node (block, flow, nested) — I1.
@@ -95,7 +95,8 @@ class StrictLoader extends SafeLoader:
     for (key_node, value_node) in node.value in document order:   # single pass, O(pairs)
       key := construct_object(key_node, deep)    # scalar: str/bool/int/float/null
       if key in seen:                            # I2: collision -> hard fail
-        raise DuplicateKeyError(key, key_node.start_mark.line + 1)   # start_mark is 0-based
+        label := key_node.value if key_node is a scalar else string(key)  # show what was written
+        raise DuplicateKeyError(label, key_node.start_mark.line + 1)   # start_mark is 0-based
       seen.add(key)
       out[key] := construct_object(value_node, deep)
     return out
@@ -106,7 +107,7 @@ check_file(path):
     safe_load(text, Loader = StrictLoader)
     return (true, "")
   catch DuplicateKeyError as d:
-    return (false, "duplicate key '" + string(d.key) + "' at line " + d.line)
+    return (false, "duplicate key '" + d.label + "' at line " + d.line)
   catch YAMLError as e:                          # scanner/parser/composer: malformed YAML
     return (false, "parse error: " + first_line(e))
 
@@ -164,7 +165,7 @@ Contrast: plain `yaml.safe_load` on the same text silently returns `permissions:
 
 ### 5.1 Data structures
 
-- `DuplicateKeyError(yaml.YAMLError)` — carries `key` (the constructed key object) and `line` (int, 1-based). Subclassing `YAMLError` keeps it in the parse-failure family; it is caught *before* the generic `YAMLError` handler so the message stays specific.
+- `DuplicateKeyError(yaml.YAMLError)` — carries `label` (the key as written in the source: the scalar key node's text, or the stringified constructed key for non-scalar keys) and `line` (int, 1-based). Subclassing `YAMLError` keeps it in the parse-failure family; it is caught *before* the generic `YAMLError` handler so the message stays specific.
 - `StrictLoader(yaml.SafeLoader)` — one override: `construct_mapping(loader, node, deep=False)`. The override must call `loader.construct_object(key_node, deep=deep)` exactly as PyYAML's default does, so key construction (str/bool/int/float/null) matches `safe_load` semantics.
 - No other state: the `seen` set is local to one mapping node and freed on unwind.
 
@@ -197,13 +198,13 @@ Contrast: plain `yaml.safe_load` on the same text silently returns `permissions:
 - **Do not `safe_load` + compare dicts** — PyYAML merges duplicates during construction; the evidence is gone by the time the dict exists (§2.2).
 - **`construct_mapping` signature:** keep `(loader, node, deep=False)` and honor `deep` in both `construct_object` calls — changing it alters alias/anchor semantics.
 - **`start_mark.line` is 0-based** — add 1 before printing; this off-by-one is the classic failure.
-- **Non-string keys:** YAML 1.1 (PyYAML) parses `yes`, `on`, `1`, `~` as bool/int/null keys. Duplicate detection compares constructed objects, so `on:` and `yes:` are *different* keys (str vs bool). Do not stringify keys before comparison — that changes semantics.
+- **Non-string keys:** YAML 1.1 (PyYAML) resolves `yes`/`on`/`true` to bool `True`, `1` to int, `~` to null — so `on:` and `yes:` in one mapping are the *same* key under PyYAML, where a 1.2-style parser (GitHub's) would treat them as distinct strings. Comparing constructed key objects keeps PyYAML the stricter parser (safe direction for a gate: it never misses a GitHub duplicate). The *label* reported is the key node's source text, so the message shows what was written (`'on'`, not `'True'`).
 - **Exit 2 vs 1 boundary:** a file that *exists but is malformed* is exit 1 (content); a file that *does not exist* is exit 2 (usage). Blurring them makes CI triage ambiguous.
 - **Deterministic order:** default discovery is sorted; explicit arguments keep argument order. Never use filesystem hash order.
 
 ### 5.5 Language notes
 
-Python 3.12 reference: subclass `yaml.SafeLoader`, override `construct_mapping`, raise a `DuplicateKeyError` (`yaml.YAMLError` subclass with `key`/`line` attributes). CLI follows the `scripts/` house style: `sys.argv` (no argparse), explicit exit codes 0/1/2, `✓`/`✗` line output — matching `scripts/backlog_index.py`, `scripts/manage_lessons.py`, `scripts/algorithm_index.py`.
+Python 3.12 reference: subclass `yaml.SafeLoader`, override `construct_mapping`, raise a `DuplicateKeyError` (`yaml.YAMLError` subclass with `label`/`line` attributes). CLI follows the `scripts/` house style: `argparse`, a `main(argv=None) -> int` entrypoint with `sys.exit(main())`, explicit exit codes 0/1/2, `✓`/`✗` line output — matching `scripts/backlog_index.py`, `scripts/manage_lessons.py`, `scripts/algorithm_index.py`.
 
 <!-- SECTION:TESTS -->
 ## 6. Test cases and sample data
@@ -212,7 +213,7 @@ Python 3.12 reference: subclass `yaml.SafeLoader`, override `construct_mapping`,
 |---|---|---|---|---|
 | 1 | clean file | `name: ci\non: push\njobs:\n  a:\n    steps:\n      - run: x\n` | `✓ <f> OK`, exit 0 | happy path |
 | 2 | duplicate top-level key | `on: push\non: pull_request\njobs: {}\n` | `✗ <f>: duplicate key 'on' at line 2`, exit 1 | the B5 incident shape |
-| 3 | duplicate nested key | `jobs:\n  a:\n    permissions:\n      contents: read\n      contents: write\n` | `✗ <f>: duplicate key 'contents' at line 4`, exit 1 | I1: nested mappings checked |
+| 3 | duplicate nested key | `jobs:\n  a:\n    permissions:\n      contents: read\n      contents: write\n` | `✗ <f>: duplicate key 'contents' at line 5`, exit 1 | I1: nested mappings checked |
 | 4 | flow-style duplicate | `jobs: {a: {steps: [{run: x, run: y}]}}\n` | `✗ <f>: duplicate key 'run' at line 1`, exit 1 | flow mappings use the same constructor |
 | 5 | same key in different mappings | `jobs:\n  a:\n    steps:\n      - run: x\n  b:\n    steps:\n      - run: y\n` | `✓ OK`, exit 0 | I2: `seen` is per mapping, not global |
 | 6 | malformed YAML | `jobs:\n  a:\n   steps: [x\n` | `✗ <f>: parse error: …`, exit 1 | malformed = content finding (1, not 2) |

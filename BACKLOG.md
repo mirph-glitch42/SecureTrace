@@ -12,8 +12,8 @@ B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DO
 B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	OPEN	Low	259	287
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	288	315
-CONSTRAINTS	-	-	-	316	324
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	288	318
+CONSTRAINTS	-	-	-	319	327
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -312,6 +312,9 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Progress:**
   - 2026-10-19 — created (G1); accepted for execution ("go for both")
   - 2026-10-19 — status → IN PROGRESS (G2: flip rides with first work); WI 2 done: `algorithms/workflow-yaml-strict-parse.md` v0.1.0 (draft) + `algorithms/INDEX.md` registry row + doc index regen
+  - 2026-10-19 — WI 3 RED: 9 tests in `tests/scripts/test_workflow_yaml.py` (all failing — checker absent); WI 4 GREEN: `scripts/check_workflow_yaml.py` per spec; `pyyaml==6.0.3` pinned + hashed (`requirements-dev.{in,txt}`); 9/9 pass
+  - 2026-10-19 — WI 5: wired in ONE change — Makefile `workflow-check` (gate + .PHONY + help), pre-commit stage 4 (renumbered to 6 stages), CI quality step; doc → v0.2.0 `implemented` + registry row
+  - 2026-10-19 — WI 6: `make gate` green (155 tests); local red-proof: probe workflow with duplicate `on:` blocked at stage 4/6 (`duplicate key 'on' at line 2`, make Error 1), then removed and stage green; HEAD clean
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints

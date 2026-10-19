@@ -13,7 +13,7 @@ GITLEAKS ?= gitleaks
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-ci lock format format-check lint docs-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate rmf-bundle
+.PHONY: help setup setup-ci lock format format-check lint docs-check workflow-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate rmf-bundle
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -54,6 +54,9 @@ docs-check: ## Verify skill documents are well-formed and indexes are fresh
 	  $(PYTHON) scripts/algorithm_index.py "$$f" --check || exit 1; \
 	done
 
+workflow-check: ## Strict-parse .github/workflows YAML — hard-fail on duplicate mapping keys (B8)
+	$(PYTHON) scripts/check_workflow_yaml.py
+
 build: ## Verify the package compiles (release-mode check)
 	$(PYTHON) -m compileall -q src/securetrace
 
@@ -83,5 +86,5 @@ sbom: ## Generate CycloneDX SBOM from locked requirements
 rmf-bundle: ## Build the RMF evidence bundle (SSP/SAP/SAR/POA&M) into artifacts/rmf/<today>
 	$(PYTHON) -m securetrace rmf build . --outdir artifacts/rmf/$(shell date +%F)
 
-gate: format-check lint docs-check build test ## Full local gate (mirror of CI quality job)
+gate: format-check lint docs-check workflow-check build test ## Full local gate (mirror of CI quality job)
 	@echo "✓ local gate green"

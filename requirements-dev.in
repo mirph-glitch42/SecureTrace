@@ -7,3 +7,4 @@ setuptools>=84          # transitive dep of pip-tools (unpinned there); must be 
 pip-audit>=2.10         # PyPI dependency audit; owns the advisory DB pip ships with
 cyclonedx-bom>=7.5      # CycloneDX SBOM from pinned requirements; DoW RMF supply-chain evidence
 build>=1.3              # PEP 517 sdist+wheel build for release artifacts; replaces raw hatch invocations
+pyyaml>=6               # B8: strict workflow-YAML duplicate-key check (SafeLoader subclass); replaces absent local validation that shipped the B5 0-job release (LLT-0017/0018)

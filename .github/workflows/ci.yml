@@ -41,6 +41,9 @@ jobs:
       - name: Docs check (backlog / lessons / algorithms)
         run: make docs-check
 
+      - name: Workflow-YAML strict parse (duplicate mapping keys)
+        run: make workflow-check
+
       - name: Build (compileall)
         run: make build
 
