@@ -12,8 +12,8 @@ B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DO
 B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	OPEN	Low	259	287
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	OPEN	Low	288	314
-CONSTRAINTS	-	-	-	315	323
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	288	315
+CONSTRAINTS	-	-	-	316	324
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -21,7 +21,7 @@ CONSTRAINTS	-	-	-	315	323
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B8, B7 | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
+**Queue:** B7 | **In progress:** B8 | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -286,7 +286,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — created (G1); status OPEN; queued behind B8 (G9)
 
 <!-- BACKLOG:ITEM:B8 -->
-## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **OPEN**
+## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **IN PROGRESS**
 
 - **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
 - **Requested:** 2026-10-19
@@ -311,6 +311,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Ordering:** before B7 (queue priority High > Medium; the gate lands first so B7's churn runs under it).
 - **Progress:**
   - 2026-10-19 — created (G1); accepted for execution ("go for both")
+  - 2026-10-19 — status → IN PROGRESS (G2: flip rides with first work); WI 2 done: `algorithms/workflow-yaml-strict-parse.md` v0.1.0 (draft) + `algorithms/INDEX.md` registry row + doc index regen
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
