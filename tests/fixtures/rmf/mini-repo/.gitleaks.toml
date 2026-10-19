@@ -1,0 +1,4 @@
+title = "fixture gitleaks config"
+
+[allowlist]
+paths = ['fixtures']

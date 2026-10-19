@@ -6,6 +6,9 @@ __pycache__/
 build/
 dist/
 
+# Derived RMF evidence bundles (make rmf-bundle) — regenerated on demand, never committed
+artifacts/
+
 # Project-global virtual environment (lives at repo root, never committed)
 .venv/
 

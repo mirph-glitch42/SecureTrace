@@ -13,7 +13,7 @@ GITLEAKS ?= gitleaks
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-ci lock format format-check lint docs-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate
+.PHONY: help setup setup-ci lock format format-check lint docs-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate rmf-bundle
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -79,6 +79,9 @@ dependency-audit: ## Audit pinned dependencies; fails on any known vulnerability
 sbom: ## Generate CycloneDX SBOM from locked requirements
 	mkdir -p dist
 	$(CDX) requirements --of JSON --output-file dist/sbom.json --output-reproducible
+
+rmf-bundle: ## Build the RMF evidence bundle (SSP/SAP/SAR/POA&M) into artifacts/rmf/<today>
+	$(PYTHON) -m securetrace rmf build . --outdir artifacts/rmf/$(shell date +%F)
 
 gate: format-check lint docs-check build test ## Full local gate (mirror of CI quality job)
 	@echo "✓ local gate green"

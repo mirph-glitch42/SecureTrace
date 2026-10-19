@@ -8,10 +8,10 @@ QUEUE	-	-	-	24	31
 B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	32	71
 B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	72	100
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	101	139
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	OPEN	Low	140	164
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	165	185
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	186	224
-CONSTRAINTS	-	-	-	225	233
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	IN_PROGRESS	Low	140	165
+B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	166	186
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	187	225
+CONSTRAINTS	-	-	-	226	234
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -19,7 +19,7 @@ CONSTRAINTS	-	-	-	225	233
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B4 → B5 | **In progress:** — | **Done:** B1, B2, B3, B6 | **Updated:** 2026-10-18
+**Queue:** B4 → B5 | **In progress:** B4 | **Done:** B1, B2, B3, B6 | **Updated:** 2026-10-18
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -138,7 +138,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (Sona
   - **Lessons:** LLT-0009 (high), LLT-0010 (medium), LLT-0011 (low), LLT-0012 (medium) recorded.
 
 <!-- BACKLOG:ITEM:B4 -->
-## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **OPEN**
+## B4. RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state) — **IN PROGRESS**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -159,7 +159,8 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B6** (Sona
   - deterministic: two runs on the same tree produce byte-identical outputs
   - every control cited in the SAR maps to at least one evidence file (asserted in tests)
 - **Ordering:** after B2 (spec) and B3 (tooling); before B5 (release should ship bundles).
-- **Progress:** —
+- **Progress:**
+  - 2026-10-18 — status → IN PROGRESS (accepted via "complete queue items"); design fixed: `securetrace.rmf.deliverables` with a fixed 11-control catalog (ST/SC/CI/QA/REL/SB), an explicit evidence corpus (no directory walks), checkers reusing the B3 cores (`backlog_index`, `lessons.record`, `algorithms.registry`), pure SSP/SAP/SAR/POA&M renderers, canonical manifest.json; `package()` is time-free — the date lives only in the caller-supplied bundle directory name (determinism acceptance)
 - **Closeout:** (pending)
 
 <!-- BACKLOG:ITEM:B5 -->

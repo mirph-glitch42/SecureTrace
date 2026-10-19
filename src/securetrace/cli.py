@@ -30,6 +30,7 @@ from securetrace.algorithms import registry
 from securetrace.backlog import index as backlog_index
 from securetrace.errors import FormatError, InvalidInput
 from securetrace.lessons import record
+from securetrace.rmf import deliverables
 
 __all__ = [
     "run_algorithm_check",
@@ -41,6 +42,7 @@ __all__ = [
     "run_lessons_init",
     "run_lessons_next_id",
     "run_lessons_sync",
+    "run_rmf_build",
 ]
 
 PROG = "securetrace"
@@ -363,4 +365,33 @@ def run_lessons_next_id(path: Path, prog: str = PROG) -> int:
         return code
     entries, _ = record.parse_entries(text.split("\n"))
     print(record.next_id(entries))
+    return 0
+
+
+# --- rmf -----------------------------------------------------------------------
+
+
+def run_rmf_build(repo: str | Path, outdir: str | Path | None = None, prog: str = PROG) -> int:
+    """Build the deterministic RMF evidence bundle for ``repo`` (backlog B4).
+
+    With no ``--outdir`` the bundle directory is ``artifacts/rmf/<YYYY-MM-DD>``
+    relative to the current working directory — the only place a date appears
+    (the bundle bytes themselves are clock-free, per the spec).
+
+    Returns:
+        0: bundle written (``{outdir}: RMF bundle written (N of M controls satisfied)`` on stdout)
+        2: repo missing/not a directory, or outdir uncreatable (``{prog}: …`` on stderr)
+    """
+    if outdir is None:
+        outdir = Path("artifacts") / "rmf" / datetime.date.today().isoformat()
+    try:
+        evidence = deliverables.collect_evidence(repo)
+        bundle = deliverables.package(evidence, repo, outdir)
+    except FormatError as exc:
+        return _fail(prog, str(exc))
+    except OSError as exc:
+        return _fail(prog, f"cannot create {outdir}: {exc}")
+    satisfied = sum(1 for control in evidence.controls if control.satisfied)
+    total = len(evidence.controls)
+    print(f"{bundle}: RMF bundle written ({satisfied} of {total} controls satisfied)")
     return 0

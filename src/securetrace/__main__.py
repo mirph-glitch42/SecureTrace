@@ -4,6 +4,7 @@ Usage:
     securetrace backlog {check,sync} <file>
     securetrace lessons {init,add,sync,check,next-id} …
     securetrace algorithms {check,sync} <doc>
+    securetrace rmf build <repo> [--outdir DIR]
 
 ``main(argv)`` returns the process exit code for command-level failures
 (0/1/2); argparse-level failures (missing subcommand, unknown subcommand,
@@ -79,6 +80,18 @@ def _add_algorithms(sub: argparse._SubParsersAction) -> None:
     as_sync.add_argument("doc", help="path to the algorithm document")
 
 
+def _add_rmf(sub: argparse._SubParsersAction) -> None:
+    sp = sub.add_parser("rmf", help="build RMF evidence bundles (SSP/SAP/SAR/POA&M)")
+    rsub = sp.add_subparsers(dest="rmf_command", required=True)
+    build = rsub.add_parser("build", help="write the RMF evidence bundle for a repository")
+    build.add_argument("repo", help="repository root to collect evidence from")
+    build.add_argument(
+        "--outdir",
+        default=None,
+        help="bundle directory (default: artifacts/rmf/<today> relative to the working directory)",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="securetrace",
@@ -90,6 +103,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_backlog(sub)
     _add_lessons(sub)
     _add_algorithms(sub)
+    _add_rmf(sub)
     return parser
 
 
@@ -129,6 +143,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.lessons_command == "check":
             return cli.run_lessons_check(path, prog="securetrace")
         return cli.run_lessons_next_id(path, prog="securetrace")
+    # rmf
+    if args.command == "rmf":
+        return cli.run_rmf_build(args.repo, outdir=args.outdir, prog="securetrace")
     # algorithms
     path = args.doc
     if args.algorithms_command == "check":

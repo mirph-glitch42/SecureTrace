@@ -13,10 +13,14 @@ Conventions (pinned):
 - structural errors → stderr ``{prog}: {msg}``, 2 (one line per error)
 - ``{prog}: {msg}`` for file/IO errors and rejected ``add`` input, 2
 - lessons ``init``/``add``/``sync``/``check``/``next-id`` messages → stdout, 0
+- rmf ``build`` → stdout ``{outdir}: RMF bundle written (N of M controls satisfied)``, 0;
+  missing repo or uncreatable outdir → stderr ``securetrace: {msg}``, 2
 """
 
 from __future__ import annotations
 
+import datetime
+import shutil
 from pathlib import Path
 
 import pytest
@@ -451,3 +455,70 @@ def test_main_unknown_subcommand_exits_2(capsys: pytest.CaptureFixture[str]) -> 
         main(["bogus"])
     assert excinfo.value.code == 2
     assert "invalid choice" in capsys.readouterr().err
+
+
+# --- rmf: build ---------------------------------------------------------------
+
+RMF_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "rmf" / "mini-repo"
+
+
+def _copy_rmf_repo(tmp_path: Path) -> Path:
+    dst = tmp_path / "repo"
+    shutil.copytree(RMF_FIXTURE, dst)
+    return dst
+
+
+def test_rmf_build_writes_bundle(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    repo = _copy_rmf_repo(tmp_path)
+    out = tmp_path / "bundle"
+    assert cli.run_rmf_build(repo, out) == 0
+    for name in ("SSP.md", "SAP.md", "SAR.md", "POAM.md", "manifest.json"):
+        assert (out / name).is_file(), name
+    assert (out / "evidence" / "BACKLOG.md").is_file()
+    captured = capsys.readouterr()
+    assert captured.out == f"{out}: RMF bundle written (11 of 11 controls satisfied)\n"
+    assert captured.err == ""
+
+
+def test_rmf_build_missing_repo_exit2(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    missing = tmp_path / "nope"
+    assert cli.run_rmf_build(missing, tmp_path / "bundle") == 2
+    err = capsys.readouterr().err
+    assert err == f"securetrace: {missing}: repository root is missing or not a directory\n"
+
+
+def test_rmf_build_uncreatable_outdir_exit2(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    repo = _copy_rmf_repo(tmp_path)
+    blocker = tmp_path / "blocker"
+    blocker.write_text("a file, not a directory\n", encoding="utf-8")
+    assert cli.run_rmf_build(repo, blocker / "bundle") == 2
+    err = capsys.readouterr().err
+    assert err.startswith("securetrace: cannot create "), err
+
+
+def test_rmf_build_default_outdir_is_artifacts_rmf_today(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    repo = workdir / "repo"
+    shutil.copytree(RMF_FIXTURE, repo)
+    monkeypatch.chdir(workdir)
+    assert cli.run_rmf_build(repo) == 0
+    today = datetime.date.today().isoformat()
+    out = workdir / "artifacts" / "rmf" / today
+    assert (out / "manifest.json").is_file()
+    assert (out / "evidence" / "BACKLOG.md").is_file()
+    capsys.readouterr()
+
+
+def test_main_dispatch_rmf_build(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    repo = _copy_rmf_repo(tmp_path)
+    out = tmp_path / "bundle2"
+    assert main(["rmf", "build", str(repo), "--outdir", str(out)]) == 0
+    assert (out / "SSP.md").is_file()
+    assert "11 of 11 controls satisfied" in capsys.readouterr().out

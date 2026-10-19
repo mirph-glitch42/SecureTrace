@@ -1,0 +1,2 @@
+# pinned (fixture)
+example==1.0.0

@@ -8,6 +8,7 @@
 |---|---|---|---|---|---|
 | `line-index-sync` | Line-Index Sync (marker scan, delta computation, idempotent TSV rewrite) | 0.1.0 | `backfilled` | [line-index-sync.md](line-index-sync.md) | Self-describing TSV index blocks: one constant delta puts every reported line number in post-rewrite coordinates; `sync` idempotent, `check` detects drift (exit 1) |
 | `lessons-record` | Lessons Record (append-only entry log with a derived self-describing TSV index) | 0.1.0 | `backfilled` | [lessons-record.md](lessons-record.md) | Append-only `LLT-NNNN` lesson log with closed vocabularies, bidirectional supersession, derived index, and the 0/1/2 exit model |
+| `rmf-evidence-bundle` | RMF Evidence Bundle (deterministic collection, control mapping, rendering, packaging) | 0.2.0 | `implemented` | [rmf-evidence-bundle.md](rmf-evidence-bundle.md) | Fixed 11-control catalog + explicit evidence corpus → deterministic SSP/SAP/SAR/POA&M bundles + canonical manifest from repo state (zero network, byte-identical reruns); pinned CLI/Makefile contract |
 
 ## Rules
 

@@ -1,0 +1,301 @@
+{
+  "catalog_version": 1,
+  "controls": [
+    {
+      "control_id": "ST-01",
+      "evidence": [
+        "BACKLOG.md"
+      ],
+      "method": "backlog index check",
+      "present": [
+        "BACKLOG.md"
+      ],
+      "satisfied": true,
+      "title": "Deterministic work records (backlog)"
+    },
+    {
+      "control_id": "ST-02",
+      "evidence": [
+        "LESSONS_LEARNED.md"
+      ],
+      "method": "lessons record check",
+      "present": [
+        "LESSONS_LEARNED.md"
+      ],
+      "satisfied": true,
+      "title": "Quality-control / lessons history"
+    },
+    {
+      "control_id": "ST-03",
+      "evidence": [
+        "algorithms/INDEX.md",
+        "algorithms/fixture.md"
+      ],
+      "method": "per-doc index check",
+      "present": [
+        "algorithms/INDEX.md",
+        "algorithms/fixture.md"
+      ],
+      "satisfied": true,
+      "title": "Algorithm / design records"
+    },
+    {
+      "control_id": "ST-04",
+      "evidence": [
+        "ARCHITECTURE.md",
+        "docs/dow-requirements.md"
+      ],
+      "method": "presence",
+      "present": [
+        "ARCHITECTURE.md",
+        "docs/dow-requirements.md"
+      ],
+      "satisfied": true,
+      "title": "Architecture & requirements traceability"
+    },
+    {
+      "control_id": "SC-01",
+      "evidence": [
+        "requirements.in",
+        "requirements-dev.in",
+        "requirements.txt",
+        "requirements-dev.txt"
+      ],
+      "method": "presence",
+      "present": [
+        "requirements.in",
+        "requirements-dev.in",
+        "requirements.txt",
+        "requirements-dev.txt"
+      ],
+      "satisfied": true,
+      "title": "Pinned, hashed dependency manifests"
+    },
+    {
+      "control_id": "SC-02",
+      "evidence": [
+        ".gitleaks.toml",
+        "hooks/pre-commit",
+        "hooks/pre-push"
+      ],
+      "method": "presence",
+      "present": [
+        ".gitleaks.toml",
+        "hooks/pre-commit",
+        "hooks/pre-push"
+      ],
+      "satisfied": true,
+      "title": "Secret-scanning policy & hooks"
+    },
+    {
+      "control_id": "CI-01",
+      "evidence": [
+        "Makefile",
+        ".github/workflows/ci.yml"
+      ],
+      "method": "presence",
+      "present": [
+        "Makefile",
+        ".github/workflows/ci.yml"
+      ],
+      "satisfied": true,
+      "title": "Gate definitions (local + CI)"
+    },
+    {
+      "control_id": "QA-01",
+      "evidence": [
+        "pyproject.toml",
+        "sonar-project.properties"
+      ],
+      "method": "presence",
+      "present": [
+        "pyproject.toml",
+        "sonar-project.properties"
+      ],
+      "satisfied": true,
+      "title": "Code quality configuration"
+    },
+    {
+      "control_id": "REL-01",
+      "evidence": [
+        "LICENSE",
+        "pyproject.toml"
+      ],
+      "method": "presence",
+      "present": [
+        "LICENSE",
+        "pyproject.toml"
+      ],
+      "satisfied": true,
+      "title": "License & packaging metadata"
+    },
+    {
+      "control_id": "REL-02",
+      "evidence": [
+        ".github/workflows/release.yml"
+      ],
+      "method": "presence",
+      "present": [
+        ".github/workflows/release.yml"
+      ],
+      "satisfied": true,
+      "title": "Release pipeline with provenance"
+    },
+    {
+      "control_id": "SB-01",
+      "evidence": [
+        "dist/sbom.json"
+      ],
+      "method": "presence",
+      "present": [
+        "dist/sbom.json"
+      ],
+      "satisfied": true,
+      "title": "Software bill of materials"
+    }
+  ],
+  "corpus": [
+    {
+      "lines": 8,
+      "path": ".github/workflows/ci.yml",
+      "sha256": "b6f2095af1b23ca1c0037a334f85cddfe6133998b9da20fbf92a9fdbf1e67a3c"
+    },
+    {
+      "lines": 10,
+      "path": ".github/workflows/release.yml",
+      "sha256": "8988b46868100970ab2abbad6b4a4840e7d533e38ea7433ce5672fb7176a3cda"
+    },
+    {
+      "lines": 4,
+      "path": ".gitleaks.toml",
+      "sha256": "15f533c7a592cebc0c1355988a044e50df70fa0169a8d29ce4cfc00fc6cfaa29"
+    },
+    {
+      "lines": 3,
+      "path": "ARCHITECTURE.md",
+      "sha256": "f406715c09d938caa8854a0cd5264d9ca761d5022e2a42e0750e56dd5efba05a"
+    },
+    {
+      "lines": 37,
+      "path": "BACKLOG.md",
+      "sha256": "49453f5a7006a0ec81eb8f790871faa99665e24862c44498b20fd3d0eeacf8dd"
+    },
+    {
+      "lines": 29,
+      "path": "LESSONS_LEARNED.md",
+      "sha256": "89688e8df6e2952c5b17cccb88402978cfba6ac1f546f49142fa1556bca70105"
+    },
+    {
+      "lines": 21,
+      "path": "LICENSE",
+      "sha256": "b942f996a47440b3f9e2ef70206e8f5ca58e28ad633cfdaaaf0113fc0ff0bcbb"
+    },
+    {
+      "lines": 4,
+      "path": "Makefile",
+      "sha256": "2c6c86af8325313a9856d33530c9a3b10a5587b9380a93406fd7cb9be5ba41ac"
+    },
+    {
+      "lines": 3,
+      "path": "README.md",
+      "sha256": "e66d6d197eda6e209308e46c379bb79b63d8eb7484ce8503c47f049c70be44f2"
+    },
+    {
+      "lines": 5,
+      "path": "algorithms/INDEX.md",
+      "sha256": "0cf1062761484390f726eb7219054c8da11440d5cf4cad50dba75987ac0c4d31"
+    },
+    {
+      "lines": 18,
+      "path": "algorithms/fixture.md",
+      "sha256": "46e0650acd2c3988e8eb5571e341026792a7ad614f0fbffc3728addea51d1968"
+    },
+    {
+      "lines": 6,
+      "path": "dist/sbom.json",
+      "sha256": "ef1aad3fd85b54261ea4a2dac17512f0deca5a1ea71e56de1c16e65898c189ac"
+    },
+    {
+      "lines": 3,
+      "path": "docs/dow-requirements.md",
+      "sha256": "a6ce29ee889b66144079101c08c11f39fa0cde3ecb21ecc3eda68ea604413d94"
+    },
+    {
+      "lines": 3,
+      "path": "hooks/pre-commit",
+      "sha256": "d03171e1259a99147a8b6ad260caaea51c31897da5f02274ef95dc294908b1d4"
+    },
+    {
+      "lines": 3,
+      "path": "hooks/pre-push",
+      "sha256": "d03171e1259a99147a8b6ad260caaea51c31897da5f02274ef95dc294908b1d4"
+    },
+    {
+      "lines": 4,
+      "path": "pyproject.toml",
+      "sha256": "731bd52c0789f3d854ef4cfc9e8dcaf40dce846909e29bb9308077b177ee54a6"
+    },
+    {
+      "lines": 1,
+      "path": "requirements-dev.in",
+      "sha256": "56fdf2dab12cce8330b2c121571c953799725e98c6185993a4b7761cdea9f227"
+    },
+    {
+      "lines": 2,
+      "path": "requirements-dev.txt",
+      "sha256": "71ddb6315d482c75b765a7f108d24ac0c7d0ae4f0709e021701ed6445968aed1"
+    },
+    {
+      "lines": 1,
+      "path": "requirements.in",
+      "sha256": "56fdf2dab12cce8330b2c121571c953799725e98c6185993a4b7761cdea9f227"
+    },
+    {
+      "lines": 2,
+      "path": "requirements.txt",
+      "sha256": "71ddb6315d482c75b765a7f108d24ac0c7d0ae4f0709e021701ed6445968aed1"
+    },
+    {
+      "lines": 2,
+      "path": "sonar-project.properties",
+      "sha256": "cb64dc1c0bc0526bdba7eb433bef5ffa69e4ebb236beac8b5e720137e98cf8b7"
+    }
+  ],
+  "docs": {
+    "POAM": "4829e98aa09be482e2e10d7e015f467f2f023ec632f6535c5befa4d641fe7c7a",
+    "SAP": "918490facdf9b105610c5db068ac76136c3190f571611a60df006612a060eb13",
+    "SAR": "a5152151dfd237f3413f51fa606324c117fb1f4e0cbcd3fd3e3fe9ec2feb5e44",
+    "SSP": "1a094222bf89f4957c055201f88313959881b1b67a3292c83f18db1f228a304e"
+  },
+  "generated_by": "securetrace 0.1.0",
+  "git_head": "no-git",
+  "schema": "securetrace.rmf-bundle/1",
+  "state": {
+    "algorithms": {
+      "docs": [
+        "algorithms/fixture.md"
+      ],
+      "total": 1
+    },
+    "backlog": {
+      "by_status": {
+        "DONE": 1,
+        "OPEN": 1
+      },
+      "open_items": [
+        [
+          "B2",
+          "Second item",
+          "OPEN"
+        ]
+      ],
+      "total": 2
+    },
+    "lessons": {
+      "by_severity": {
+        "high": 1
+      },
+      "total": 1
+    }
+  }
+}
