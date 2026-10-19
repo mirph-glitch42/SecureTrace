@@ -10,23 +10,34 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	30
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	32	45
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	46	59
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	60	73
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	74	87
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	88	101
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	102	115
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	116	129
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	130	143
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	144	157
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	158	171
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	172	185
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	186	199
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	200	213
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	214	227
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	228	241
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	242	255
+LLT_INDEX_BLOCK	—	—	—	—	—	11	41
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	43	56
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	57	70
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	71	84
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	85	98
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	99	112
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	113	126
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	127	140
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	141	154
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	155	168
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	169	182
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	183	196
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	197	210
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	211	224
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	225	238
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	239	252
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	253	266
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	267	280
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	281	294
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	295	308
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	309	322
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	323	336
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	337	350
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	351	364
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	365	378
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	379	392
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	393	406
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	407	420
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -252,3 +263,157 @@ LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling lo
 - **Supersedes:** —
 - **Prevention:** Always quote URLs in shell commands; json.load(strict=False) for GitHub API responses; assert a live-only field per poll iteration.
 - **References:** GitHub REST API; LLT-0003 (zsh word splitting)
+
+<!-- LLT:ENTRY:LLT-0017 -->
+## LLT-0017 — Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails
+
+- **Recorded:** 2026-10-19
+- **Category:** debugging
+- **Severity:** high
+- **Status:** active
+- **Context:** B5 release.yml carried a duplicate `attestations:` key under `permissions`; ~13 ephemeral workflow runs all started with the fallback name (file path) and 0 jobs, and local YAML validation never flagged it.
+- **Pitfall:** Ruby Psych and PyYAML silently accept duplicate mapping keys, so local yaml-check passes; the GitHub Actions workflow parser (yaml.v3) hard-fails the whole workflow definition, producing runs named after the file with zero jobs.
+- **Solution:** Keep exactly one key per mapping; add a strict duplicate-key check over .github/workflows/*.yml to both pre-commit and CI so local green means GitHub green.
+- **Supersedes:** —
+- **Prevention:** Duplicate-key lint for workflow files in pre-commit and CI.
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0018 -->
+## LLT-0018 — Fallback-name workflow run with 0 jobs means a definition parse error
+
+- **Recorded:** 2026-10-19
+- **Category:** debugging
+- **Severity:** medium
+- **Status:** active
+- **Context:** B5 debugging: every push produced a run named after the workflow file path with zero jobs.
+- **Pitfall:** A run whose name is the file path (fallback), with 0 jobs, firing on every push means the workflow definition failed to parse, not that a job failed; hunting for job logs is a dead end because none exist.
+- **Solution:** Quick check: GET /repos/{o}/{r}/actions/workflows/<file> returns the parsed name and state; if name is the file path the definition is broken, so fix the YAML and re-push.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0019 -->
+## LLT-0019 — gh attestation create does not exist; use actions/attest
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** medium
+- **Status:** active
+- **Context:** B5 originally planned provenance creation with `gh attestation create`.
+- **Pitfall:** Current gh CLI has no `attestation create` subcommand (only download, trusted-root, verify); the plan looked plausible but could not run.
+- **Solution:** Create provenance attestations in-workflow with the SHA-pinned `actions/attest` (v4, provenance + multi-subject) and capture the bundle via `steps.attest.outputs.bundle-path`.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0020 -->
+## LLT-0020 — gh attestation verify: --signer-repo silently shadows --signer-workflow
+
+- **Recorded:** 2026-10-19
+- **Category:** security
+- **Severity:** high
+- **Status:** active
+- **Context:** B5 verify step identity pinning.
+- **Pitfall:** Passing both `--signer-repo` and `--signer-workflow` uses the repo-level (broader) match and silently ignores the workflow-level pin, weakening the identity check with no warning.
+- **Solution:** Never pass both; pin exactly `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` for a workflow-specific identity.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0021 -->
+## LLT-0021 — Verify action input names against the action.yml at the pinned SHA
+
+- **Recorded:** 2026-10-19
+- **Category:** dependencies
+- **Severity:** high
+- **Status:** active
+- **Context:** Pinned sigstore/cosign-installer to SHA 6f9f177... and set input `cosign-release: v2.6.5`; an earlier draft used `COSIGN_VERSION`.
+- **Pitfall:** Action input names differ across major versions and unknown inputs are silently ignored; `COSIGN_VERSION` (v1-era) against a v3+ action installs an unpinned version instead of the intended one, breaking reproducibility.
+- **Solution:** Fetch the action.yml at the exact pinned SHA before relying on an input name (cosign-installer v3+: `cosign-release`); treat input-accepted-but-no-effect as a red flag.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0022 -->
+## LLT-0022 — gh release create uses --verify-tag, not --verify
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** low
+- **Status:** active
+- **Context:** B5 publish step.
+- **Pitfall:** `gh release create` has no `--verify` flag; the tag-verification flag is `--verify-tag`, and the wrong flag fails with a confusing unknown-flag error.
+- **Solution:** Use `gh release create <tag> --verify-tag`; `--verify` belongs to `gh release verify`.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0023 -->
+## LLT-0023 — Keep workflow YAML pure ASCII
+
+- **Recorded:** 2026-10-19
+- **Category:** debugging
+- **Severity:** medium
+- **Status:** active
+- **Context:** B5 release.yml authoring.
+- **Pitfall:** Non-ASCII characters in .github/workflows files are a known GitHub workflow parse-failure trigger; the file still parses locally and the failure appears as fallback-name, 0-job runs.
+- **Solution:** Keep workflow YAML strictly ASCII (no em-dashes, no unicode arrows); put typographic niceties in docs only.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0024 -->
+## LLT-0024 — gh release verify is async: GitHub-created release attestations lag
+
+- **Recorded:** 2026-10-19
+- **Category:** security
+- **Severity:** high
+- **Status:** active
+- **Context:** B5 final verify loop; run 39245874727 hit a 0.4 s race.
+- **Pitfall:** `gh release verify` looks up the GitHub-created release attestation (subject = tag object digest `sha1:<tagsha>`, predicate `release`, initiator `github`), created asynchronously after publish; a verify within ~1 s can fail with `no attestations for tag`. Distinct from artifact provenance attestations (subject `sha256:<file>`).
+- **Solution:** Wrap `gh release verify` + `verify-asset` in a bounded retry loop with backoff (10 attempts x 30 s); first-attempt success is timing luck, the loop makes the flow robust.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0025 -->
+## LLT-0025 — GitHub attestations list API is keyed by subject digest
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** medium
+- **Status:** active
+- **Context:** B5 attestation evidence collection.
+- **Pitfall:** `GET /repos/{o}/{r}/attestations` returns an empty list and `?ref=` 404s; there is no GET-by-id endpoint, and list entries may omit an `id` field.
+- **Solution:** Look up by subject digest: `GET /repos/{o}/{r}/attestations/sha256:<hex>` for artifact provenance, `sha1:<tag-object-sha>` for tag/release attestations; use `initiator`/`predicate` for identity, not `id`.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0026 -->
+## LLT-0026 — GitHub can invisibly block re-creation of a specific tag name
+
+- **Recorded:** 2026-10-19
+- **Category:** environment
+- **Severity:** high
+- **Status:** active
+- **Context:** B5 closeout: after deleting tag v0.1.0 and release 417220556, ~8 attempts over ~10 min to recreate tag `v0.1.0` all failed (GH013 `creations being restricted` / `422 Reference update failed`) while new names (`probe-tag-check`, `v0.2.9-probe`) worked.
+- **Pitfall:** REST `rulesets` and GraphQL `repository.rulesets` both report empty and there is no user-level ruleset endpoint to inspect, so the block is invisible; tag deletion is also coupled to release existence (422 until the release is deleted first).
+- **Solution:** Probe with a fresh name to confirm the block is name-specific, then ship the identical hardening under the next version tag and bump the package version to keep artifact names consistent with the tag; record the block in the backlog instead of burning time hunting the ruleset.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —
+
+<!-- LLT:ENTRY:LLT-0027 -->
+## LLT-0027 — RMF golden manifest embeds the live package version
+
+- **Recorded:** 2026-10-19
+- **Category:** testing
+- **Severity:** medium
+- **Status:** active
+- **Context:** B5 version bump 0.1.0 to 0.1.1 broke `test_golden_renderings` by exactly one byte.
+- **Pitfall:** `manifest.json` golden embeds `generated_by: securetrace <__version__>` (src/securetrace/rmf/deliverables.py:616), so every version bump breaks the golden by one character.
+- **Solution:** Regenerate goldens through the test own code path (`collect_evidence` + `package` on a `tests/fixtures/rmf/mini-repo` fixture copy); only `manifest.json` should change, SSP/SAP/SAR/POAM stay byte-identical.
+- **Supersedes:** —
+- **Prevention:** —
+- **References:** —

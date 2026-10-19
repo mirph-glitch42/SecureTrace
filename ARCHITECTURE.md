@@ -89,10 +89,10 @@ Full requirements + sources: [`docs/dow-requirements.md`](docs/dow-requirements.
 
 | Requirement (source) | Implemented by | Status |
 |---|---|---|
-| RMF 7 steps, NIST SP 800-37 (DoDI 8510.01) | `securetrace.rmf` deliverable scaffolds (B4) | planned |
-| **Assess Only** evidence for software below system level (DoDI 8510.01) | dated, deterministic evidence bundles from CI state (B4) | planned |
-| SSP / SAP / SAR / POA&M | `securetrace.rmf` renderers with control→evidence mapping asserted in tests (B4) | planned |
-| SWP ≤ 6-month increments, cATO / speed-of-relevance (DoDI 5000.87 + integration guidance) | tag-triggered release pipeline regenerating evidence per release (B1/B4/B5) | B1 done, B4/B5 planned |
+| RMF 7 steps, NIST SP 800-37 (DoDI 8510.01) | `securetrace.rmf` deliverable scaffolds (B4) | done |
+| **Assess Only** evidence for software below system level (DoDI 8510.01) | dated, deterministic evidence bundles from CI state (B4) | done |
+| SSP / SAP / SAR / POA&M | `securetrace.rmf` renderers with control→evidence mapping asserted in tests (B4) | done |
+| SWP ≤ 6-month increments, cATO / speed-of-relevance (DoDI 5000.87 + integration guidance) | tag-triggered release pipeline regenerating evidence per release (B1/B4/B5) | done (B1+B4+B5) |
 | DevSecOps discipline (SSDF SP 800-218) | this repo's own gates as reference implementation (B1) | done |
 | Deterministic process records (SWP QC expectation) | BACKLOG.md, LESSONS_LEARNED.md, algorithms/ (B1) | done |
 | Supply-chain evidence | pinned hashed lockfiles + per-run and per-release SBOM (B1) | done |

@@ -9,9 +9,9 @@ B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low
 B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
-B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	204
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	205	243
-CONSTRAINTS	-	-	-	244	252
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	180	216
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	217	255
+CONSTRAINTS	-	-	-	256	264
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -178,7 +178,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Lessons:** LLT-0013 (golden HEAD baking), LLT-0014 (unguarded argparse sub-command attribute), LLT-0015 (`dist/` gitignore shadowed a fixture — the CI root cause), LLT-0016 (zsh glob + strict-JSON polling loops).
 
 <!-- BACKLOG:ITEM:B5 -->
-## B5. Release hardening: keyless signing + provenance for release artifacts — **IN PROGRESS**
+## B5. Release hardening: keyless signing + provenance for release artifacts — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -200,7 +200,19 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — design pivot (run 39234156533 went RED: current `gh` CLI has **no create subcommand** for `gh attestation` — only download/trusted-root/verify). New provenance path per 2026 GitHub docs: `actions/attest` (SHA-pinned v4, SLSA v1 provenance mode, multi-subject) + repo-level **immutable releases** (`PUT /repos/.../immutable-releases`): tag+assets locked, auto signed release attestation at creation, consumer recipe `gh release verify` / `gh release verify-asset`. cosign keyless signing + identity-pinned verify unchanged. ARCHITECTURE.md §5 updated as design of record.
   - 2026-10-19 — root cause of the 0-job fallback-name failures found and fixed: duplicate `attestations:` key in `permissions` (GitHub's yaml.v3 parser hard-fails on duplicate mapping keys; Ruby Psych / PyYAML silently tolerate — local green, GitHub red). Proven by ~13 controlled temp-workflow tests + a Ruby duplicate-key walker. Fix `e116bd2`: single `attestations: write`, release.yml pure ASCII, ARCHITECTURE.md §5 synced, temp diagnostics removed; gate green (146 tests); workflow re-registered as `Release` (active); re-tagged `v0.1.0` -> `e116bd2`; CI on `e116bd2` green.
   - 2026-10-19 — run 39245874727: all 16 steps executed, release + 6 assets published, but step 16 `gh release verify` failed `no attestations for tag v0.1.0`. Root cause: `gh release verify` looks up the **release attestation** (subject = tag ref digest `sha1:<tag-object-sha>`, predicate `release`, initiator `github`) which GitHub creates **asynchronously** after publish — the verify ran ~0.4 s after `gh release create`. Attestation confirmed present minutes later (id 57367814, `GET /repos/.../attestations/sha1:e29193ea...`). Fixed: step 16 now retries 10 x 30 s; step 15 idempotent (`gh release delete` before `create`). ARCHITECTURE.md §5 documents both attestation classes + digest-keyed list endpoints.
-- **Closeout:** (pending)
+  - 2026-10-19 — re-tag `v0.1.0` → `1f89f0c` blocked by GitHub: deleting the old tag required deleting release 417220556 first (tag+release coupled), but then re-creating the exact name `v0.1.0` was refused (GH013 `Cannot create ref due to creations being restricted`; REST + GraphQL ruleset lists empty at repo level, no orgs, no user-level endpoint; new tag names — `probe-tag-check`, `v0.2.9-probe` — created and deleted fine; ~8 attempts over ~10 min all failed). Matches a GitHub community report of the identical invisible block. Decision: ship the identical hardening as **v0.1.1**; version bump `0.1.0 → 0.1.1` (`pyproject.toml` + `__version__` + regenerated RMF golden `manifest.json` `generated_by`; consumer recipe in ARCHITECTURE.md §5 switched to `<tag>` placeholders so it never pins a version). Commit `8db543c`; CI run 39261482050 green.
+  - 2026-10-19 — **Release run 39261660707** (tag `v0.1.1` → `8db543c`): all 16 steps **success**, including the first real pass of the idempotent publish + retry-verify design (step 16 passed on attempt 1/10 — `✓ Release v0.1.1 verified!` + `verify-asset` for wheel and sdist). Release 417335625 published with 6 assets: wheel `sha256:f76b43…` (34,307 B), sdist `sha256:361a3c…` (172,244 B), `sbom.json`, 2× `*.sigstore.json`, `attestation-bundle.json`. Attestations confirmed via digest-keyed API: release attestation on tag object (initiator `github`) + artifact attestations on the wheel digest.
+  - 2026-10-19 — tamper red-drill (acceptance: verify fails on tampered artifact): throwaway branch `bionic/b5-tamper-drill` @ `939600e` inserted a byte-flip of both `dist/` artifacts AFTER signing+attestation, BEFORE verify; tag `v0.0.0-drill` → run **39259302690** = `completed|failure`, failing step exactly `Verify signatures (identity-pinned…)` — cosign: `matching bundle to payload: bundle="e18ab5…" payload="c34cc7…"`; all publish steps skipped; **0 releases** existed after the run. Drill tag + branch deleted (remote + local).
+  - 2026-10-19 — status → DONE (closeout below).
+- **Closeout (2026-10-19, DONE):**
+  - **Version:** package `0.1.0 → 0.1.1` (the `v0.1.0` tag name is blocked for re-creation by an invisible GitHub-side rule — see progress above; `v0.1.1` ships the identical code + hardening and keeps artifact names consistent with the tag).
+  - **Commits:** `e116bd2` (duplicate-`attestations:`-key parse-failure fix), `1f89f0c` (retry-verify + idempotent delete-then-create publish), `8db543c` (version bump 0.1.0→0.1.1, golden `generated_by` regen, `<tag>` consumer recipe).
+  - **CI / runs:** CI run 39261482050 on `8db543c` — `quality` + `security` + `SonarCloud` = success. Release run 39261660707 (tag `v0.1.1`) — 16/16 steps success. Red-drill run 39259302690 (tag `v0.0.0-drill`) — RED at `Verify signatures` exactly as designed, no release created. Prior red: run 39245874727 (async release-attestation race at step 16 — fixed by `1f89f0c`).
+  - **Acceptance (before→after):**
+    - Before: unsigned wheel/sdist, no provenance, mutable release, no consumer verification path, no tamper detection.
+    - After: every published artifact carries (a) a Sigstore **keyless** signature bundle (Fulcio OIDC; `cosign verify-blob` green with identity pinned to workflow file + tag), (b) **SLSA v1 provenance** attestation (`actions/attest@1e69f48…`; `gh attestation verify --signer-workflow …/release.yml` green), (c) a **GitHub release attestation** (initiator `github`, verified in-pipeline by `gh release verify` + `gh release verify-asset`, retry-tolerant to the documented async gap); repo-level **immutable releases**; idempotent publish (rerun/re-tag safe); consumer recipe + both attestation classes documented in ARCHITECTURE.md §5.
+    - Tamper drill: a single byte flipped after signing+attestation → run RED at `Verify signatures` (cosign bundle-vs-payload digest mismatch), zero releases published — acceptance criterion met.
+  - **Lessons:** LLT-0017…LLT-0027 (duplicate YAML keys vs GitHub parser; workflow parse-failure signature; `gh attestation create` absent; `--signer-repo` shadowing; action input names at the pinned SHA; `--verify-tag`; ASCII-only workflow YAML; async release-attestation race; digest-keyed attestations API; invisible tag-name re-creation block; golden manifest embeds package version).
 
 <!-- BACKLOG:ITEM:B6 -->
 ## B6. SonarCloud quality gate: triage findings on vendored scanner config + scripts — **DONE**
