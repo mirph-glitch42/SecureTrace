@@ -11,9 +11,9 @@ B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	L
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
 B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	290
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	291	321
-CONSTRAINTS	-	-	-	322	330
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	291
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	292	322
+CONSTRAINTS	-	-	-	323	331
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -287,6 +287,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — status → IN PROGRESS (G2: flip rides with first work); B8 stays IN PROGRESS until the joint closeout
   - 2026-10-19 — WI 2 (increment 1, S6353): `[0-9]` → ASCII-scoped `(?a:\d)` — `record.py` ×6 (ENTRY_MARKER_RE, HEADING_RE, ID_RE, DATE_RE) + `deliverables.py` ×1 (_B_ITEM_RE); the `LLT-[0-9]{4}` error-message literal is a format description, not a regex (left per B7 blast radius); `algorithms/lessons-record.md` cited patterns synced + 0.1.1 (ALRK rule 5) + registry row; `make gate` green (155 tests, goldens byte-identical, no regen)
   - 2026-10-19 — WI 3 (increment 2, S9409 ×10): the 4 RMF renderers (`render_ssp`/`render_sap`/`render_sar`/`render_poam`) rewritten so no two consecutive `lines.append` calls remain — static runs became list literals / `lines.extend([...])`; loop bodies keep one append per iteration; output byte-identical (`tests/rmf/` goldens pass, no regeneration); no doc change (algorithm unchanged — verified `rmf-evidence-bundle.md` cites concepts, not code); `make gate` green (155 tests)
+  - 2026-10-19 — WI 4 (increment 3, S1192 ×5): module constants before `CATALOG` — `BACKLOG_DOC` / `LESSONS_DOC` / `PYPROJECT_TOML` / `SEPARATOR_3` / `SEPARATOR_4` — replacing every code occurrence (4+4+3 file-name sites in CATALOG/FIXED/state parsers; 3+3 separator sites across the 5 renderers); human-readable remediation prose in CATALOG left untouched (format description, not code); each literal now appears exactly once; output byte-identical (goldens pass, no regeneration); no doc change (algorithm unchanged); `make gate` green (155 tests)
 
 <!-- BACKLOG:ITEM:B8 -->
 ## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **IN PROGRESS**

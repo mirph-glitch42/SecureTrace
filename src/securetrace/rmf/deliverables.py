@@ -128,19 +128,29 @@ class Evidence:
     catalog_version: int
 
 
+#: Fixed file names cited by the catalog, the fixed corpus, and the state parsers.
+BACKLOG_DOC = "BACKLOG.md"
+LESSONS_DOC = "LESSONS_LEARNED.md"
+PYPROJECT_TOML = "pyproject.toml"
+
+#: Markdown table separators used by the renderers (3- and 4-column).
+SEPARATOR_3 = "|---|---|---|"
+SEPARATOR_4 = "|---|---|---|---|"
+
+
 #: Fixed control catalog — defined, not discovered (catalog order is the render order).
 CATALOG: tuple[ControlSpec, ...] = (
     ControlSpec(
         "ST-01",
         "Deterministic work records (backlog)",
-        ("BACKLOG.md",),
+        (BACKLOG_DOC,),
         "backlog index check",
         "Restore BACKLOG.md and regenerate its index (securetrace backlog sync).",
     ),
     ControlSpec(
         "ST-02",
         "Quality-control / lessons history",
-        ("LESSONS_LEARNED.md",),
+        (LESSONS_DOC,),
         "lessons record check",
         "Restore LESSONS_LEARNED.md and regenerate its index (securetrace lessons sync).",
     ),
@@ -183,14 +193,14 @@ CATALOG: tuple[ControlSpec, ...] = (
     ControlSpec(
         "QA-01",
         "Code quality configuration",
-        ("pyproject.toml", "sonar-project.properties"),
+        (PYPROJECT_TOML, "sonar-project.properties"),
         "presence",
         "Restore pyproject.toml and sonar-project.properties.",
     ),
     ControlSpec(
         "REL-01",
         "License & packaging metadata",
-        ("LICENSE", "pyproject.toml"),
+        ("LICENSE", PYPROJECT_TOML),
         "presence",
         "Restore LICENSE and the packaging metadata in pyproject.toml.",
     ),
@@ -212,8 +222,8 @@ CATALOG: tuple[ControlSpec, ...] = (
 
 #: The fixed evidence corpus: the 19 unique paths the catalog cites, plus README.md.
 FIXED: tuple[str, ...] = (
-    "BACKLOG.md",
-    "LESSONS_LEARNED.md",
+    BACKLOG_DOC,
+    LESSONS_DOC,
     "algorithms/INDEX.md",
     "ARCHITECTURE.md",
     "docs/dow-requirements.md",
@@ -226,7 +236,7 @@ FIXED: tuple[str, ...] = (
     "hooks/pre-push",
     "Makefile",
     ".github/workflows/ci.yml",
-    "pyproject.toml",
+    PYPROJECT_TOML,
     "sonar-project.properties",
     "LICENSE",
     ".github/workflows/release.yml",
@@ -296,10 +306,10 @@ def _lessons_state(text: str | None) -> LessonsState | None:
 def _control_ok(spec: ControlSpec, texts: dict[str, str], algo_docs: tuple[str, ...]) -> bool:
     """Live checker for a control (vacuous for ``presence`` methods)."""
     if spec.control_id == "ST-01":
-        text = texts.get("BACKLOG.md")
+        text = texts.get(BACKLOG_DOC)
         return text is not None and backlog_index.is_fresh(text)
     if spec.control_id == "ST-02":
-        text = texts.get("LESSONS_LEARNED.md")
+        text = texts.get(LESSONS_DOC)
         if text is None:
             return False
         try:
@@ -365,8 +375,8 @@ def collect_evidence(repo: str | Path) -> Evidence:
         controls.append(ControlResult(spec, resolved, present, satisfied))
     return Evidence(
         corpus=tuple(corpus),
-        backlog=_backlog_state(texts.get("BACKLOG.md")),
-        lessons=_lessons_state(texts.get("LESSONS_LEARNED.md")),
+        backlog=_backlog_state(texts.get(BACKLOG_DOC)),
+        lessons=_lessons_state(texts.get(LESSONS_DOC)),
         algorithms=AlgorithmsState(total=len(algo_docs), docs=algo_docs),
         controls=tuple(controls),
         git_head=_git_head(root),
@@ -398,7 +408,7 @@ def _satisfied_count(evidence: Evidence) -> int:
 
 
 def _baseline_table(evidence: Evidence) -> list[str]:
-    lines = ["| Control | Title | Method | Evidence |", "|---|---|---|---|"]
+    lines = ["| Control | Title | Method | Evidence |", SEPARATOR_4]
     for control in evidence.controls:
         lines.append(
             f"| {control.spec.control_id} | {control.spec.title} | {control.spec.method} "
@@ -489,7 +499,7 @@ def render_sap(evidence: Evidence) -> str:
         "## 2. Control selection",
         "",
         "| Control | Title | Method |",
-        "|---|---|---|",
+        SEPARATOR_3,
     ]
     for control in evidence.controls:
         lines.append(
@@ -507,7 +517,7 @@ def render_sap(evidence: Evidence) -> str:
         ]
     )
     lines.extend(["", "## 4. Evidence corpus", ""])
-    lines.extend(["| Path | Lines | SHA-256 |", "|---|---|---|"])
+    lines.extend(["| Path | Lines | SHA-256 |", SEPARATOR_3])
     for entry in evidence.corpus:
         lines.append(f"| `{entry.path}` | {entry.lines} | {entry.sha256} |")
     return "\n".join(lines) + "\n"
@@ -530,7 +540,7 @@ def render_sar(evidence: Evidence) -> str:
         "## 2. Control results",
         "",
         "| Control | Title | Evidence | Result |",
-        "|---|---|---|---|",
+        SEPARATOR_4,
     ]
     for control in evidence.controls:
         result = "SATISFIED" if control.satisfied else "NOT SATISFIED"
@@ -563,7 +573,7 @@ def render_poam(evidence: Evidence) -> str:
     if not findings:
         lines.append("None — all controls satisfied.")
     else:
-        lines.extend(["| # | Control | Finding | Remediation |", "|---|---|---|---|"])
+        lines.extend(["| # | Control | Finding | Remediation |", SEPARATOR_4])
         for number, control in enumerate(findings, start=1):
             lines.append(
                 f"| {number} | {control.spec.control_id} | {_finding(control)} | "
@@ -574,7 +584,7 @@ def render_poam(evidence: Evidence) -> str:
     if backlog is None or not backlog.open_items:
         lines.append("none")
     else:
-        lines.extend(["| Item | Title | Status |", "|---|---|---|"])
+        lines.extend(["| Item | Title | Status |", SEPARATOR_3])
         for item_id, title, status in backlog.open_items:
             lines.append(f"| {item_id} | {title} | {status} |")
     return "\n".join(lines) + "\n"
