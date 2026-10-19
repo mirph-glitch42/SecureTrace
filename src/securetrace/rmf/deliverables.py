@@ -57,7 +57,7 @@ CATALOG_VERSION = 1
 OPEN_STATUSES = ("OPEN", "IN_PROGRESS")
 GIT_TIMEOUT_SECONDS = 10
 
-_B_ITEM_RE = re.compile(r"^B[0-9]+$")
+_B_ITEM_RE = re.compile(r"^B(?a:\d)+$")
 
 
 @dataclass(frozen=True)

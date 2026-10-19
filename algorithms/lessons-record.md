@@ -19,12 +19,12 @@ REFERENCES	658	666
 |---|---|
 | Name | Lessons Record (append-only entry log with a derived self-describing TSV index) |
 | Slug | lessons-record |
-| Version | 0.1.0 |
+| Version | 0.1.1 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
-| Last modified | 2026-10-18 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f` |
+| Last modified | 2026-10-19 |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | <br>`scripts/manage_lessons.py:L79-L134` (constants, vocabularies, exceptions, `Entry`) — `L158` (`atomic_write`) — `L173-L313` (`find_index_block`, `parse_entries`, `check_consistency`, `structural_errors`) — `L334-L390` (delta core: `expected_index_rows`, `index_is_fresh`, `regenerate`) — `L409-L467` (`build_template`, `render_entry`, `max_id`, `cmd_init`, `validate_add_args`) — `L492-L605` (`cmd_add`, `cmd_sync`, `cmd_check`, `cmd_next_id`) — `L607-L674` (`build_parser`, `main`) |
@@ -225,8 +225,8 @@ constants
                    dependencies, tooling, environment, process, data, other)
     SEVERITIES := (low, medium, high, critical)
     STATUSES   := (active, superseded)
-    ID_RE   := ^LLT-[0-9]{4}$
-    DATE_RE := ^[0-9]{4}-[0-9]{2}-[0-9]{2}$    # DEV(3): format-only, no calendar validation
+    ID_RE   := ^LLT-(?a:\d){4}$
+    DATE_RE := ^(?a:\d){4}-(?a:\d){2}-(?a:\d){2}$    # DEV(3): format-only, no calendar validation
     HEADER  := "id\ttitle\tcategory\tseverity\tstatus\trecorded\tstart_line\tend_line"
 
 find_index_block(lines) -> (begin | none, end | none)
@@ -483,8 +483,8 @@ supersession holds (LLT-0002 points at LLT-0001, and LLT-0001 is the only
   (same filesystem — `os.replace` is atomic only then) + `os.replace`; the
   temp file is unlinked on any failure path.
 - **Regexes** (module level, compiled once): `BEGIN_RE`/`END_RE` tolerate
-  inner whitespace; `ENTRY_MARKER_RE` = `^<!--\s*LLT:ENTRY:(LLT-[0-9]{4})\s*-->\s*$`;
-  `HEADING_RE` = `^##\s+(LLT-[0-9]{4})\s+—\s+(\S.*?)\s*$` — the em dash is
+  inner whitespace; `ENTRY_MARKER_RE` = `^<!--\s*LLT:ENTRY:(LLT-(?a:\d){4})\s*-->\s*$`;
+  `HEADING_RE` = `^##\s+(LLT-(?a:\d){4})\s+—\s+(\S.*?)\s*$` — the em dash is
   *required*; `FIELD_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*(.*?)\s*$` (colon
   inside the bold, value may be empty).
 - **Vocabularies:** 11 categories, 4 severities, 2 statuses — closed sets

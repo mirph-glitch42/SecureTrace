@@ -11,9 +11,9 @@ B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	L
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
 B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	OPEN	Low	259	287
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	288	318
-CONSTRAINTS	-	-	-	319	327
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	289
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	290	320
+CONSTRAINTS	-	-	-	321	329
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -21,7 +21,7 @@ CONSTRAINTS	-	-	-	319	327
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B7 | **In progress:** B8 | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
+**Queue:** — | **In progress:** B8, B7 | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -257,7 +257,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Notes:** the endpoint 404s in the session handoff were a name miss — the working call is `POST https://sonarcloud.io/api/issues/do_transition` with `issue=<key>`, `transition=falsepositive|wontfix`, `comment=<text>` (recorded in LLT-0008).
 
 <!-- BACKLOG:ITEM:B7 -->
-## B7. SonarCloud code-smell remediation in securetrace core (41 findings, 4 files) — **OPEN**
+## B7. SonarCloud code-smell remediation in securetrace core (41 findings, 4 files) — **IN PROGRESS**
 
 - **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
 - **Requested:** 2026-10-19
@@ -284,6 +284,8 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Ordering:** after B8 (queue priority: High before Medium; B8's gate change lands first so B7's refactor churn runs under it).
 - **Progress:**
   - 2026-10-19 — created (G1); status OPEN; queued behind B8 (G9)
+  - 2026-10-19 — status → IN PROGRESS (G2: flip rides with first work); B8 stays IN PROGRESS until the joint closeout
+  - 2026-10-19 — WI 2 (increment 1, S6353): `[0-9]` → ASCII-scoped `(?a:\d)` — `record.py` ×6 (ENTRY_MARKER_RE, HEADING_RE, ID_RE, DATE_RE) + `deliverables.py` ×1 (_B_ITEM_RE); the `LLT-[0-9]{4}` error-message literal is a format description, not a regex (left per B7 blast radius); `algorithms/lessons-record.md` cited patterns synced + 0.1.1 (ALRK rule 5) + registry row; `make gate` green (155 tests, goldens byte-identical, no regen)
 
 <!-- BACKLOG:ITEM:B8 -->
 ## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **IN PROGRESS**
