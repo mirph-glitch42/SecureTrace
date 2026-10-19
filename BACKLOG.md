@@ -2,16 +2,18 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	15
-HEADER	-	-	-	17	23
-QUEUE	-	-	-	24	30
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	31	70
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	180	216
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	217	255
-CONSTRAINTS	-	-	-	256	264
+INDEX_BLOCK	-	-	-	3	17
+HEADER	-	-	-	19	25
+QUEUE	-	-	-	26	33
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	34	73
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	74	102
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	103	141
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	OPEN	Low	259	287
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	OPEN	Low	288	314
+CONSTRAINTS	-	-	-	315	323
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -19,14 +21,15 @@ CONSTRAINTS	-	-	-	256	264
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B5 | **In progress:** B5 | **Done:** B1, B2, B3, B4, B6 | **Updated:** 2026-10-19
+**Queue:** B8, B7 | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B5** (Low) — release hardening: keyless signing + provenance for release artifacts
+1. **B8** (High) — workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)
+2. **B7** (Medium) — SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)
 
-Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B6** (SonarCloud triage) — see their closeouts.
+Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
 ## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
@@ -252,6 +255,62 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
     - `sonar-project.properties` committed at repo root: `sonar.exclusions=.gitleaks-defaults.toml` + provenance comment (prevents re-flagging on future analyses).
     - `make gate` green locally (18 tests) before push; pre-commit gate green on commit.
   - **Notes:** the endpoint 404s in the session handoff were a name miss — the working call is `POST https://sonarcloud.io/api/issues/do_transition` with `issue=<key>`, `transition=falsepositive|wontfix`, `comment=<text>` (recorded in LLT-0008).
+
+<!-- BACKLOG:ITEM:B7 -->
+## B7. SonarCloud code-smell remediation in securetrace core (41 findings, 4 files) — **OPEN**
+
+- **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
+- **Requested:** 2026-10-19
+- **Priority:** Medium
+- **Request (verbatim):** proposal — "remediate the 41 SonarCloud code smells in `src/securetrace` + `tests` (S6353 regex digit classes, S8786 super-linear regexes, S3776 complex functions, S1192 magic strings, S9409 consecutive appends, S5778 multi-invocation exception tests) with behavior-preserving refactors, each increment gate-green before commit"; user approval (2026-10-19): "go for both"
+- **Problem / evidence:** SonarCloud API census (`GET /api/issues/search?projects=mirph-glitch42_SecureTrace&ps=200`, measured 2026-10-19): 84 total issues, **0 open** — but 41 code smells in `src/securetrace` + `tests` are held as `WONTFIX` stopgaps (gate-green triage) instead of fixed: `src/securetrace/lessons/record.py` — S6353×6 (L61, 62, 65, 66) + S8786×2 (L62, 63) + S3776×4 (L155 cc=63, L256 cc=16, L436 cc=16, L468 cc=23); `src/securetrace/rmf/deliverables.py` — S6353×1 (L60) + S1192×5 (L136, 143, 186, 401, 502) + S9409×10 (L445, 465, 469, 477, 487, 507, 531, 550, 566, 581); `src/securetrace/backlog/index.py` — S8786×1 (L57); `tests/lessons/test_record.py` — S5778×12 (L196–278).
+- **Chosen approach:** six behavior-preserving increments in dependency order (S6353 → S9409 → S1192 → S8786 → S3776 → S5778), each `make gate`-green before commit (146 tests + `tests/rmf/` goldens pin behavior bit-for-bit); regex rewrites keep the language exactly (ASCII-scoped `\d` via `(?a:...)`; unambiguous linear quantifiers instead of lazy `.*?\s*$`); S3776 decomposes into small helpers preserving exact error-message strings and order (frozen by tests + LLT-0009/0012); S5778 restructures each exception test to exactly one potentially-throwing invocation in the test body.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Increment 1 — S6353: `[0-9]` → ASCII-scoped `\d` (`record.py` ×6, `deliverables.py` ×1); gate + commit
+  3. Increment 2 — S9409: `deliverables.py` renderers — consecutive `lines.append` → `extend` / list literals (byte-identical output); gate + commit
+  4. Increment 3 — S1192: `deliverables.py` repeated string literals → module constants (identical output); gate + commit
+  5. Increment 4 — S8786: `record.py` L62/63 + `index.py` L57 regexes → linear equivalents (same language; suite verifies); gate + commit
+  6. Increment 5 — S3776: `record.py` L155/256/436/468 → small helpers (cc ≤ 15), error strings + order preserved; gate + commit
+  7. Increment 6 — S5778: `test_record.py` ×12 → one potentially-throwing invocation per test body; gate + commit
+  8. Push; SonarCloud re-analysis → the 41 findings resolve to `FIXED`/closed; `SonarCloud Code Analysis` check green
+  9. Closeout with evidence (B7 + B8 land in the same final change)
+- **Blast radius:** `src/securetrace/{lessons/record.py, rmf/deliverables.py, backlog/index.py}`, `tests/lessons/test_record.py`; observable behavior must stay bit-identical (146 tests + `tests/rmf/` goldens — no golden regeneration); the 9 `pythonsecurity:S8705/S8707` WONTFIX (`cli.py` ×2, `deliverables.py` ×7 — LLT-0008 precedent) and vendored `scripts/*` findings stay untouched.
+- **Acceptance criteria:**
+  - after the final push + re-analysis, 41/41 B7-scope findings are `FIXED`/closed or absent (re-measured via the SonarCloud issues API)
+  - `make gate` green after every increment — 146 tests pass and `tests/rmf/` goldens byte-identical (no golden regeneration)
+  - `SonarCloud Code Analysis` check = success on the final `main` commit; 0 open issues project-wide
+  - LLT-0009/LLT-0012 pinned quirks still pass (documented, not fixed — behavior unchanged by construction)
+- **Ordering:** after B8 (queue priority: High before Medium; B8's gate change lands first so B7's refactor churn runs under it).
+- **Progress:**
+  - 2026-10-19 — created (G1); status OPEN; queued behind B8 (G9)
+
+<!-- BACKLOG:ITEM:B8 -->
+## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **OPEN**
+
+- **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
+- **Requested:** 2026-10-19
+- **Priority:** High
+- **Request (verbatim):** proposal — "close the parser-divergence gap that broke B5: GitHub's yaml.v3 parser hard-fails on duplicate mapping keys while PyYAML/Ruby Psych silently tolerate them (LLT-0017) — add a strict YAML check for `.github/workflows/*.yml` to the pre-commit gate and the CI quality job, TDD-first, dependency pinned + hashed"; user approval (2026-10-19): "go for both"
+- **Problem / evidence:** B5 incident (2026-10-19): duplicate `attestations:` key in `release.yml` `permissions` — every local gate green (no YAML stage), `Release` run 39234156533 produced zero jobs; root-caused via ~13 controlled probe workflows + a Ruby duplicate-key walker (LLT-0017, high). Current pre-commit gate (5 stages: format-check / lint / docs-check / secrets / tests) and the CI quality job have **no** workflow-YAML validation — a duplicate key in `ci.yml` or `release.yml` ships to GitHub and fails only there.
+- **Chosen approach:** new checker `scripts/check_workflow_yaml.py` (PyYAML `SafeLoader` subclass that rejects duplicate mapping keys, reporting file + key + 1-based line; exit 0 = clean, 1 = duplicate keys or parse error, 2 = usage error) wired as Makefile `workflow-check` target + pre-commit stage (renumber to 6) + CI quality-job step — one change per the Makefile/hook contract comment; `pyyaml` added to `requirements-dev.in` + `make lock` (hashed pin, DevSecOps); TDD RED first in `tests/scripts/test_workflow_yaml.py`; short algorithm doc (`algorithms/workflow-yaml-strict-parse.md`) before code per @algorithm-records-keeper.
+- **Work items (in order):**
+  1. This backlog entry
+  2. Algorithm doc v0.1.0 + `algorithms/INDEX.md` registry row (status `implemented`) + its index regen
+  3. RED: `tests/scripts/test_workflow_yaml.py` — clean file passes; duplicate top-level key fails with key + line; nested duplicate fails; flow-style `{a: 1, a: 2}` fails; malformed YAML → exit 1; missing file → exit 2; default discovery finds and passes both real workflow files
+  4. GREEN: `scripts/check_workflow_yaml.py`; `pyyaml` into `requirements-dev.in` + `make lock` + venv install
+  5. Wire ONE change: Makefile `workflow-check` target + `gate` + `.PHONY` + help; pre-commit stage 4 (6 stages); ci.yml quality step after docs-check
+  6. `make gate` green (146 existing + new tests); local red-proof (staged scratch workflow with a duplicate key blocks, then removed); commit; push; CI green
+  7. Closeout with evidence (B7 + B8 land in the same final change)
+- **Blast radius:** new `scripts/check_workflow_yaml.py` + `tests/scripts/test_workflow_yaml.py`; `Makefile` (new target, `gate` list, `.PHONY`, help); `hooks/pre-commit` (new stage 4, stages renumber 4→5, 5→6); `.github/workflows/ci.yml` (one new step in `quality`); `requirements-dev.in` / `requirements-dev.txt` (pyyaml pin + hashes); `algorithms/` (new doc + registry row). No changes to `src/securetrace/` or to existing workflow behavior.
+- **Acceptance criteria:**
+  - a duplicate-key workflow YAML is rejected locally at the new pre-commit stage AND by the CI quality job, reporting file + key + line (local red-proof: staged scratch workflow blocks the hook, then removed; TDD RED evidence in `tests/scripts/`)
+  - `make gate` green including the new stage — 146 existing tests still pass + new test file green
+  - `pyyaml` pinned with hashes in `requirements-dev.txt` (`pip-compile --generate-hashes`); `dependency-audit` green in CI
+  - both current workflow files (`ci.yml`, `release.yml`) pass the new check
+- **Ordering:** before B7 (queue priority High > Medium; the gate lands first so B7's churn runs under it).
+- **Progress:**
+  - 2026-10-19 — created (G1); accepted for execution ("go for both")
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
