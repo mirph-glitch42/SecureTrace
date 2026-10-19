@@ -5,6 +5,9 @@ __pycache__/
 .eggs/
 build/
 dist/
+# Test fixture evidence must be committed despite the dist/ rule above (SB-01 corpus path)
+!tests/fixtures/rmf/mini-repo/dist/
+!tests/fixtures/rmf/mini-repo/dist/sbom.json
 
 # Derived RMF evidence bundles (make rmf-bundle) — regenerated on demand, never committed
 artifacts/
