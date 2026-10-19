@@ -43,7 +43,7 @@ jobs:
       - name: Generate SBOM
         run: make sbom
 
-      # --- B5: keyless signing + provenance (ARCHITECTURE.md §5) ---------------
+      # --- B5: keyless signing + provenance (ARCHITECTURE.md Section 5) ------
       # Install cosign from a SHA-pinned installer (v4.1.2) with a pinned
       # cosign version (v2.6.5). The installer independently verifies the
       # cosign binary against the Sigstore release public key before use.
@@ -121,7 +121,7 @@ jobs:
           set -euo pipefail
           gh release create "${GITHUB_REF_NAME}" \
             --title "SecureTrace ${GITHUB_REF_NAME}" \
-            --notes "Automated immutable release. Assets: sdist, wheel, CycloneDX SBOM, Sigstore keyless signature bundles, SLSA v1 provenance attestation bundle. Consumer verification: gh release verify / gh release verify-asset — full recipe in ARCHITECTURE.md §5." \
+            --notes "Automated immutable release. Assets: sdist, wheel, CycloneDX SBOM, Sigstore keyless signature bundles, SLSA v1 provenance attestation bundle. Consumer verification: gh release verify / gh release verify-asset; full recipe in ARCHITECTURE.md Section 5." \
             --prerelease \
             --verify-tag \
             dist/*.whl \
