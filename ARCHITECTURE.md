@@ -107,7 +107,46 @@ LESSONS_LEARNED.md (QC history)         ─┘         ├─▶ SSP / SAP / SAR
                                                     └─▶ artifacts/rmf/<date>/ (release)
 ```
 
-## 5. Non-goals
+## 5. Release pipeline (keyless signing + provenance, B5)
+
+Tag-triggered (`v*`) — `.github/workflows/release.yml`. Every published
+artifact (wheel, sdist) carries two independent Sigstore artifacts, and both
+are verified in-pipeline **before** the release is created (fail-fast: a
+tampered or foreign artifact can never be published):
+
+```
+make package ─▶ dist/*.whl, dist/*.tar.gz ─┬─▶ cosign sign-blob ─▶ <artifact>.sigstore.json
+                                          │      (keyless: Fulcio OIDC cert + Rekor entry)
+                                          └─▶ gh attestation   ─▶ <artifact>.jsonl
+                                               (SLSA v1 provenance, Sigstore public instance)
+                                                    │
+                  verify (identity-pinned, both) ──┘
+                    cosign verify-blob  --certificate-identity=https://github.com/<org>/<repo>/.github/workflows/release.yml@refs/tags/<tag>
+                                        --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+                    gh attestation verify --source-repo <org>/<repo> --source-workflow release.yml
+                                                    │
+                                                    ▼
+                    gh release create + upload (artifacts + signature bundles)
+```
+
+- **Identity:** keyless — no long-lived key. The signer is the workflow's
+  GitHub OIDC identity (ephemeral Fulcio certificate, Rekor transparency
+  entry). Verification pins certificate identity (repo + workflow + tag ref)
+  **and** OIDC issuer, so a signature produced by any other workflow, repo,
+  or CI fails.
+- **Pinned toolchain:** `sigstore/cosign-installer` @ commit
+  `6f9f17788090df1f26f669e9d70d6ae9567deba6` (v4.1.2) with
+  `COSIGN_VERSION=v2.6.5` (supported v2 series; the `*.sigstore.json` bundle
+  format of the official v2 quickstart). Least privilege:
+  `permissions: contents: write, id-token: write, attestations: write`.
+- **Consumer recipe** (stock tools, no SecureTrace dependency):
+  `cosign verify-blob <artifact> --bundle <artifact>.sigstore.json \
+  --certificate-identity https://github.com/mirph-glitch42/SecureTrace/.github/workflows/release.yml@refs/tags/<tag> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com`
+  and `gh attestation verify <artifact> --bundle <artifact>.jsonl \
+  --source-repo mirph-glitch42/SecureTrace --source-workflow release.yml`.
+
+## 6. Non-goals
 
 - No network access in library code (stdlib-only runtime; RMF bundles build
   offline from local artifacts).

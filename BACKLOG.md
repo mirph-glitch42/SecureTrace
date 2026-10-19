@@ -9,9 +9,9 @@ B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low
 B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
-B5	Release hardening: keyless signing + provenance for release artifacts	OPEN	Low	180	200
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	201	239
-CONSTRAINTS	-	-	-	240	248
+B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	201
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	202	240
+CONSTRAINTS	-	-	-	241	249
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -19,7 +19,7 @@ CONSTRAINTS	-	-	-	240	248
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B5 | **In progress:** — | **Done:** B1, B2, B3, B4, B6 | **Updated:** 2026-10-19
+**Queue:** B5 | **In progress:** B5 | **Done:** B1, B2, B3, B4, B6 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -178,7 +178,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Lessons:** LLT-0013 (golden HEAD baking), LLT-0014 (unguarded argparse sub-command attribute), LLT-0015 (`dist/` gitignore shadowed a fixture — the CI root cause), LLT-0016 (zsh glob + strict-JSON polling loops).
 
 <!-- BACKLOG:ITEM:B5 -->
-## B5. Release hardening: keyless signing + provenance for release artifacts — **OPEN**
+## B5. Release hardening: keyless signing + provenance for release artifacts — **IN PROGRESS**
 
 - **Source:** agent (proposed — flagged to user per G8)
 - **Requested:** 2026-10-18
@@ -195,7 +195,8 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Blast radius:** `.github/workflows/release.yml` only.
 - **Acceptance criteria:** published artifacts have verifiable keyless signatures; verify step fails on tampered artifact (test on throwaway branch).
 - **Ordering:** last — after B4 so releases ship RMF bundles; independent of B3.
-- **Progress:** —
+- **Progress:**
+  - 2026-10-19 — status → IN PROGRESS (B4 closed same day); design per Sigstore official CI quickstart: `cosign sign-blob` (keyless, Fulcio OIDC via `sigstore/cosign-installer` pinned by SHA, `COSIGN_VERSION` pinned) on wheel+sdist, `gh attestation` (GitHub-native SLSA v1 provenance) for both artifacts, identity-pinned `cosign verify-blob` + `gh attestation verify` steps BEFORE release creation (fail-fast: a tampered artifact can never be published); consumers verify with stock cosign/gh
 - **Closeout:** (pending)
 
 <!-- BACKLOG:ITEM:B6 -->
