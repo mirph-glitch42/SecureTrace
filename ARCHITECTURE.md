@@ -9,15 +9,17 @@
 ```
 src/securetrace/
 ├── __init__.py            # __version__, package docstring
-├── __main__.py            # console-script entrypoint (securetrace)
+├── __main__.py            # console entry: `securetrace …` argparse dispatch into cli
+├── cli.py                 # B3 — subcommands, I/O, messages, exit codes (0/1/2)
+├── errors.py              # B3 — typed errors (FormatError et al.) shared by subpackages
 ├── py.typed               # PEP 561 marker
-├── backlog/               # B3 — deterministic backlog parsing/management
+├── backlog/               # B3 — deterministic backlog parsing/indexing (pure core)
 │   ├── __init__.py
-│   └── index.py           # index-block parsing/regeneration (format: frozen)
-├── lessons/               # B3 — lessons-learned record management
+│   └── index.py           # marker scan, delta, idempotent TSV rewrite (format: frozen)
+├── lessons/               # B3 — lessons-learned record management (pure core)
 │   ├── __init__.py
 │   └── record.py          # entry lifecycle (add/supersede/sync/check)
-├── algorithms/            # B3 — algorithm document registry management
+├── algorithms/            # B3 — algorithm document registry management (pure core)
 │   ├── __init__.py
 │   └── registry.py        # INDEX.md row ↔ document consistency
 ├── rmf/                   # B4 — RMF deliverable (package) generation
@@ -28,9 +30,10 @@ src/securetrace/
     └── gates.py           # gate definitions shared by hooks/Makefile/CI consumers
 ```
 
-Tests mirror 1:1: `tests/<subpkg>/test_<module>.py`, plus
-`tests/scripts/test_skill_scripts.py` for the vendored gate scripts and
-`tests/test_package.py` for the package itself.
+Tests mirror 1:1: `tests/<subpkg>/test_<module>.py` for the pure core, `tests/test_cli.py`
+for the CLI surface (messages + exit codes), and `tests/test_package.py` for the
+package itself. `tests/scripts/test_skill_scripts.py` pins the frozen CLI surface of
+the thin `scripts/` wrappers against the skill's reference behavior.
 
 **Naming distinction (important):** `algorithms/` (repo root) holds
 *algorithm documents* per the `@algorithm-records-keeper` skill;
@@ -68,11 +71,13 @@ Invariants:
    a gate failure blocks commit/push/CI, full stop.
 2. **Frozen index formats** — the TSV index blocks in `BACKLOG.md`,
    `LESSONS_LEARNED.md`, `algorithms/*.md` are the contract between the
-   vendored scripts (`scripts/`), the future package API (B3), and CI.
-   Roundtrip tests in `tests/scripts/` pin the behavior.
+   `scripts/` wrappers, the `securetrace` package API (B3), and CI.
+   Roundtrip tests in `tests/scripts/` plus the package tests pin the behavior.
 3. **Vendored skill scripts** — `scripts/{backlog_index,manage_lessons,algorithm_index}.py`
-   are vendored from `~/.lmstudio/skills/…` (provenance in docstrings) so that
-   hooks and CI never depend on machine-local paths. See LESSONS_LEARNED.md LLT-0002.
+   were vendored from `~/.lmstudio/skills/…` (provenance in docstrings) so that
+   hooks and CI never depend on machine-local paths; B3 turned them into thin
+   wrappers over `securetrace.cli`, preserving the exact CLI surface, messages,
+   and exit codes. See LESSONS_LEARNED.md LLT-0002.
 4. **Pinned, hashed dependencies** — `requirements*.in` → `pip-compile
    --generate-hashes` → `requirements*.txt`; CI installs with `--require-hashes`.
 5. **Conventional Commits** enforced locally (commit-msg) — release workflow
