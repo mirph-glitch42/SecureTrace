@@ -186,11 +186,11 @@ retry. Note the attestation list endpoint is keyed by **subject digest** —
   `permissions: contents: write, id-token: write, attestations: write`
   (a scope may appear only once in the mapping; `write` covers `read`).
 - **Consumer recipe** (stock tools, no SecureTrace dependency):
-  1. `gh release verify v0.1.0` — release is immutable + valid release
+  1. `gh release verify <tag>` — release is immutable + valid release
      attestation present; prints all attested asset digests. (If run within
      a few seconds of the release being published, retry — the release
      attestation is created asynchronously; see above.)
-  2. `gh release verify-asset v0.1.0 <artifact>` — downloaded asset exactly
+  2. `gh release verify-asset <tag> <artifact>` — downloaded asset exactly
      matches the attested release asset (digest + signature).
   3. `cosign verify-blob <artifact> --bundle <artifact>.sigstore.json \
      --certificate-identity https://github.com/mirph-glitch42/SecureTrace/.github/workflows/release.yml@refs/tags/<tag> \

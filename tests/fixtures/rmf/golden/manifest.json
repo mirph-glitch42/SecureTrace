@@ -267,7 +267,7 @@
     "SAR": "a5152151dfd237f3413f51fa606324c117fb1f4e0cbcd3fd3e3fe9ec2feb5e44",
     "SSP": "1a094222bf89f4957c055201f88313959881b1b67a3292c83f18db1f228a304e"
   },
-  "generated_by": "securetrace 0.1.0",
+  "generated_by": "securetrace 0.1.1",
   "git_head": "no-git",
   "schema": "securetrace.rmf-bundle/1",
   "state": {

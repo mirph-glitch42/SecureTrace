@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "securetrace"
-version = "0.1.0"
+version = "0.1.1"
 description = "Agentic tooling for secure, traceable software development: deterministic backlogs, lessons learned, algorithm records, CI/CD gates, and DoW RMF package deliverables."
 readme = "README.md"
 requires-python = ">=3.12"
