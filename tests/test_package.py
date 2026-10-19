@@ -33,5 +33,8 @@ def test_cli_reports_version(capsys: pytest.CaptureFixture[str]) -> None:
     assert securetrace.__version__ in capsys.readouterr().out
 
 
-def test_cli_skeleton_message() -> None:
-    assert main([]) == 0
+def test_cli_requires_subcommand() -> None:
+    """No subcommand: argparse rejects with SystemExit(2) (usage on stderr)."""
+    with pytest.raises(SystemExit) as excinfo:
+        main([])
+    assert excinfo.value.code == 2
