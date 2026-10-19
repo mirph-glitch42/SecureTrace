@@ -110,41 +110,66 @@ LESSONS_LEARNED.md (QC history)         ─┘         ├─▶ SSP / SAP / SAR
 ## 5. Release pipeline (keyless signing + provenance, B5)
 
 Tag-triggered (`v*`) — `.github/workflows/release.yml`. Every published
-artifact (wheel, sdist) carries two independent Sigstore artifacts, and both
-are verified in-pipeline **before** the release is created (fail-fast: a
-tampered or foreign artifact can never be published):
+artifact (wheel, sdist) carries two independent attestation layers, both
+verified in-pipeline **before** the release is created (fail-fast: a
+tampered or foreign artifact can never be published). The release itself is
+an **immutable release** (repo setting enabled via
+`PUT /repos/mirph-glitch42/SecureTrace/immutable-releases`): the tag is
+locked to the commit, assets cannot be modified or deleted after publication,
+and GitHub auto-generates a signed **release attestation** (tag + commit SHA
++ asset digests) at creation time.
 
 ```
 make package ─▶ dist/*.whl, dist/*.tar.gz ─┬─▶ cosign sign-blob ─▶ <artifact>.sigstore.json
                                           │      (keyless: Fulcio OIDC cert + Rekor entry)
-                                          └─▶ gh attestation   ─▶ <artifact>.jsonl
-                                               (SLSA v1 provenance, Sigstore public instance)
+                                          └─▶ actions/attest  ─▶ SLSA v1 provenance attestation
+                                               (Sigstore public instance;        (one attestation,
+                                                stored in GitHub attestation      both subjects;
+                                                registry keyed by digest;         local bundle
+                                                local bundle also published)     also published)
                                                     │
                   verify (identity-pinned, both) ──┘
-                    cosign verify-blob  --certificate-identity=https://github.com/<org>/<repo>/.github/workflows/release.yml@refs/tags/<tag>
+                    cosign verify-blob  --bundle <artifact>.sigstore.json
+                                        --certificate-identity=https://github.com/mirph-glitch42/SecureTrace/.github/workflows/release.yml@refs/tags/<tag>
                                         --certificate-oidc-issuer=https://token.actions.githubusercontent.com
-                    gh attestation verify --source-repo <org>/<repo> --source-workflow release.yml
+                    gh attestation verify <artifact> -R mirph-glitch42/SecureTrace
+                                        --signer-workflow mirph-glitch42/SecureTrace/.github/workflows/release.yml
                                                     │
                                                     ▼
-                    gh release create + upload (artifacts + signature bundles)
+                    gh release create (immutable) ─▶ auto release attestation
+                    gh release verify <tag>          (consumer-side proof, in-pipeline)
+                    gh release verify-asset <tag> <artifact>
 ```
 
 - **Identity:** keyless — no long-lived key. The signer is the workflow's
   GitHub OIDC identity (ephemeral Fulcio certificate, Rekor transparency
   entry). Verification pins certificate identity (repo + workflow + tag ref)
   **and** OIDC issuer, so a signature produced by any other workflow, repo,
-  or CI fails.
+  or CI fails. The SLSA attestation is separately verified against a
+  fully-anchored SAN pin on the exact workflow file (gh CLI policy; note
+  `--signer-workflow` and `--signer-repo` are mutually exclusive in that
+  policy — the workflow pin is the stronger one).
 - **Pinned toolchain:** `sigstore/cosign-installer` @ commit
   `6f9f17788090df1f26f669e9d70d6ae9567deba6` (v4.1.2) with
-  `COSIGN_VERSION=v2.6.5` (supported v2 series; the `*.sigstore.json` bundle
-  format of the official v2 quickstart). Least privilege:
-  `permissions: contents: write, id-token: write, attestations: write`.
+  `cosign-release: v2.6.5` (supported v2 series; the installer input name is
+  `cosign-release`, and the installer itself verifies the cosign binary
+  against the Sigstore release key before use); `actions/attest` @ commit
+  `1e69f48acb82d1966a394da916b4c1698aa569d6` (v4, provenance mode,
+  multi-subject). Least privilege:
+  `permissions: contents: write, id-token: write, attestations: read,
+  attestations: write`.
 - **Consumer recipe** (stock tools, no SecureTrace dependency):
-  `cosign verify-blob <artifact> --bundle <artifact>.sigstore.json \
-  --certificate-identity https://github.com/mirph-glitch42/SecureTrace/.github/workflows/release.yml@refs/tags/<tag> \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com`
-  and `gh attestation verify <artifact> --bundle <artifact>.jsonl \
-  --source-repo mirph-glitch42/SecureTrace --source-workflow release.yml`.
+  1. `gh release verify v0.1.0` — release is immutable + valid release
+     attestation present; prints all attested asset digests.
+  2. `gh release verify-asset v0.1.0 <artifact>` — downloaded asset exactly
+     matches the attested release asset (digest + signature).
+  3. `cosign verify-blob <artifact> --bundle <artifact>.sigstore.json \
+     --certificate-identity https://github.com/mirph-glitch42/SecureTrace/.github/workflows/release.yml@refs/tags/<tag> \
+     --certificate-oidc-issuer https://token.actions.githubusercontent.com`
+  4. `gh attestation verify <artifact> -R mirph-glitch42/SecureTrace \
+     --signer-workflow mirph-glitch42/SecureTrace/.github/workflows/release.yml`
+     (online: fetches the attestation for the artifact's digest from the
+     GitHub attestation registry).
 
 ## 6. Non-goals
 

@@ -9,9 +9,9 @@ B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low
 B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
-B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	201
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	202	240
-CONSTRAINTS	-	-	-	241	249
+B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	202
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	203	241
+CONSTRAINTS	-	-	-	242	250
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -197,6 +197,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Ordering:** last — after B4 so releases ship RMF bundles; independent of B3.
 - **Progress:**
   - 2026-10-19 — status → IN PROGRESS (B4 closed same day); design per Sigstore official CI quickstart: `cosign sign-blob` (keyless, Fulcio OIDC via `sigstore/cosign-installer` pinned by SHA, `COSIGN_VERSION` pinned) on wheel+sdist, `gh attestation` (GitHub-native SLSA v1 provenance) for both artifacts, identity-pinned `cosign verify-blob` + `gh attestation verify` steps BEFORE release creation (fail-fast: a tampered artifact can never be published); consumers verify with stock cosign/gh
+  - 2026-10-19 — design pivot (run 39234156533 went RED: current `gh` CLI has **no create subcommand** for `gh attestation` — only download/trusted-root/verify). New provenance path per 2026 GitHub docs: `actions/attest` (SHA-pinned v4, SLSA v1 provenance mode, multi-subject) + repo-level **immutable releases** (`PUT /repos/.../immutable-releases`): tag+assets locked, auto signed release attestation at creation, consumer recipe `gh release verify` / `gh release verify-asset`. cosign keyless signing + identity-pinned verify unchanged. ARCHITECTURE.md §5 updated as design of record.
 - **Closeout:** (pending)
 
 <!-- BACKLOG:ITEM:B6 -->
