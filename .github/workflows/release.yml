@@ -118,6 +118,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          # Idempotent re-publish: a workflow rerun (or tag re-push) for the
+          # same tag must replace, not conflict with, the previous release.
+          # Deleting a release is allowed even for immutable releases (it is
+          # the assets of an existing release that cannot be modified).
+          gh release delete "${GITHUB_REF_NAME}" --yes >/dev/null 2>&1 || true
           gh release create "${GITHUB_REF_NAME}" \
             --title "SecureTrace ${GITHUB_REF_NAME}" \
             --notes "Automated immutable release. Assets: sdist, wheel, CycloneDX SBOM, Sigstore keyless signature bundles, SLSA v1 provenance attestation bundle. Consumer verification: gh release verify / gh release verify-asset; full recipe in ARCHITECTURE.md Section 5." \
@@ -132,12 +137,38 @@ jobs:
       # Consumer-side proof, run as a real consumer would (in-pipeline):
       # the release carries a valid signed release attestation and every
       # locally built artifact exactly matches the published release assets.
+      #
+      # GitHub creates that release attestation (initiator "github", subject
+      # = the tag ref, predicate type "release") ASYNCHRONOUSLY after the
+      # release is published. A verify issued within about one second of
+      # `gh release create` can miss it ("no attestations for tag <tag>")
+      # even though everything is valid - observed 2026-10-19, run
+      # 39245874727 (verify at +0.4s failed; the attestation was queryable
+      # minutes later). Retry with backoff instead of failing on delay.
       - name: Verify published release (consumer-side proof)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
-          gh release verify "${GITHUB_REF_NAME}"
-          for f in dist/*.whl dist/*.tar.gz; do
-            gh release verify-asset "${GITHUB_REF_NAME}" "$f"
+          set -uo pipefail
+          max_attempts=10
+          attempt=1
+          while :; do
+            ok=1
+            gh release verify "${GITHUB_REF_NAME}" || ok=0
+            if [ "$ok" -eq 1 ]; then
+              for f in dist/*.whl dist/*.tar.gz; do
+                gh release verify-asset "${GITHUB_REF_NAME}" "$f" || ok=0
+              done
+            fi
+            if [ "$ok" -eq 1 ]; then
+              echo "Consumer-side verification passed on attempt ${attempt}/${max_attempts}."
+              exit 0
+            fi
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "ERROR: release attestation not visible after ${max_attempts} attempts (~5 min)." >&2
+              exit 1
+            fi
+            echo "Release attestation not yet visible (attempt ${attempt}/${max_attempts}); retrying in 30s..." >&2
+            attempt=$((attempt + 1))
+            sleep 30
           done

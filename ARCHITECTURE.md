@@ -136,10 +136,37 @@ make package ─▶ dist/*.whl, dist/*.tar.gz ─┬─▶ cosign sign-blob ─�
                                         --signer-workflow mirph-glitch42/SecureTrace/.github/workflows/release.yml
                                                     │
                                                     ▼
-                    gh release create (immutable) ─▶ auto release attestation
-                    gh release verify <tag>          (consumer-side proof, in-pipeline)
-                    gh release verify-asset <tag> <artifact>
+                    gh release delete <tag> (idempotent re-publish, no-op if absent)
+                    gh release create (immutable) ─▶ GitHub auto-creates the release attestation
+                    gh release verify <tag>          (consumer-side proof, in-pipeline; retried
+                    gh release verify-asset <tag> <artifact>   up to 10 x 30s because creation
+                                                             is asynchronous)
 ```
+
+**Two distinct attestation classes** (do not conflate — they answer different
+questions and live under different keys in the GitHub attestation registry):
+
+1. **Artifact provenance attestations** (created by `actions/attest` in
+   pipeline): subject = the *file* digest (`sha256:<hex>`), predicate type
+   `https://slsa.dev/provenance/v1`, initiator = the workflow. Queryable via
+   `GET /repos/{owner}/{repo}/attestations/sha256:<hex>`; verified with
+   `cosign verify-blob` (local bundle) or `gh attestation verify` (online).
+2. **Release attestation** (created by *GitHub*, asynchronously after the
+   release is published): subject = the *tag ref* digest (for an annotated
+   tag, `sha1:<tag-object-sha>`), predicate type `release`, initiator
+   `github`. Queryable via
+   `GET /repos/{owner}/{repo}/attestations/sha1:<tag-object-sha>`; verified
+   by `gh release verify` / `gh release verify-asset`.
+
+Because class 2 is created **asynchronously** after `gh release create`
+returns, a consumer-side verify issued within about one second of publishing
+can fail with `no attestations for tag <tag>` even though everything is valid
+(observed 2026-10-19, run 39245874727; the attestation became queryable
+minutes later). The pipeline therefore retries `gh release verify` / `gh
+release verify-asset` up to 10 times at 30 s intervals (~5 min window).
+Human consumers verifying later (minutes/days after release) do not need
+retry. Note the attestation list endpoint is keyed by **subject digest** —
+`GET /repos/{owner}/{repo}/attestations?ref=...` does not exist (404).
 
 - **Identity:** keyless — no long-lived key. The signer is the workflow's
   GitHub OIDC identity (ephemeral Fulcio certificate, Rekor transparency
@@ -160,7 +187,9 @@ make package ─▶ dist/*.whl, dist/*.tar.gz ─┬─▶ cosign sign-blob ─�
   (a scope may appear only once in the mapping; `write` covers `read`).
 - **Consumer recipe** (stock tools, no SecureTrace dependency):
   1. `gh release verify v0.1.0` — release is immutable + valid release
-     attestation present; prints all attested asset digests.
+     attestation present; prints all attested asset digests. (If run within
+     a few seconds of the release being published, retry — the release
+     attestation is created asynchronously; see above.)
   2. `gh release verify-asset v0.1.0 <artifact>` — downloaded asset exactly
      matches the attested release asset (digest + signature).
   3. `cosign verify-blob <artifact> --bundle <artifact>.sigstore.json \

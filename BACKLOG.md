@@ -9,9 +9,9 @@ B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low
 B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	71	99
 B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	100	138
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	139	179
-B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	202
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	203	241
-CONSTRAINTS	-	-	-	242	250
+B5	Release hardening: keyless signing + provenance for release artifacts	IN_PROGRESS	Low	180	204
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	205	243
+CONSTRAINTS	-	-	-	244	252
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -198,6 +198,8 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Progress:**
   - 2026-10-19 — status → IN PROGRESS (B4 closed same day); design per Sigstore official CI quickstart: `cosign sign-blob` (keyless, Fulcio OIDC via `sigstore/cosign-installer` pinned by SHA, `COSIGN_VERSION` pinned) on wheel+sdist, `gh attestation` (GitHub-native SLSA v1 provenance) for both artifacts, identity-pinned `cosign verify-blob` + `gh attestation verify` steps BEFORE release creation (fail-fast: a tampered artifact can never be published); consumers verify with stock cosign/gh
   - 2026-10-19 — design pivot (run 39234156533 went RED: current `gh` CLI has **no create subcommand** for `gh attestation` — only download/trusted-root/verify). New provenance path per 2026 GitHub docs: `actions/attest` (SHA-pinned v4, SLSA v1 provenance mode, multi-subject) + repo-level **immutable releases** (`PUT /repos/.../immutable-releases`): tag+assets locked, auto signed release attestation at creation, consumer recipe `gh release verify` / `gh release verify-asset`. cosign keyless signing + identity-pinned verify unchanged. ARCHITECTURE.md §5 updated as design of record.
+  - 2026-10-19 — root cause of the 0-job fallback-name failures found and fixed: duplicate `attestations:` key in `permissions` (GitHub's yaml.v3 parser hard-fails on duplicate mapping keys; Ruby Psych / PyYAML silently tolerate — local green, GitHub red). Proven by ~13 controlled temp-workflow tests + a Ruby duplicate-key walker. Fix `e116bd2`: single `attestations: write`, release.yml pure ASCII, ARCHITECTURE.md §5 synced, temp diagnostics removed; gate green (146 tests); workflow re-registered as `Release` (active); re-tagged `v0.1.0` -> `e116bd2`; CI on `e116bd2` green.
+  - 2026-10-19 — run 39245874727: all 16 steps executed, release + 6 assets published, but step 16 `gh release verify` failed `no attestations for tag v0.1.0`. Root cause: `gh release verify` looks up the **release attestation** (subject = tag ref digest `sha1:<tag-object-sha>`, predicate `release`, initiator `github`) which GitHub creates **asynchronously** after publish — the verify ran ~0.4 s after `gh release create`. Attestation confirmed present minutes later (id 57367814, `GET /repos/.../attestations/sha1:e29193ea...`). Fixed: step 16 now retries 10 x 30 s; step 15 idempotent (`gh release delete` before `create`). ARCHITECTURE.md §5 documents both attestation classes + digest-keyed list endpoints.
 - **Closeout:** (pending)
 
 <!-- BACKLOG:ITEM:B6 -->
