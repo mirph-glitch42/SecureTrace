@@ -395,7 +395,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   6. TDD registry parser + renderer (roundtrip golden vs the real algorithms/INDEX.md)
   7. TDD tamper detection: manifest sha256, distinct diagnoses, 0/1/2 exits
   8. CLI: upsert/progress/show/render/check per doc + `docs render-all/check-all` + `migrate`
-  9. Migrate the real docs into `data/` stores + manifest (13 items / 33 lessons / 4 rows, no loss)
+  9. Migrate the real docs into `data/` stores + manifest (10 items / 33 lessons / 5 rows, no loss)
   10. Rewire gates: Makefile `docs-check` + `docs-render`, pre-commit stage 3, CI quality; live block demo of a hand edit
   11. Update README + ARCHITECTURE.md + `skills/securetrace/SKILL.md` + guard test
   12. Close B10 through the new CLI (dogfood) + `make gate` + CI + closeout
@@ -406,7 +406,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - all creation/update of the three pipeline docs is expressible via `securetrace` CLI commands (`upsert/progress/add/show/render/check`, `docs render-all/check-all`)
   - tamper detection: a 1-byte flip of a rendered doc → `check` exits 1 diagnosing doc-modified-outside-app; a store edit after render → `check` exits 1 diagnosing store drift; malformed store → exit 2 (all RED→GREEN tested)
   - golden roundtrip: `parse → render → parse` is identity and `render(parse(real_doc))` == committed bytes for all three real docs (modulo the generated header)
-  - migration lossless: 13 backlog items, 33 lessons, 4 registry rows present in the stores with all fields
+  - migration lossless: 10 backlog items, 33 lessons, 5 registry rows present in the stores with all fields
   - a hand edit to any pipeline doc is blocked by the pre-commit `docs-check` (demonstrated) and by CI quality (`make docs-check`)
   - `make gate` green; CI quality + security + SonarCloud green on the closeout commit; B10 closed via the new CLI
 - **Ordering:** after B9 (documents the stable surface B10 replaces); B11+ must use the new pipeline.

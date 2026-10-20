@@ -35,14 +35,15 @@ def backlog_store(items=None):
         "doc": "backlog",
         "schema_version": SCHEMA_VERSION,
         "updated": "2026-10-20",
+        # prose lines only — the section headings are renderer constants, not store data
         "header": [
-            "## Status",
+            "Tracks all SecureTrace work.",
             "",
             "**Queue:** — | **In progress:** — | **Done:** B1 | **Updated:** 2026-10-20",
         ],
-        "queue": ["## Queue (execution order)", "", "— (queue is empty; all items done)"],
+        "queue": ["— (queue is empty; all items done)"],
         "items": [backlog_item(1)] if items is None else items,
-        "constraints": ["## Standing constraints", "", "- gate green"],
+        "constraints": ["- gate green"],
     }
 
 

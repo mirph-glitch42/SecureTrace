@@ -4,12 +4,12 @@
 id	start_line	end_line
 INDEX_BLOCK	3	13
 METADATA	15	36
-THEORY	37	130
-PSEUDOCODE	131	169
-WALKTHROUGH	170	209
-IMPLEMENTATION	210	253
-TESTS	254	269
-REFERENCES	270	278
+THEORY	37	131
+PSEUDOCODE	132	170
+WALKTHROUGH	171	210
+IMPLEMENTATION	211	258
+TESTS	259	274
+REFERENCES	275	283
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,12 +19,12 @@ REFERENCES	270	278
 |---|---|
 | Name | Deterministic Document Pipeline (canonical store → pure render → integrity verify) |
 | Slug | deterministic-doc-pipeline |
-| Version | 0.1.0 |
+| Version | 0.1.1 |
 | Status | draft |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-20 |
 | Last modified | 2026-10-20 |
-| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1) |
+| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | — (B10 WI 3–8; expected `src/securetrace/docs/` + `securetrace.cli`/`__main__` wiring) |
 | Time complexity | O(D) for parse, render, and check (D = document size in bytes) |
@@ -94,7 +94,7 @@ re-sorting open prose lists (progress lines are data, not derived).
   cells (status, priority, lesson fields, registry columns) become structured
   data; open prose (request verbatim, problem, progress lines, closeout lines)
   stays as *ordered line lists* in the store. This keeps roundtrips lossless
-  for the live 13 backlog items / 33 lessons without inventing a prose schema.
+  for the live 10 backlog items / 33 lessons without inventing a prose schema.
 
 ### 2.3 Correctness argument
 
@@ -114,8 +114,9 @@ re-sorting open prose lists (progress lines are data, not derived).
   - store fails schema validation → case c (exit 2), before any comparison.
 - Losslessness: `parse` accepts exactly the grammar `render` emits (plus the
   grandfathered current files, which differ only by the absent generated
-  header); the golden roundtrip tests (T2–T4) pin `parse ∘ render = id` on the
-  live data, so migration cannot silently drop a field.
+  header — and the TSV line numbers that header shifts); the golden
+  roundtrip tests (T2–T4) pin `parse ∘ render = id` on the live data, so
+  migration cannot silently drop a field.
 
 ### 2.4 Complexity
 
@@ -213,7 +214,9 @@ Store: the one-item backlog store of test T1 (§6).
 ### 5.1 Module layout (B10)
 
 - `src/securetrace/docs/__init__.py` — package doc + `RENDERER_VERSION` constant.
-- `src/securetrace/docs/canonical.py` — `canonical_json`, `sha256_hex`.
+- `src/securetrace/docs/canonical.py` — `canonical_json`, `sha256_hex`, and
+  the per-kind constants the renderers share: `DOC_TITLES`, `CLI_VERBS`,
+  `DEFAULT_STORE_PATHS`, `generated_header` (the 7-line C4 no-hand-edit block).
 - `src/securetrace/docs/schema.py` — store validation (backlog/lessons/registry) + typed errors.
 - `src/securetrace/docs/backlog_doc.py` — `parse_backlog` / `render_backlog`.
 - `src/securetrace/docs/lessons_doc.py` — `parse_lessons` / `render_lessons`.
@@ -225,9 +228,11 @@ Store: the one-item backlog store of test T1 (§6).
 
 ### 5.2 Determinism rules (each enforced by a test)
 
-1. No `datetime`, `time`, `random`, `uuid`, or `os.environ` reads inside the
-   `securetrace.docs` core modules (AST-asserted, same discipline as the RMF
-   offline test T-C3).
+1. No top-level imports of `datetime`, `time`, `random`, `uuid`, `os`,
+   `subprocess`, `socket`, or `urllib` in the `securetrace.docs` core modules
+   (AST-asserted, same discipline as the RMF offline test T-C3); `integrity.py`
+   is the documented exception — the manifest I/O module (temp file +
+   `os.replace`).
 2. Entries iterate in stable-id order; open prose lists (progress, closeout,
    work items, acceptance) are data — emitted in stored order, never re-sorted.
 3. All output uses `\n`; every rendered file ends with exactly one trailing
@@ -257,14 +262,14 @@ Store: the one-item backlog store of test T1 (§6).
 | # | Sample input (abridged) | Expected output | Why it matters |
 |---|---|---|---|
 | T1 | one-item backlog store (B1, 2 progress lines, 3-line closeout) | `render(parse(render(store))) == render(store)`; sha256 identical across two runs | C1/C2 core roundtrip |
-| T2 | the real repo `BACKLOG.md` (13 items at B10 time) | `parse → render` reproduces committed bytes (modulo generated header); 13/13 items, all fields | lossless migration of the live backlog |
+| T2 | the real repo `BACKLOG.md` (10 items at B10 time) | `parse → render` reproduces committed bytes (modulo the generated header block and the TSV line numbers it shifts); 10/10 items, all fields | lossless migration of the live backlog |
 | T3 | the real repo `LESSONS_LEARNED.md` (33 lessons) | roundtrip identity; 33/33 lessons, closed vocabularies intact | lossless migration of the live record |
-| T4 | the real repo `algorithms/INDEX.md` (4 rows) | roundtrip identity; 4/4 rows in slug order | lossless migration of the registry |
+| T4 | the real repo `algorithms/INDEX.md` (5 rows) | roundtrip identity; 5/5 rows in slug order | lossless migration of the registry |
 | T5 | T1 doc with one byte flipped inside an item body | `check` exit 1; stderr names the outside-app diagnosis + the render command | user requirement 2 — tamper is diagnosed, not just detected |
 | T6 | T1 store edited (progress line appended) after render | `check` exit 1; diagnosis is store drift, distinct from T5 | the two drift directions are told apart |
 | T7 | store with duplicate item id `B1` | mutation/check exit 2, malformed-store diagnosis | schema gate before any render |
 | T8 | `canonical_json({"b": 1, "a": {"d": 2, "c": 3}})` | `{\n  "a": {\n    "c": 3,\n    "d": 2\n  },\n  "b": 1\n}\n` | the canonical byte form is unique (T8 pins sorted keys, indent 2, trailing newline) |
-| T9 | source of the five `securetrace.docs` core modules | AST: no `datetime`/`time`/`random`/`uuid`/`os.environ` usage | no-clock discipline (C5) |
+| T9 | source of the `securetrace.docs` core modules (discovered dynamically; `integrity.py` excluded) | AST: no top-level imports of `datetime`/`time`/`random`/`uuid`/`os`/`subprocess`/`socket`/`urllib` | no-clock/no-env discipline (C5) |
 | T10 | same store with items in different JSON order | rendered output identical | ordering comes from the id, never from input order |
 
 <!-- SECTION:REFERENCES -->

@@ -34,6 +34,7 @@ __all__ = [
 SCHEMA_VERSION = 1
 
 DATE_RE = re.compile(r"^(?:\d{4})-(?:\d{2})-(?:\d{2})$")
+UPDATED_LINE_RE = re.compile(r"\*\*Updated:\*\*[ \t]*(\d{4}-\d{2}-\d{2})[ \t]*$")
 BACKLOG_ITEM_ID_RE = re.compile(r"^B\d+$")
 LESSON_ID_RE = re.compile(r"^LLT-(?:\d{4})$")
 REGISTRY_SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
@@ -156,6 +157,18 @@ def validate_backlog(store: object) -> None:
     _lines(s["header"], "backlog.header")
     _lines(s["queue"], "backlog.queue")
     _lines(s["constraints"], "backlog.constraints")
+    header_dates = [
+        m.group(1) for line in s["header"] if (m := UPDATED_LINE_RE.search(line)) is not None
+    ]
+    if len(header_dates) != 1:
+        raise SchemaError(
+            "backlog.header must contain exactly one line ending with '**Updated:** YYYY-MM-DD'"
+        )
+    if header_dates[0] != updated:
+        raise SchemaError(
+            f"backlog.updated ({updated!r}) does not match the header status line date "
+            f"({header_dates[0]!r})"
+        )
     items = s["items"]
     if not isinstance(items, list) or not items:
         raise SchemaError("backlog.items must be a non-empty list")
