@@ -195,7 +195,13 @@ def test_roundtrip_real_backlog_golden():
 
 
 def test_parse_real_backlog_b10_shape():
-    """The live B10 item parses into its 12 fields, 3 progress lines, IN PROGRESS."""
+    """The live B10 item parses into its 12 fields, IN PROGRESS.
+
+    The Progress count is live data — it grows with each WI closeout
+    (4 at WI 4 time); byte-exact losslessness is pinned by the T2 golden,
+    so this test pins the stable shape (field names, status) plus a floor
+    and anchor on the progress list.
+    """
     store = parse_backlog(REAL_BACKLOG.read_text(encoding="utf-8"))
     b10 = store["items"][9]
     assert b10["status"] == "IN PROGRESS"
@@ -214,7 +220,8 @@ def test_parse_real_backlog_b10_shape():
         "Progress",
     ]
     progress = next(f for f in b10["fields"] if f["name"] == "Progress")
-    assert len(progress["lines"]) == 3
+    assert len(progress["lines"]) >= 4  # WI 1–4 closeouts; grows with the record
+    assert progress["lines"][0].startswith("  - 2026-10-20 — status → IN PROGRESS")
 
 
 # --------------------------------------------------------------------- T7 (malformed store)

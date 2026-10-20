@@ -14,8 +14,8 @@ B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	260	305
 B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	306	343
 B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	344	378
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	417
-CONSTRAINTS	-	-	-	418	426
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	418
+CONSTRAINTS	-	-	-	419	427
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -414,6 +414,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-20 — status → IN PROGRESS; WI 1 done (this entry — grandfathered as the last manual edit to a pipeline doc); header + queue updated; index regenerated + `--check` green
   - 2026-10-20 — WI 2 done: ALRK doc `algorithms/deterministic-doc-pipeline.md` (v0.1.0 draft, 8 index entries, repo `algorithms check` green) + registry row added slug-sorted (5 rows); next WI 3 (store core, TDD)
   - 2026-10-20 — WI 3 done: `src/securetrace/docs/` core — `canonical.py` (canonical JSON + sha256), `schema.py` (strict payload-key sets, closed vocabularies, id uniqueness/strict-increase, slug sort), `integrity.py` (manifest new/validate/save atomic, entry_matches, DOC_KINDS); 41 tests (tests/docs/test_canonical, test_schema, test_integrity); `make gate` green (219 tests); commit `022f6fc`, CI green (SonarCloud/quality/security 3× success); next WI 4 (backlog parser + renderer, TDD)
+  - 2026-10-20 — WI 4 done: backlog parser + renderer (TDD red→green) — `backlog_doc.py` (parse_backlog/render_backlog over the legacy synced_text index math; generated-header contract C4; `updated` header-date cross-check in `schema.validate_backlog`), `canonical.py` + `DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`; ALRK doc → v0.1.1 (live counts, T2 golden wording, T9 ban set + `integrity.py` exception); `tests/docs/test_backlog_doc.py` (20 tests incl. T2 golden vs the real BACKLOG.md) + `test_core_discipline.py` (T9 AST); 239 tests green; commits `14e78f6` + `6978573` (certifi 2026.10.19 for GHSA-6q48-6c7w-9gw2, LLT-0034); CI green (SonarCloud/quality/security 3× success); next WI 5 (lessons parser + renderer, TDD)
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
