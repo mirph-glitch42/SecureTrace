@@ -7,9 +7,9 @@ METADATA	15	36
 THEORY	37	131
 PSEUDOCODE	132	170
 WALKTHROUGH	171	210
-IMPLEMENTATION	211	258
-TESTS	259	274
-REFERENCES	275	283
+IMPLEMENTATION	211	260
+TESTS	261	276
+REFERENCES	277	285
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,12 +19,12 @@ REFERENCES	275	283
 |---|---|
 | Name | Deterministic Document Pipeline (canonical store → pure render → integrity verify) |
 | Slug | deterministic-doc-pipeline |
-| Version | 0.1.1 |
+| Version | 0.1.2 |
 | Status | draft |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-20 |
 | Last modified | 2026-10-20 |
-| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts |
+| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | — (B10 WI 3–8; expected `src/securetrace/docs/` + `securetrace.cli`/`__main__` wiring) |
 | Time complexity | O(D) for parse, render, and check (D = document size in bytes) |
@@ -214,9 +214,11 @@ Store: the one-item backlog store of test T1 (§6).
 ### 5.1 Module layout (B10)
 
 - `src/securetrace/docs/__init__.py` — package doc + `RENDERER_VERSION` constant.
-- `src/securetrace/docs/canonical.py` — `canonical_json`, `sha256_hex`, and
-  the per-kind constants the renderers share: `DOC_TITLES`, `CLI_VERBS`,
-  `DEFAULT_STORE_PATHS`, `generated_header` (the 7-line C4 no-hand-edit block).
+- `src/securetrace/docs/canonical.py` — `canonical_json`, `sha256_hex`,
+  `skip_generated_header` (the shared C4 parse-skip, used by the backlog and
+  lessons renderers), and the per-kind constants the renderers share:
+  `DOC_TITLES`, `CLI_VERBS`, `DEFAULT_STORE_PATHS`, `generated_header`
+  (the 7-line C4 no-hand-edit block).
 - `src/securetrace/docs/schema.py` — store validation (backlog/lessons/registry) + typed errors.
 - `src/securetrace/docs/backlog_doc.py` — `parse_backlog` / `render_backlog`.
 - `src/securetrace/docs/lessons_doc.py` — `parse_lessons` / `render_lessons`.

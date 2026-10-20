@@ -31,7 +31,7 @@ from securetrace.backlog.index import (
     synced_text,
 )
 from securetrace.docs import RENDERER_VERSION
-from securetrace.docs.canonical import DOC_TITLES, generated_header
+from securetrace.docs.canonical import DOC_TITLES, generated_header, skip_generated_header
 from securetrace.docs.schema import SCHEMA_VERSION, validate_store
 from securetrace.errors import FormatError
 
@@ -39,8 +39,6 @@ __all__ = ["parse_backlog", "render_backlog"]
 
 INDEX_BEGIN = "<!-- INDEX:BEGIN format=tsv version=1 -->"
 INDEX_END = "<!-- INDEX:END -->"
-GENERATED_BEGIN_PREFIX = "<!-- GENERATED:BEGIN"
-GENERATED_END_PREFIX = "<!-- GENERATED:END"
 
 #: Section heading per reserved section kind (a code constant — the store
 #: carries only the prose lines under each heading).
@@ -115,35 +113,6 @@ def render_backlog(store: object) -> str:
 
 
 # --------------------------------------------------------------------- parse
-
-
-def _skip_generated_header(lines: list[str], start: int) -> int:
-    """If a generated header block starts at *start*, return the index past it.
-
-    The block is the BEGIN line, comment lines only, and the END line; one
-    following blank line is consumed when present (the renderer always emits
-    it; a missing one is caught later by the index-freshness check).
-    Grandfathered docs have no block at all — *start* is returned unchanged.
-
-    Raises:
-        FormatError: the block is unterminated or contains a non-comment line.
-    """
-    if start >= len(lines) or not lines[start].startswith(GENERATED_BEGIN_PREFIX):
-        return start
-    end = None
-    for j in range(start, len(lines)):
-        if lines[j].startswith(GENERATED_END_PREFIX):
-            end = j
-            break
-    if end is None:
-        raise FormatError("generated header block is missing its <!-- GENERATED:END --> line")
-    for j in range(start + 1, end):
-        if not (lines[j].startswith("<!--") and lines[j].endswith("-->")):
-            raise FormatError("generated header block contains a non-comment line")
-    cursor = end + 1
-    if cursor < len(lines) and lines[cursor] == "":
-        cursor += 1
-    return cursor
 
 
 def _check_section_order(sections: list) -> list:
@@ -276,7 +245,7 @@ def parse_backlog(text: str) -> dict:
         raise FormatError(f"the backlog document must start with the title line {DOC_TITLES['backlog']!r}")
     if len(lines) < 2 or lines[1] != "":
         raise FormatError("line 2 of the backlog document must be blank")
-    cursor = _skip_generated_header(lines, 2)
+    cursor = skip_generated_header(lines, 2)
     if cursor < len(lines) and lines[cursor] == "":
         cursor += 1
     if cursor >= len(lines) or not lines[cursor].startswith("<!-- INDEX:BEGIN"):

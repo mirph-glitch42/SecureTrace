@@ -15,13 +15,18 @@ from __future__ import annotations
 import hashlib
 import json
 
+from securetrace.errors import FormatError
+
 __all__ = [
     "CLI_VERBS",
     "DOC_TITLES",
     "DEFAULT_STORE_PATHS",
+    "GENERATED_BEGIN_PREFIX",
+    "GENERATED_END_PREFIX",
     "canonical_json",
     "generated_header",
     "sha256_hex",
+    "skip_generated_header",
 ]
 
 #: Title line per pipeline doc kind (a code constant — never store data).
@@ -93,3 +98,37 @@ def generated_header(
         f"<!-- Renderer: securetrace.docs v{renderer_version} | Spec: algorithms/deterministic-doc-pipeline.md -->",
         "<!-- GENERATED:END -->",
     ]
+
+
+#: Marker line prefixes of the generated header block (contract C4).
+GENERATED_BEGIN_PREFIX = "<!-- GENERATED:BEGIN"
+GENERATED_END_PREFIX = "<!-- GENERATED:END"
+
+
+def skip_generated_header(lines: list[str], start: int) -> int:
+    """If a generated header block starts at *start*, return the index past it.
+
+    The block is the BEGIN line, comment lines only, and the END line; one
+    following blank line is consumed when present (the renderer always emits
+    it; a missing one is caught later by the index-freshness check).
+    Grandfathered docs have no block at all — *start* is returned unchanged.
+
+    Raises:
+        FormatError: the block is unterminated or contains a non-comment line.
+    """
+    if start >= len(lines) or not lines[start].startswith(GENERATED_BEGIN_PREFIX):
+        return start
+    end = None
+    for j in range(start, len(lines)):
+        if lines[j].startswith(GENERATED_END_PREFIX):
+            end = j
+            break
+    if end is None:
+        raise FormatError("generated header block is missing its <!-- GENERATED:END --> line")
+    for j in range(start + 1, end):
+        if not (lines[j].startswith("<!--") and lines[j].endswith("-->")):
+            raise FormatError("generated header block contains a non-comment line")
+    cursor = end + 1
+    if cursor < len(lines) and lines[cursor] == "":
+        cursor += 1
+    return cursor
