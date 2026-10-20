@@ -2,19 +2,20 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	18
-HEADER	-	-	-	20	26
-QUEUE	-	-	-	27	33
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	34	73
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	74	102
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	103	141
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	259	304
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	305	342
-B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	343	377
-CONSTRAINTS	-	-	-	378	386
+INDEX_BLOCK	-	-	-	3	19
+HEADER	-	-	-	21	27
+QUEUE	-	-	-	28	34
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	35	74
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	75	103
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	104	142
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	143	183
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	184	220
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	221	259
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	260	305
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	306	343
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	344	378
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	415
+CONSTRAINTS	-	-	-	416	424
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -22,12 +23,12 @@ CONSTRAINTS	-	-	-	378	386
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** — | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-20
+**Queue:** B10 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-20
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-— (queue is empty; all items done)
+**B10** (deterministic document pipeline — CLI-only store → rendered docs + tamper detection)
 
 Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate), **B9** (agent-facing SKILL.md usage guide) — see their closeouts.
 
@@ -374,6 +375,43 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **CI:** on `2ea1ace` — SonarCloud Code Analysis success, quality success, security success (check-runs API, first poll).
   - **Acceptance:** front matter valid — name `securetrace` == folder name, kebab-case, display-name present, description 135 chars (≤ 150 guideline, ≤ 300 hard limit), model invocation enabled; all 20 required command/contract references documented (23/23 in `tests/test_skill_doc.py`, RED 23-fail → GREEN); covers all four CLI subcommands (backlog/lessons/algorithms/rmf) with exact leaf commands, the five `scripts/` wrappers, the full gate matrix (Makefile/hooks/CI), the six document contracts, the agent working loop, the RMF entry point (`make rmf-bundle` / `securetrace rmf build`), and the lesson-grounded pitfalls; `make gate` green (178 tests = 155 + 23); not installed — `~/.lmstudio/skills/` unchanged (9 pre-existing skills, no `securetrace`) and `.agents/` absent; installable later as-is (folder name == front-matter name).
   - **Lessons:** none new — every pitfall the guide cites already exists in LESSONS_LEARNED.md (LLT-0002/0003/0004/0005/0016/0017/0018/0031/0033).
+
+<!-- BACKLOG:ITEM:B10 -->
+## B10. Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection — **IN PROGRESS**
+
+- **Source:** user
+- **Requested:** 2026-10-20
+- **Priority:** High
+- **Request (verbatim):** "To make all documents as deterministic as possible, we need to ensure that construction of files is done in a deterministic manner. New requirements: 1) Creation and update of files is to be done via CLI input. Files should not be directly edited by the agent. Place warning that no manual editing is permited. 2) create a data store that can be stored in the repo to maintain the authoritative version of the document, and to provide a means to know if the external document has been modified outside of the app. 3) build the .md documents automatically via CLI or gate."
+- **Problem / evidence:** BACKLOG.md, LESSONS_LEARNED.md, and algorithms/INDEX.md are agent-authored .md files with only index-block freshness checked: a hand edit (agent or human) is indistinguishable from a CLI update, and nothing ties the doc bytes to a canonical data version. RMF-grade determinism requires the doc to be a pure render of an authoritative store, with out-of-band modification detectable.
+- **Chosen approach:** in-repo `data/` stores (canonical JSON: `data/backlog.json`, `data/lessons.json`, `data/algorithms.json`) are the single source of truth; the three pipeline docs are rendered by pure functions (`render(store) → bytes` — no clock, randomness, or environment dependence); `data/manifest.json` pins sha256 of store + rendered doc per document; `check` re-renders and byte-compares, cross-checking the manifest, diagnosing (a) doc modified outside the app, (b) store modified after render, (c) malformed; every mutation is a CLI command (`upsert/progress/add/show/render/check`, `docs render-all|check-all`, one-shot `migrate`); the pre-commit/CI `docs-check` gate enforces doc == render(store) so a hand edit blocks the commit; each rendered doc carries a generated header warning that manual editing is not permitted.
+- **Scope decision (recorded):** pipeline docs = BACKLOG.md, LESSONS_LEARNED.md, algorithms/INDEX.md. Authored content (ALRK prose docs `algorithms/*.md`, SKILL.md, README, ARCHITECTURE.md) stays agent-written; per-doc ALRK line indexes unchanged. Existing .md-based `backlog/lessons` commands are re-pointed at the store (the positional file arg becomes the store path); the .md is never a write target.
+- **Work items (in order):**
+  1. This backlog entry — the last manual edit to a pipeline doc (grandfathered; all later changes go through the new CLI)
+  2. ALRK: `algorithms/deterministic-doc-pipeline.md` (design before code) + registry row
+  3. TDD store core: canonical JSON, schema validation, manifest read/write
+  4. TDD backlog parser + renderer (roundtrip golden vs the real BACKLOG.md)
+  5. TDD lessons parser + renderer (roundtrip golden vs the real LESSONS_LEARNED.md)
+  6. TDD registry parser + renderer (roundtrip golden vs the real algorithms/INDEX.md)
+  7. TDD tamper detection: manifest sha256, distinct diagnoses, 0/1/2 exits
+  8. CLI: upsert/progress/show/render/check per doc + `docs render-all/check-all` + `migrate`
+  9. Migrate the real docs into `data/` stores + manifest (13 items / 33 lessons / 4 rows, no loss)
+  10. Rewire gates: Makefile `docs-check` + `docs-render`, pre-commit stage 3, CI quality; live block demo of a hand edit
+  11. Update README + ARCHITECTURE.md + `skills/securetrace/SKILL.md` + guard test
+  12. Close B10 through the new CLI (dogfood) + `make gate` + CI + closeout
+- **Blast radius:** new `securetrace.docs` subpackage + `data/` + CLI surface change (backlog/lessons/algorithms positional arg becomes the store path), Makefile/hooks/CI docs-check, SKILL.md + guard test, README/ARCHITECTURE; the RMF collector keeps working (rendered format preserves the existing markdown shape; RMF tests run on the synthetic mini-repo fixture, not this tree).
+- **Acceptance criteria:**
+  - `data/` holds canonical JSON stores for all three pipeline docs + `data/manifest.json` (per-doc `store_sha256`, `doc_sha256`, renderer version)
+  - every pipeline doc carries a generated header stating manual editing is not permitted and naming the CLI path to modify it
+  - all creation/update of the three pipeline docs is expressible via `securetrace` CLI commands (`upsert/progress/add/show/render/check`, `docs render-all/check-all`)
+  - tamper detection: a 1-byte flip of a rendered doc → `check` exits 1 diagnosing doc-modified-outside-app; a store edit after render → `check` exits 1 diagnosing store drift; malformed store → exit 2 (all RED→GREEN tested)
+  - golden roundtrip: `parse → render → parse` is identity and `render(parse(real_doc))` == committed bytes for all three real docs (modulo the generated header)
+  - migration lossless: 13 backlog items, 33 lessons, 4 registry rows present in the stores with all fields
+  - a hand edit to any pipeline doc is blocked by the pre-commit `docs-check` (demonstrated) and by CI quality (`make docs-check`)
+  - `make gate` green; CI quality + security + SonarCloud green on the closeout commit; B10 closed via the new CLI
+- **Ordering:** after B9 (documents the stable surface B10 replaces); B11+ must use the new pipeline.
+- **Progress:**
+  - 2026-10-20 — status → IN PROGRESS; WI 1 done (this entry — grandfathered as the last manual edit to a pipeline doc); header + queue updated; index regenerated + `--check` green
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
