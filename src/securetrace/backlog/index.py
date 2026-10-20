@@ -49,9 +49,8 @@ __all__ = [
 
 BEGIN_RE = re.compile(r"^<!--\s*INDEX:BEGIN\b.*?-->\s*$")
 END_RE = re.compile(r"^<!--\s*INDEX:END\s*-->\s*$")
-MARKER_RE = re.compile(
-    r"^<!--\s*BACKLOG:(?P<kind>HEADER|QUEUE|CONSTRAINTS|ITEM:(?P<item>[A-Z][A-Z0-9_]*))\s*-->\s*$"
-)
+KIND_MARKER_RE = re.compile(r"^<!--\s*BACKLOG:(?P<kind>[A-Z][A-Z0-9_]*)\s*-->\s*$")
+ITEM_MARKER_RE = re.compile(r"^<!--\s*BACKLOG:ITEM:(?P<item>[A-Z][A-Z0-9_]*)\s*-->\s*$")
 TSV_HEADER = "id\ttitle\tstatus\tpriority\tstart_line\tend_line"
 RESERVED = ("HEADER", "QUEUE", "CONSTRAINTS")
 PRIORITY_RE = re.compile(r"^\s*\*\*Priority:\*\*\s*(?P<val>.+?)\s*$", re.IGNORECASE)
@@ -107,6 +106,24 @@ def find_index_block(lines: list[str]) -> tuple[int, int]:
     return begin, end
 
 
+def _marker_on_line(line: str) -> tuple[str, str | None] | None:
+    """Parse one section marker line.
+
+    Returns ``(kind, item_id)``: a reserved kind (``HEADER``/``QUEUE``/
+    ``CONSTRAINTS``) with ``item_id`` ``None``, or ``"ITEM:<id>"`` with the
+    item id. ``None`` means "not a marker" — unknown kinds (and the bare word
+    ``ITEM``) are ignored, exactly as with the former single-regex form.
+    """
+    m = KIND_MARKER_RE.match(line)
+    if m is not None:
+        kind = m.group("kind")
+        return (kind, None) if kind in RESERVED else None
+    m = ITEM_MARKER_RE.match(line)
+    if m is not None:
+        return (f"ITEM:{m.group('item')}", m.group("item"))
+    return None
+
+
 def find_sections(lines: list[str], index_end: int) -> list[Section]:
     """Return all section markers in file order.
 
@@ -120,17 +137,17 @@ def find_sections(lines: list[str], index_end: int) -> list[Section]:
     sections: list[Section] = []
     seen: set[str] = set()
     for i, line in enumerate(lines):
-        m = MARKER_RE.match(line)
-        if not m:
+        marker = _marker_on_line(line)
+        if marker is None:
             continue
         if i <= index_end:
             raise FormatError(
                 f"marker at line {i + 1} is at or inside the index block; "
                 "markers must come after INDEX:END"
             )
-        kind = m.group("kind")
+        kind, item_id = marker
         is_item = kind.startswith("ITEM:")
-        row_id = m.group("item") if is_item else kind
+        row_id = item_id if is_item else kind
         if is_item and row_id in RESERVED:
             raise FormatError(
                 f"item id {row_id} is reserved for a section name; "
