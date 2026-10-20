@@ -19,12 +19,12 @@ REFERENCES	658	666
 |---|---|
 | Name | Lessons Record (append-only entry log with a derived self-describing TSV index) |
 | Slug | lessons-record |
-| Version | 0.1.3 |
+| Version | 0.1.4 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
 | Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4)<br>0.1.3 (2026-10-19): cited `FIELD_RE` value pattern resynced to the nested-optional linear form (`(?:\S+(?:\s+\S+)*)?` — empty allowed, trailing whitespace excluded, internal whitespace preserved) — behavior-identical (B7 increment 7) |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4)<br>0.1.3 (2026-10-19): cited `FIELD_RE` value pattern resynced to the nested-optional linear form (`(?:\S+(?:\s+\S+)*)?` — empty allowed, trailing whitespace excluded, internal whitespace preserved) — behavior-identical (B7 increment 7)<br>0.1.4 (2026-10-19): field-line match split into `FIELD_RE` (non-empty value: `\S+(?:\s+\S+)*`) + `FIELD_EMPTY_RE` (empty value) after the live API kept flagging the nested-optional form — empty-value capture preserved via the second regex (B7 increment 8) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | <br>`scripts/manage_lessons.py:L79-L134` (constants, vocabularies, exceptions, `Entry`) — `L158` (`atomic_write`) — `L173-L313` (`find_index_block`, `parse_entries`, `check_consistency`, `structural_errors`) — `L334-L390` (delta core: `expected_index_rows`, `index_is_fresh`, `regenerate`) — `L409-L467` (`build_template`, `render_entry`, `max_id`, `cmd_init`, `validate_add_args`) — `L492-L605` (`cmd_add`, `cmd_sync`, `cmd_check`, `cmd_next_id`) — `L607-L674` (`build_parser`, `main`) |
@@ -254,7 +254,7 @@ parse_entries(lines) -> (entries, errors)
             if heading.title contains a tab: errors += "entry {eid}: title contains a tab character (G6)"
         fields := {}
         for k := i + 1 .. j - 1:
-            if FIELD_RE (- **Name:** value) does not match lines[k]: continue
+            if FIELD_RE (non-empty value) / FIELD_EMPTY_RE (empty value) do not match lines[k]: continue; on FIELD_EMPTY_RE match: value := ""
             name := field name
             if name not in REQUIRED + OPTIONAL:
                 errors += "entry {eid}: unknown field '{name}' (line {k+1}); allowed: ..."; continue
@@ -485,8 +485,8 @@ supersession holds (LLT-0002 points at LLT-0001, and LLT-0001 is the only
 - **Regexes** (module level, compiled once): `BEGIN_RE`/`END_RE` tolerate
   inner whitespace; `ENTRY_MARKER_RE` = `^<!--\s*LLT:ENTRY:(LLT-(?a:\d){4})\s*-->\s*$`;
   `HEADING_RE` = `^##\s+(LLT-(?a:\d){4})\s+—\s+(\S+(?:\s+\S+)*)\s*$` — the em dash is
-  *required*; `FIELD_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*((?:\S+(?:\s+\S+)*)?)\s*$` (colon
-  inside the bold, value may be empty).
+  *required*; `FIELD_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*(\S+(?:\s+\S+)*)\s*$` (non-empty value)
+  + `FIELD_EMPTY_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*$` (empty value; colon inside the bold).
 - **Vocabularies:** 11 categories, 4 severities, 2 statuses — closed sets
   (guard G6); never extend by "fixing" an error message.
 

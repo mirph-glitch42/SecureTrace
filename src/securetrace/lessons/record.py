@@ -60,7 +60,8 @@ BEGIN_RE = re.compile(r"^<!--\s*LLT:INDEX:BEGIN\s*-->\s*$")
 END_RE = re.compile(r"^<!--\s*LLT:INDEX:END\s*-->\s*$")
 ENTRY_MARKER_RE = re.compile(r"^<!--\s*LLT:ENTRY:(?P<id>LLT-(?a:\d){4})\s*-->\s*$")
 HEADING_RE = re.compile(r"^##\s+(?P<id>LLT-(?a:\d){4})\s+—\s+(?P<title>\S+(?:\s+\S+)*)\s*$")
-FIELD_RE = re.compile(r"^-\s+\*\*(?P<name>[A-Za-z]+):\*\*\s*(?P<value>(?:\S+(?:\s+\S+)*)?)\s*$")
+FIELD_RE = re.compile(r"^-\s+\*\*(?P<name>[A-Za-z]+):\*\*\s*(?P<value>\S+(?:\s+\S+)*)\s*$")
+FIELD_EMPTY_RE = re.compile(r"^-\s+\*\*(?P<name>[A-Za-z]+):\*\*\s*$")
 
 ID_RE = re.compile(r"^LLT-(?a:\d){4}$")
 DATE_RE = re.compile(r"^(?a:\d){4}-(?a:\d){2}-(?a:\d){2}$")
@@ -185,9 +186,13 @@ def _parse_fields(errors: list[str], eid: str, lines: list[str], i: int, j: int)
     fields: dict[str, str] = {}
     for k in range(i + 1, j):
         fm = FIELD_RE.match(lines[k])
-        if not fm:
-            continue
-        name = fm.group("name")
+        if fm:
+            name, value = fm.group("name"), fm.group("value")
+        else:
+            fm = FIELD_EMPTY_RE.match(lines[k])
+            if not fm:
+                continue
+            name, value = fm.group("name"), ""
         if name not in ALL_FIELDS:
             errors.append(
                 f"entry {eid}: unknown field '{name}' (line {k + 1}); "
@@ -197,7 +202,6 @@ def _parse_fields(errors: list[str], eid: str, lines: list[str], i: int, j: int)
         if name in fields:
             errors.append(f"entry {eid}: duplicate field '{name}' (line {k + 1})")
             continue
-        value = fm.group("value")
         if "\t" in value:
             errors.append(f"entry {eid}: field '{name}' contains a tab character (G6)")
         fields[name] = value

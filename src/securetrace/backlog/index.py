@@ -53,7 +53,7 @@ KIND_MARKER_RE = re.compile(r"^<!--\s*BACKLOG:(?P<kind>[A-Z][A-Z0-9_]*)\s*-->\s*
 ITEM_MARKER_RE = re.compile(r"^<!--\s*BACKLOG:ITEM:(?P<item>[A-Z][A-Z0-9_]*)\s*-->\s*$")
 TSV_HEADER = "id\ttitle\tstatus\tpriority\tstart_line\tend_line"
 RESERVED = ("HEADER", "QUEUE", "CONSTRAINTS")
-PRIORITY_RE = re.compile(r"^\s*\*\*Priority:\*\*\s*(?P<val>.+)$", re.IGNORECASE)
+PRIORITY_RE = re.compile(r"^\s*\*\*Priority:\*\*\s*(?P<val>\S+)\s*$", re.IGNORECASE)
 PRIORITY_MAP = {"HIGH": "High", "MEDIUM": "Medium", "LOW": "Low"}
 DEFAULT_PRIORITY = "Low"
 
