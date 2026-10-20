@@ -14,8 +14,8 @@ B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	260	305
 B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	306	343
 B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	344	378
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	415
-CONSTRAINTS	-	-	-	416	424
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	416
+CONSTRAINTS	-	-	-	417	425
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -412,6 +412,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Ordering:** after B9 (documents the stable surface B10 replaces); B11+ must use the new pipeline.
 - **Progress:**
   - 2026-10-20 — status → IN PROGRESS; WI 1 done (this entry — grandfathered as the last manual edit to a pipeline doc); header + queue updated; index regenerated + `--check` green
+  - 2026-10-20 — WI 2 done: ALRK doc `algorithms/deterministic-doc-pipeline.md` (v0.1.0 draft, 8 index entries, repo `algorithms check` green) + registry row added slug-sorted (5 rows); next WI 3 (store core, TDD)
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
