@@ -10,34 +10,40 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	41
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	43	56
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	57	70
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	71	84
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	85	98
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	99	112
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	113	126
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	127	140
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	141	154
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	155	168
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	169	182
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	183	196
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	197	210
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	211	224
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	225	238
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	239	252
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	253	266
-LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	267	280
-LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	281	294
-LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	295	308
-LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	309	322
-LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	323	336
-LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	337	350
-LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	351	364
-LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	365	378
-LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	379	392
-LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	393	406
-LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	407	420
+LLT_INDEX_BLOCK	—	—	—	—	—	11	47
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	49	62
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	63	76
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	77	90
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	91	104
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	105	118
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	119	132
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	133	146
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	147	160
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	161	174
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	175	188
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	189	202
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	203	216
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	217	230
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	231	244
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	245	258
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	259	272
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	273	286
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	287	300
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	301	314
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	315	328
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	329	342
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	343	356
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	357	370
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	371	384
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	385	398
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	399	412
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	413	426
+LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	427	440
+LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	441	454
+LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	455	468
+LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	469	482
+LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	483	496
+LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	497	510
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -417,3 +423,87 @@ LLT-0027	RMF golden manifest embeds the live package version	testing	medium	acti
 - **Supersedes:** —
 - **Prevention:** —
 - **References:** —
+
+<!-- LLT:ENTRY:LLT-0028 -->
+## LLT-0028 — yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** medium
+- **Status:** active
+- **Context:** B8: the strict workflow-YAML checker (scripts/check_workflow_yaml.py) needs a custom exception carrying the duplicate-key label and line, while staying catchable as yaml.YAMLError.
+- **Pitfall:** yaml.YAMLError is a plain Exception-style class: calling it with keyword arguments (problem=..., problem_mark=...) raises TypeError, so a custom error built directly on it crashes at the moment it is raised.
+- **Solution:** Subclass yaml.MarkedYAMLError and call super().__init__(context=None, context_mark=None, problem='...', problem_mark=None) — that signature accepts those kwargs, and the subclass remains an instance of yaml.YAMLError for except-clauses.
+- **Supersedes:** —
+- **Prevention:** Before subclassing a library exception type, check the constructor signature of the class actually subclassed (the concrete one, not the base).
+- **References:** scripts/check_workflow_yaml.py (DuplicateKeyError); algorithms/workflow-yaml-strict-parse.md
+
+<!-- LLT:ENTRY:LLT-0029 -->
+## LLT-0029 — PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value
+
+- **Recorded:** 2026-10-19
+- **Category:** data
+- **Severity:** medium
+- **Status:** active
+- **Context:** B8: the duplicate-key checker message names the colliding key; workflow top-level keys include `on:` (LLT-0017/LLT-0023).
+- **Pitfall:** PyYAML implements YAML 1.1 and resolves bare on/yes/true scalars to boolean True: reporting the constructed key object yields 'duplicate key True' instead of 'duplicate key on', misdirecting the user to the wrong construct.
+- **Solution:** Take the label from the source scalar node — key_node.value when the key node is a yaml.nodes.ScalarNode — and fall back to str(constructed) only for non-scalar keys (flow collections).
+- **Supersedes:** —
+- **Prevention:** When echoing YAML keys or values back to users, prefer the node's source text over the constructed Python object.
+- **References:** scripts/check_workflow_yaml.py (StrictLoader.construct_mapping); tests/scripts/test_workflow_yaml.py
+
+<!-- LLT:ENTRY:LLT-0030 -->
+## LLT-0030 — ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell
+
+- **Recorded:** 2026-10-19
+- **Category:** process
+- **Severity:** low
+- **Status:** active
+- **Context:** B7/B8 closeout audit: algorithms/rmf-evidence-bundle.md METADATA table says 'Status | draft' (line 23) while the algorithms/INDEX.md registry row says implemented (version 0.2.0 matches in both).
+- **Pitfall:** The tempting fix is editing the closed doc's status cell to 'implemented' — but the ALRK immutable-history guard forbids rewriting closed documents, and the registry is the canonical status record (INDEX.md rule 3); silently amending the doc papers over the mismatch instead of recording it.
+- **Solution:** Treat the registry row as canonical; record the divergence as a lesson (this entry) instead of editing the closed doc; if a metadata correction is genuinely needed, publish a new version with a status-history line rather than amending in place.
+- **Supersedes:** —
+- **Prevention:** On any status mismatch between an algorithm doc and the registry, trust the registry (INDEX.md rule 3); never amend closed docs in place.
+- **References:** algorithms/rmf-evidence-bundle.md (METADATA line 23); algorithms/INDEX.md
+
+<!-- LLT:ENTRY:LLT-0031 -->
+## LLT-0031 — SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** medium
+- **Status:** active
+- **Context:** B7: after each increment (fixes plus WONTFIX/FALSE-POSITIVE triage), the SonarCloud Code Analysis check and New Code gate on the analyzed commit stayed red although the issues were handled.
+- **Pitfall:** Assuming triage or a code fix updates the gate verdict on the same commit — it does not; the verdict is computed from the issue state at that analysis. Only the next push (a new analysis) re-evaluates the gate.
+- **Solution:** After triage or fixes, push a follow-up commit to trigger a fresh analysis and read the check run on the NEW sha; verify freshness first by confirming api/projects/search revision matches the new commit (LLT-0008 for the API subset).
+- **Supersedes:** —
+- **Prevention:** When a SonarCloud verdict contradicts the issue state, first confirm the analysis revision is the commit you think it is — never read a stale gate.
+- **References:** B7 closeout (BACKLOG.md); SonarCloud API api/projects/search
+
+<!-- LLT:ENTRY:LLT-0032 -->
+## LLT-0032 — Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths
+
+- **Recorded:** 2026-10-19
+- **Category:** debugging
+- **Severity:** high
+- **Status:** active
+- **Context:** Marker parsing in src/securetrace/backlog/index.py: _marker_on_line returns (kind, item_id) with item_id None for reserved kinds (HEADER/QUEUE/CONSTRAINTS); the scan loop once unpacked it as (kind, row_id).
+- **Pitfall:** Unpacking a positional tuple into names implying a different second element: the reserved-section branch silently produced row_id=None and downstream use raised AttributeError — and the path is only exercised via backlog_index.py --check (not pytest), so the test suite stayed green.
+- **Solution:** Name unpack targets after what the helper actually returns (kind, item_id) and derive the always-present field conditionally: row_id = item_id if kind.startswith('ITEM:') else kind (index.py L148-150).
+- **Supersedes:** —
+- **Prevention:** When unpacking a tuple whose second element can be None, read the helper's docstring before naming the target, and ensure the None path is exercised by a gate check, not only by tests.
+- **References:** src/securetrace/backlog/index.py (_marker_on_line + scan loop L148-150)
+
+<!-- LLT:ENTRY:LLT-0033 -->
+## LLT-0033 — Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes
+
+- **Recorded:** 2026-10-19
+- **Category:** tooling
+- **Severity:** high
+- **Status:** active
+- **Context:** B7 increments 4/7/8: three consecutive rewrites of record.py FIELD_RE and index.py PRIORITY_RE were each gate-green locally, yet the first two remained flagged by SonarCloud S8786.
+- **Pitfall:** S8786 (ReDoS/super-linear regex) is decided by shape, not measured complexity: the same linear-time language is flagged or passes depending on form. Flagged: \S*(?:\s+\S+)* (star-led), (?:\S+(?:\s+\S+)*)? (quantified group nested in a quantified group), .+ after \s* (dot quantifier adjacent to a star). Passed: \S+(?:\s+\S+)* (HEADING_RE), (?a:\d){4}, and even lazy .*? with no quantified neighbor (BEGIN_RE, never flagged). Local ruff/pytest gates cannot see this rule at all.
+- **Solution:** Rewrite using only sub-shapes with passing precedent (\S+-led non-empty value, no nested quantified groups, no dot adjacent to a star); split an 'empty-or-value' capture into two regexes (non-empty + dedicated empty match) instead of an optional nested group (FIELD_RE + FIELD_EMPTY_RE); verify against the live API before declaring fixed — api/projects/search revision must match the commit, then look up the issue keys in api/issues/search.
+- **Supersedes:** —
+- **Prevention:** Treat every S8786 fix as a hypothesis: gate-green locally, then confirm CLOSED/FIXED via the SonarCloud issues API before closing the backlog item.
+- **References:** B7 closeout (BACKLOG.md); src/securetrace/lessons/record.py (FIELD_RE/FIELD_EMPTY_RE); src/securetrace/backlog/index.py (PRIORITY_RE); LLT-0008

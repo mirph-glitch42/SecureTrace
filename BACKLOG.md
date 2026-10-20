@@ -4,16 +4,16 @@
 id	title	status	priority	start_line	end_line
 INDEX_BLOCK	-	-	-	3	17
 HEADER	-	-	-	19	25
-QUEUE	-	-	-	26	33
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	34	73
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	74	102
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	103	141
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	296
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	297	327
-CONSTRAINTS	-	-	-	328	336
+QUEUE	-	-	-	26	32
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	33	72
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	73	101
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	102	140
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	141	181
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	182	218
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	219	257
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	258	303
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	304	341
+CONSTRAINTS	-	-	-	342	350
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -21,15 +21,14 @@ CONSTRAINTS	-	-	-	328	336
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** — | **In progress:** B8, B7 | **Done:** B1, B2, B3, B4, B5, B6 | **Updated:** 2026-10-19
+**Queue:** — | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6, B7, B8 | **Updated:** 2026-10-19
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B8** (High) — workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)
-2. **B7** (Medium) — SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)
+— (queue is empty; all items done)
 
-Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage) — see their closeouts.
+Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
 ## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
@@ -257,7 +256,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Notes:** the endpoint 404s in the session handoff were a name miss — the working call is `POST https://sonarcloud.io/api/issues/do_transition` with `issue=<key>`, `transition=falsepositive|wontfix`, `comment=<text>` (recorded in LLT-0008).
 
 <!-- BACKLOG:ITEM:B7 -->
-## B7. SonarCloud code-smell remediation in securetrace core (41 findings, 4 files) — **IN PROGRESS**
+## B7. SonarCloud code-smell remediation in securetrace core (41 findings, 4 files) — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
 - **Requested:** 2026-10-19
@@ -293,9 +292,17 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — WI 7 (increment 6, S5778 ×12): 12 exception tests in `tests/lessons/test_record.py` carried setup constructors (TEMPLATE/BASE/TWO/lesson(...)) inside the `pytest.raises` body beside `add_lesson` — setup objects hoisted to module-level constants (pure constructors, safe at import) so each flagged body is exactly one throwing invocation; unflagged exception tests (single-call bodies) and non-exception tests untouched; no doc change (test-only); `make gate` green (155 tests)
   - 2026-10-19 — WI 8 (increment 7, S8786 ×2): final 2 of the 41 — record.py `FIELD_RE` value group → nested-optional linear form `(?:\S+(?:\s+\S+)*)?` (empty allowed, trailing whitespace excluded, internal whitespace preserved — Sonar empirically accepts `\S+`-led shapes but flags the `\S*`-led form, so the proven-passing shape is wrapped optional) + index.py `PRIORITY_RE` value group `.+?` → `.+` (consumer already `.strip()`s before the map lookup and error text — capture bit-identical); all pinned field/priority tests unchanged and passing; **resolves the 40-vs-41 count discrepancy**: the 41st was index.py `PRIORITY_RE` (never covered by any earlier increment — WI 5's "×2" was the two record.py value groups only), and inc 4's FIELD_RE rewrite remained flagged; docs synced same change (ALRK rule 5): lessons-record 0.1.3 / line-index-sync 0.1.2 / registry rows; `make gate` green (155 tests)
   - 2026-10-19 — WI 9 (increment 8, S8786 ×2 — final 2 of 41, still-flagged iteration): live API after `6e153f0` (revision-verified fresh via `api/projects/search`) still flagged inc 7's forms — S8786 is shape-sensitive beyond ReDoS complexity: a quantified group nested in a quantified group (`(?:\S+(?:\s+\S+)*)?`) and a dot quantifier adjacent to a star (`.+` after `\s*`) are both rejected, while `\S+(?:\s+\S+)*` (HEADING_RE) passes — both targets rewritten to proven-passing sub-shapes: record.py `FIELD_RE` split into `FIELD_RE` (non-empty value `\S+(?:\s+\S+)*`) + new `FIELD_EMPTY_RE` (empty value, no groups — same inc-4 two-regex split as MARKER_RE; `_parse_fields` tries both and records `value=""` on the empty match — empty→G6 empty error, tab→G6 tab error, unknown/duplicate emission order all preserved; verified against every pinned field case) and index.py `PRIORITY_RE` → value = single non-whitespace token `\S+` + trailing `\s*$` (consumer `.strip()` now idempotent — map lookup and error text identical for every pinned priority case); 23-case behavior matrix OK, all pinned cases byte-identical, 2 unpinned degenerate divergences documented (whitespace-only / multi-word priority value now → `Low` instead of FormatError); docs synced same change (ALRK rule 5): lessons-record 0.1.4 / line-index-sync 0.1.3 / registry rows; `make gate` green (155 tests)
+- **Closeout (2026-10-19, DONE):**
+  - **Version:** none (quality fixes only; no API/CLI surface change, no release).
+  - **Commits:** 8 increments, each `make gate`-green before commit — `d08683d` (inc 1, S6353 ×7), `98680a2` (inc 2, S9409 ×10), `33c060d` (inc 3, S1192 ×5), `d7f856b` (inc 4, S8786 ×2), `cb21cb6` (inc 5, S3776 ×4), `6805678` (inc 6, S5778 ×12), `6e153f0` (inc 7, S8786 ×2), `448933a` (inc 8, S8786 ×2 — final).
+  - **SonarCloud verification (acceptance, live API):** analysis of `448933a` confirmed fresh first (`api/projects/search` revision = `448933a9907508d84cb067fff7a6e83ab9a38cbb`, lastAnalysisDate 2026-10-20T04:02:45+0000); issues API: **41/41 B7-scope findings CLOSED/FIXED** — both S8786 targets now CLOSED (`AaFSTEnJRefphxp1-wf9` record.py, `AaFSTEkbRefphxp1-wf3` index.py); project-wide 85 = 59 CLOSED/FIXED + 10 RESOLVED/WONTFIX (pre-existing S8705×1 + S8707×9 hotspots, outside B7 blast radius, LLT-0008 precedent) + 16 FALSE-POSITIVE (gitleaks config fixtures); **0 OPEN**.
+  - **CI:** on final `main` commit `448933a` — SonarCloud Code Analysis success, quality success, security success (check-runs API).
+  - **Acceptance:** 41/41 re-measured via the SonarCloud issues API (above); `make gate` green after every increment (155 tests; `tests/rmf/` goldens byte-identical, no regeneration); `SonarCloud Code Analysis` = success on the final `main` commit; 0 open project-wide; LLT-0009/LLT-0012 pinned quirks still pass (pinned tests green in all increments).
+  - **Notable findings:** the 40-vs-41 count discrepancy resolved in inc 7 (the 41st was index.py `PRIORITY_RE`); S8786 shape-sensitivity model built from 8 data points (nested quantified groups, dot-quantifier adjacent to a star, and star-led value groups rejected; `\S+`-led groups and an isolated lazy dot accepted) → LLT-0033; inc 8's two-regex split (FIELD_RE + FIELD_EMPTY_RE) mirrors inc 4's successful MARKER_RE split.
+  - **Lessons:** LLT-0031 (per-analysis gate verdicts), LLT-0032 (tuple-unpack aliasing in the marker scan), LLT-0033 (S8786 shape-sensitivity), LLT-0030 (ALRK registry-status canonicality, found in this closeout audit).
 
 <!-- BACKLOG:ITEM:B8 -->
-## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **IN PROGRESS**
+## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **DONE**
 
 - **Source:** agent (proposed — flagged to user per G8; approved "go for both" 2026-10-19)
 - **Requested:** 2026-10-19
@@ -324,6 +331,13 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — WI 3 RED: 9 tests in `tests/scripts/test_workflow_yaml.py` (all failing — checker absent); WI 4 GREEN: `scripts/check_workflow_yaml.py` per spec; `pyyaml==6.0.3` pinned + hashed (`requirements-dev.{in,txt}`); 9/9 pass
   - 2026-10-19 — WI 5: wired in ONE change — Makefile `workflow-check` (gate + .PHONY + help), pre-commit stage 4 (renumbered to 6 stages), CI quality step; doc → v0.2.0 `implemented` + registry row
   - 2026-10-19 — WI 6: `make gate` green (155 tests); local red-proof: probe workflow with duplicate `on:` blocked at stage 4/6 (`duplicate key 'on' at line 2`, make Error 1), then removed and stage green; HEAD clean
+- **Closeout (2026-10-19, DONE):**
+  - **Version:** none (gate tooling; no package API change).
+  - **Commits:** `7cf69d2` (WI 2, algorithm-doc spec + registry row), `b08a5f9` (WI 3–6, checker + Makefile/pre-commit/CI wiring + pyyaml pin + tests).
+  - **CI:** on final commit `b08a5f9` — quality success (check-run 118322312106), security success (check-run 118322312523), SonarCloud Code Analysis success (check-run 118322474916); both workflow files pass the new check in every gate since.
+  - **Sonar note:** one new S8707 hotspot in the checker itself (`scripts/check_workflow_yaml.py` L86, key `AaFWGkrR-FZCSHT58nSu`) triaged WONTFIX per the LLT-0008 precedent (local-CLI file-read path, not exploitable in this context) — outside B7/B8 acceptance scope (security hotspots tracked separately from the 41 code smells).
+  - **Acceptance:** duplicate-key workflow rejected locally at pre-commit stage 4/6 (red-proof: `duplicate key 'on' at line 2`, make Error 1) and by the CI quality job (TDD RED→GREEN evidence in `tests/scripts/test_workflow_yaml.py`, 9 tests); `make gate` green (155 tests); `pyyaml==6.0.3` pinned + hashed (`requirements-dev.txt`); both current workflow files (`ci.yml`, `release.yml`) pass the new check.
+  - **Lessons:** LLT-0028 (YAMLError constructor kwargs), LLT-0029 (YAML 1.1 bool key reporting).
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
