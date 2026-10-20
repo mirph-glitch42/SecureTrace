@@ -10,40 +10,41 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	47
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	49	62
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	63	76
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	77	90
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	91	104
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	105	118
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	119	132
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	133	146
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	147	160
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	161	174
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	175	188
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	189	202
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	203	216
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	217	230
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	231	244
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	245	258
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	259	272
-LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	273	286
-LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	287	300
-LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	301	314
-LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	315	328
-LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	329	342
-LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	343	356
-LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	357	370
-LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	371	384
-LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	385	398
-LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	399	412
-LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	413	426
-LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	427	440
-LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	441	454
-LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	455	468
-LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	469	482
-LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	483	496
-LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	497	510
+LLT_INDEX_BLOCK	—	—	—	—	—	11	48
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	50	63
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	64	77
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	78	91
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	92	105
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	106	119
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	120	133
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	134	147
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	148	161
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	162	175
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	176	189
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	190	203
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	204	217
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	218	231
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	232	245
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	246	259
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	260	273
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	274	287
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	288	301
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	302	315
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	316	329
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	330	343
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	344	357
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	358	371
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	372	385
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	386	399
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	400	413
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	414	427
+LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	428	441
+LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	442	455
+LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	456	469
+LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	470	483
+LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	484	497
+LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	498	511
+LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	512	525
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -507,3 +508,17 @@ LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verif
 - **Supersedes:** —
 - **Prevention:** Treat every S8786 fix as a hypothesis: gate-green locally, then confirm CLOSED/FIXED via the SonarCloud issues API before closing the backlog item.
 - **References:** B7 closeout (BACKLOG.md); src/securetrace/lessons/record.py (FIELD_RE/FIELD_EMPTY_RE); src/securetrace/backlog/index.py (PRIORITY_RE); LLT-0008
+
+<!-- LLT:ENTRY:LLT-0034 -->
+## LLT-0034 — New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it
+
+- **Recorded:** 2026-10-20
+- **Category:** dependencies
+- **Severity:** medium
+- **Status:** active
+- **Context:** B10 WI 4 closeout (2026-10-20): commit 14e78f6 pushed with a green local gate; the CI security job (gitleaks + pip-audit + SBOM) failed hours later, while the identical lockfile had passed on 7137b83 earlier the same day. certifi, a transitive dep (requests -> pip-audit), was locked at 2026.7.22; GHSA-6q48-6c7w-9gw2 was published with fix version 2026.10.19, and pip-audit failed the audit.
+- **Pitfall:** A security-job failure on a previously green commit is time-dependent external drift (a new advisory), not a regression in the pushed change — the diagnosis starts with the job log, not the diff. And the obvious fix does not work: re-running a plain 'make lock' leaves the vulnerable pin in place, because pip-compile prefers already-locked versions (minimal-diff resolution), so the vulnerable certifi==2026.7.22 survived the re-lock.
+- **Solution:** Delete the stale 'certifi==2026.7.22' stanza (with its hashes) from requirements-dev.txt, re-run 'make lock' so pip-compile re-resolves certifi to 2026.10.19 with fresh hashes, reinstall the venv with --require-hashes, verify 'make dependency-audit' is clean and 'make gate' is green, then commit as a separate chore(deps) change and re-run CI.
+- **Supersedes:** —
+- **Prevention:** When the security job fails on a commit that previously passed, assume a newly published advisory first. To fix a CVE in a locked transitive dep, do not trust a plain re-lock: remove the vulnerable pin (or add a floor constraint in the .in manifest) and THEN re-lock, then re-audit in a hash-verified install.
+- **References:** LLT-0005

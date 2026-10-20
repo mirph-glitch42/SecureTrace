@@ -94,7 +94,7 @@ re-sorting open prose lists (progress lines are data, not derived).
   cells (status, priority, lesson fields, registry columns) become structured
   data; open prose (request verbatim, problem, progress lines, closeout lines)
   stays as *ordered line lists* in the store. This keeps roundtrips lossless
-  for the live 10 backlog items / 33 lessons without inventing a prose schema.
+  for the live 10 backlog items and 34 lessons (at WI 4 time; the record is append-only and grows with B10) without inventing a prose schema.
 
 ### 2.3 Correctness argument
 
@@ -263,7 +263,7 @@ Store: the one-item backlog store of test T1 (§6).
 |---|---|---|---|
 | T1 | one-item backlog store (B1, 2 progress lines, 3-line closeout) | `render(parse(render(store))) == render(store)`; sha256 identical across two runs | C1/C2 core roundtrip |
 | T2 | the real repo `BACKLOG.md` (10 items at B10 time) | `parse → render` reproduces committed bytes (modulo the generated header block and the TSV line numbers it shifts); 10/10 items, all fields | lossless migration of the live backlog |
-| T3 | the real repo `LESSONS_LEARNED.md` (33 lessons) | roundtrip identity; 33/33 lessons, closed vocabularies intact | lossless migration of the live record |
+| T3 | the real repo `LESSONS_LEARNED.md` (34 lessons at WI 4 time; the test derives N from the live file, never a hardcoded count) | roundtrip identity; N/N lessons, closed vocabularies intact | lossless migration of the live record |
 | T4 | the real repo `algorithms/INDEX.md` (5 rows) | roundtrip identity; 5/5 rows in slug order | lossless migration of the registry |
 | T5 | T1 doc with one byte flipped inside an item body | `check` exit 1; stderr names the outside-app diagnosis + the render command | user requirement 2 — tamper is diagnosed, not just detected |
 | T6 | T1 store edited (progress line appended) after render | `check` exit 1; diagnosis is store drift, distinct from T5 | the two drift directions are told apart |
