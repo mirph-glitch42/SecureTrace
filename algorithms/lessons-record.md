@@ -19,12 +19,12 @@ REFERENCES	658	666
 |---|---|
 | Name | Lessons Record (append-only entry log with a derived self-describing TSV index) |
 | Slug | lessons-record |
-| Version | 0.1.2 |
+| Version | 0.1.3 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
 | Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4) |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4)<br>0.1.3 (2026-10-19): cited `FIELD_RE` value pattern resynced to the nested-optional linear form (`(?:\S+(?:\s+\S+)*)?` — empty allowed, trailing whitespace excluded, internal whitespace preserved) — behavior-identical (B7 increment 7) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | <br>`scripts/manage_lessons.py:L79-L134` (constants, vocabularies, exceptions, `Entry`) — `L158` (`atomic_write`) — `L173-L313` (`find_index_block`, `parse_entries`, `check_consistency`, `structural_errors`) — `L334-L390` (delta core: `expected_index_rows`, `index_is_fresh`, `regenerate`) — `L409-L467` (`build_template`, `render_entry`, `max_id`, `cmd_init`, `validate_add_args`) — `L492-L605` (`cmd_add`, `cmd_sync`, `cmd_check`, `cmd_next_id`) — `L607-L674` (`build_parser`, `main`) |
@@ -485,7 +485,7 @@ supersession holds (LLT-0002 points at LLT-0001, and LLT-0001 is the only
 - **Regexes** (module level, compiled once): `BEGIN_RE`/`END_RE` tolerate
   inner whitespace; `ENTRY_MARKER_RE` = `^<!--\s*LLT:ENTRY:(LLT-(?a:\d){4})\s*-->\s*$`;
   `HEADING_RE` = `^##\s+(LLT-(?a:\d){4})\s+—\s+(\S+(?:\s+\S+)*)\s*$` — the em dash is
-  *required*; `FIELD_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*(\S*(?:\s+\S+)*)\s*$` (colon
+  *required*; `FIELD_RE` = `^-\s+\*\*([A-Za-z]+):\*\*\s*((?:\S+(?:\s+\S+)*)?)\s*$` (colon
   inside the bold, value may be empty).
 - **Vocabularies:** 11 categories, 4 severities, 2 statuses — closed sets
   (guard G6); never extend by "fixing" an error message.

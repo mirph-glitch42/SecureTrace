@@ -19,12 +19,12 @@ REFERENCES	429	438
 |---|---|
 | Name | Line-Index Sync (marker scan, delta computation, idempotent TSV rewrite) |
 | Slug | line-index-sync |
-| Version | 0.1.1 |
+| Version | 0.1.2 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
 | Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4) |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4)<br>0.1.2 (2026-10-19): `PRIORITY_RE` value pattern described in the linear non-lazy form (`.+`; the consumer strips before the map lookup and the error text, so the capture is bit-identical) — behavior-identical (B7 increment 7) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | <br>`scripts/backlog_index.py:L51-L237` (reference implementation, richest format)<br>`scripts/algorithm_index.py:L38-L150` (same core, `id/start_line/end_line` format)<br>`scripts/manage_lessons.py:L334-L390` (same delta core, third format — see `lessons-record`) |
@@ -154,7 +154,7 @@ Backfilled against `ad0fc9f`; observed gaps between ideal and actual:
 6. **Placeholder dash differs by format:** backlog/algorithm rows use `-`,
    the lessons variant uses `—` (em dash). Mixing them breaks `check`.
 7. **Priority parsing does not see bulleted lines.** `PRIORITY_RE` is
-   `^\s*\*\*Priority:\*\*\s*(.+?)\s*$` (case-insensitive): it matches only a
+   `^\s*\*\*Priority:\*\*\s*(.+)$` (case-insensitive): it matches only a
    line that *starts* with `**Priority:**` (after optional whitespace). The
    bulleted form `- **Priority:** High` — used by this repo's BACKLOG.md and
    by the skill's own `references/item-anatomy.md` — never matches, so the

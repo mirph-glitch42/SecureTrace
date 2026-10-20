@@ -60,7 +60,7 @@ BEGIN_RE = re.compile(r"^<!--\s*LLT:INDEX:BEGIN\s*-->\s*$")
 END_RE = re.compile(r"^<!--\s*LLT:INDEX:END\s*-->\s*$")
 ENTRY_MARKER_RE = re.compile(r"^<!--\s*LLT:ENTRY:(?P<id>LLT-(?a:\d){4})\s*-->\s*$")
 HEADING_RE = re.compile(r"^##\s+(?P<id>LLT-(?a:\d){4})\s+—\s+(?P<title>\S+(?:\s+\S+)*)\s*$")
-FIELD_RE = re.compile(r"^-\s+\*\*(?P<name>[A-Za-z]+):\*\*\s*(?P<value>\S*(?:\s+\S+)*)\s*$")
+FIELD_RE = re.compile(r"^-\s+\*\*(?P<name>[A-Za-z]+):\*\*\s*(?P<value>(?:\S+(?:\s+\S+)*)?)\s*$")
 
 ID_RE = re.compile(r"^LLT-(?a:\d){4}$")
 DATE_RE = re.compile(r"^(?a:\d){4}-(?a:\d){2}-(?a:\d){2}$")
