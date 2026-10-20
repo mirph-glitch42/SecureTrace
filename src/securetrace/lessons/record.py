@@ -152,14 +152,108 @@ def find_index_block(lines: list[str]) -> tuple[int | None, int | None]:
     return begin, end
 
 
+def _find_heading(lines: list[str], i: int, j: int) -> tuple[int, str, str] | None:
+    """First ``## LLT-NNNN — <title>`` heading inside the entry span, if any."""
+    for k in range(i + 1, j):
+        hm = HEADING_RE.match(lines[k])
+        if hm:
+            return k, hm.group("id"), hm.group("title")
+    return None
+
+
+def _check_heading(errors: list[str], eid: str, i: int, j: int, lines: list[str]) -> str:
+    """Validate the entry heading; return its title ('' when the heading is missing)."""
+    heading = _find_heading(lines, i, j)
+    if heading is None:
+        errors.append(
+            f"entry {eid}: missing heading '## {eid} — <title>' in lines {i + 1}-{j} (G8)"
+        )
+        return ""
+    title = heading[2]
+    if heading[1] != eid:
+        errors.append(
+            f"entry marker {eid} (line {i + 1}) disagrees with heading id "
+            f"{heading[1]} (line {heading[0] + 1}); marker and heading must match (G8)"
+        )
+    if "\t" in title:
+        errors.append(f"entry {eid}: title contains a tab character (G6)")
+    return title
+
+
+def _parse_fields(errors: list[str], eid: str, lines: list[str], i: int, j: int) -> dict[str, str]:
+    """Collect the entry's field lines into a dict, recording field-level errors."""
+    fields: dict[str, str] = {}
+    for k in range(i + 1, j):
+        fm = FIELD_RE.match(lines[k])
+        if not fm:
+            continue
+        name = fm.group("name")
+        if name not in ALL_FIELDS:
+            errors.append(
+                f"entry {eid}: unknown field '{name}' (line {k + 1}); "
+                f"allowed: {', '.join(ALL_FIELDS)}"
+            )
+            continue
+        if name in fields:
+            errors.append(f"entry {eid}: duplicate field '{name}' (line {k + 1})")
+            continue
+        value = fm.group("value")
+        if "\t" in value:
+            errors.append(f"entry {eid}: field '{name}' contains a tab character (G6)")
+        fields[name] = value
+    return fields
+
+
+def _check_required_fields(errors: list[str], eid: str, fields: dict[str, str]) -> None:
+    """Required fields present and non-empty, in pinned order (G6)."""
+    for req in REQUIRED_FIELDS:
+        if req not in fields:
+            errors.append(f"entry {eid}: missing required field '{req}' (G6)")
+        elif not fields[req]:
+            errors.append(f"entry {eid}: required field '{req}' is empty (G6)")
+
+
+def _check_field_vocabularies(errors: list[str], eid: str, fields: dict[str, str]) -> None:
+    """Date shape (format-only, DEV(3)) and vocabulary guards for present fields (G6/G7)."""
+    recorded = fields.get("Recorded")
+    if recorded and not DATE_RE.match(recorded):
+        errors.append(f"entry {eid}: Recorded '{recorded}' is not YYYY-MM-DD (G6)")
+    category = fields.get("Category")
+    if category is not None and category not in CATEGORIES:
+        errors.append(
+            f"entry {eid}: Category '{category}' not in vocabulary: {', '.join(CATEGORIES)} (G6)"
+        )
+    severity = fields.get("Severity")
+    if severity is not None and severity not in SEVERITIES:
+        errors.append(
+            f"entry {eid}: Severity '{severity}' not in vocabulary: {', '.join(SEVERITIES)} (G6)"
+        )
+    status = fields.get("Status")
+    if status is not None and status not in STATUSES:
+        errors.append(
+            f"entry {eid}: Status '{status}' not in vocabulary: {', '.join(STATUSES)} (G6)"
+        )
+    supersedes = fields.get("Supersedes")
+    if supersedes is not None and supersedes != "—" and not ID_RE.match(supersedes):
+        errors.append(f"entry {eid}: Supersedes '{supersedes}' must be an LLT-NNNN id or — (G7)")
+
+
+def _check_optional_fields(errors: list[str], eid: str, fields: dict[str, str]) -> None:
+    """Optional fields, when present, must be non-empty (write — when absent)."""
+    for opt in ("Prevention", "References"):
+        if opt in fields and not fields[opt]:
+            errors.append(f"entry {eid}: optional field '{opt}' is empty; write — when absent (G6)")
+
+
 def parse_entries(lines: list[str]) -> tuple[list[Entry], list[str]]:
     """Parse every entry section; return (entries in file order, structural errors).
 
-    Checks per entry: marker/heading agreement, heading presence, title and
-    field values single-line without tabs, known field names, no duplicate
-    fields, required fields present and non-empty, ``Recorded`` date shape
-    (format-only, DEV(3)), category/severity/status vocabularies,
-    ``Supersedes`` id shape, and non-empty optional fields.
+    Per-entry checks (pinned order, collected not fail-fast): duplicate marker
+    (G4), heading presence/agreement (G8), tab-free title (G6), known and
+    unique field names, tab-free values, required fields present and
+    non-empty (G6), ``Recorded`` date shape (format-only, DEV(3)),
+    category/severity/status vocabularies (G6), ``Supersedes`` id shape
+    (G7), and non-empty optional fields (G6).
     """
     errors: list[str] = []
     entries: list[Entry] = []
@@ -175,86 +269,17 @@ def parse_entries(lines: list[str]) -> tuple[list[Entry], list[str]]:
         j = i + 1
         while j < len(lines) and not ENTRY_MARKER_RE.match(lines[j]):
             j += 1
-        heading: tuple[int, str, str] | None = None
-        for k in range(i + 1, j):
-            hm = HEADING_RE.match(lines[k])
-            if hm:
-                heading = (k, hm.group("id"), hm.group("title"))
-                break
-        title = ""
-        if heading is None:
-            errors.append(
-                f"entry {eid}: missing heading '## {eid} — <title>' in lines {i + 1}-{j} (G8)"
-            )
-        else:
-            if heading[1] != eid:
-                errors.append(
-                    f"entry marker {eid} (line {i + 1}) disagrees with heading id "
-                    f"{heading[1]} (line {heading[0] + 1}); marker and heading must match (G8)"
-                )
-            title = heading[2]
-            if "\t" in title:
-                errors.append(f"entry {eid}: title contains a tab character (G6)")
-        fields: dict[str, str] = {}
-        for k in range(i + 1, j):
-            fm = FIELD_RE.match(lines[k])
-            if not fm:
-                continue
-            name = fm.group("name")
-            if name not in ALL_FIELDS:
-                errors.append(
-                    f"entry {eid}: unknown field '{name}' (line {k + 1}); "
-                    f"allowed: {', '.join(ALL_FIELDS)}"
-                )
-                continue
-            if name in fields:
-                errors.append(f"entry {eid}: duplicate field '{name}' (line {k + 1})")
-                continue
-            value = fm.group("value")
-            if "\t" in value:
-                errors.append(f"entry {eid}: field '{name}' contains a tab character (G6)")
-            fields[name] = value
-        for req in REQUIRED_FIELDS:
-            if req not in fields:
-                errors.append(f"entry {eid}: missing required field '{req}' (G6)")
-            elif not fields[req]:
-                errors.append(f"entry {eid}: required field '{req}' is empty (G6)")
-        recorded = fields.get("Recorded")
-        if recorded and not DATE_RE.match(recorded):
-            errors.append(f"entry {eid}: Recorded '{recorded}' is not YYYY-MM-DD (G6)")
-        category = fields.get("Category")
-        if category is not None and category not in CATEGORIES:
-            errors.append(
-                f"entry {eid}: Category '{category}' not in vocabulary: "
-                f"{', '.join(CATEGORIES)} (G6)"
-            )
-        severity = fields.get("Severity")
-        if severity is not None and severity not in SEVERITIES:
-            errors.append(
-                f"entry {eid}: Severity '{severity}' not in vocabulary: "
-                f"{', '.join(SEVERITIES)} (G6)"
-            )
-        status = fields.get("Status")
-        if status is not None and status not in STATUSES:
-            errors.append(
-                f"entry {eid}: Status '{status}' not in vocabulary: {', '.join(STATUSES)} (G6)"
-            )
-        supersedes = fields.get("Supersedes")
-        if supersedes is not None and supersedes != "—" and not ID_RE.match(supersedes):
-            errors.append(
-                f"entry {eid}: Supersedes '{supersedes}' must be an LLT-NNNN id or — (G7)"
-            )
-        for opt in ("Prevention", "References"):
-            if opt in fields and not fields[opt]:
-                errors.append(
-                    f"entry {eid}: optional field '{opt}' is empty; write — when absent (G6)"
-                )
+        title = _check_heading(errors, eid, i, j, lines)
+        fields = _parse_fields(errors, eid, lines, i, j)
+        _check_required_fields(errors, eid, fields)
+        _check_field_vocabularies(errors, eid, fields)
+        _check_optional_fields(errors, eid, fields)
         entries.append(Entry(id=eid, title=title, fields=fields, start=i + 1, end=j))
     return entries, errors
 
 
-def check_consistency(entries: list[Entry]) -> list[str]:
-    """Cross-entry invariants: supersession bidirectionality and id ordering."""
+def _check_supersession(entries: list[Entry]) -> list[str]:
+    """Every ``Supersedes`` target must exist and be marked superseded (G7)."""
     errors: list[str] = []
     by_id: dict[str, Entry] = {}
     for e in entries:
@@ -269,6 +294,12 @@ def check_consistency(entries: list[Entry]) -> list[str]:
             errors.append(
                 f"entry {e.id}: Supersedes {sup}, but {sup} is not marked superseded (G7)"
             )
+    return errors
+
+
+def _check_superseded_have_successor(entries: list[Entry]) -> list[str]:
+    """A superseded entry must be superseded by some entry (G7)."""
+    errors: list[str] = []
     for e in entries:
         if e.fields.get("Status") != "superseded":
             continue
@@ -278,15 +309,28 @@ def check_consistency(entries: list[Entry]) -> list[str]:
                 f"entry {e.id} is superseded but no entry supersedes it; "
                 f"add the replacement with --supersedes {e.id} (G7)"
             )
+    return errors
+
+
+def _check_id_order(entries: list[Entry]) -> list[str]:
+    """Ids must strictly increase in file order (G4); report the first violation."""
     nums = [int(e.id[4:]) for e in entries]
     for a, b in zip(nums, nums[1:], strict=False):
         if b <= a:
-            errors.append(
+            return [
                 "entry ids must strictly increase in file order (append-only); "
                 f"found {a} followed by {b} (G4)"
-            )
-            break
-    return errors
+            ]
+    return []
+
+
+def check_consistency(entries: list[Entry]) -> list[str]:
+    """Cross-entry invariants: supersession bidirectionality and id ordering."""
+    return (
+        _check_supersession(entries)
+        + _check_superseded_have_successor(entries)
+        + _check_id_order(entries)
+    )
 
 
 def structural_errors(text: str) -> list[str]:
@@ -433,22 +477,18 @@ def next_id(entries: list[Entry]) -> str:
     return f"LLT-{max_id(entries) + 1:04d}"
 
 
-def _validate_new_lesson(lesson: NewLesson) -> None:
-    """Guard the ``add`` inputs (G6 vocabulary/shape guards).
-
-    Order is pinned: required fields (title, context, pitfall, solution),
-    then category, severity, recorded date shape, then the optional
-    prevention/references single-line checks.
-
-    Raises:
-        InvalidInput: the first violated guard, with its pinned message.
-    """
+def _validate_required(lesson: NewLesson) -> None:
+    """Required ``--title/--context/--pitfall/--solution``: non-empty, single line (G6)."""
     for name in ("title", "context", "pitfall", "solution"):
         value = getattr(lesson, name)
         if not value or not value.strip():
             raise InvalidInput(f"--{name} is required and must be non-empty (G6)")
         if "\t" in value or "\n" in value:
             raise InvalidInput(f"--{name} must be a single line without tabs (G6)")
+
+
+def _validate_vocabularies(lesson: NewLesson) -> None:
+    """Category/severity vocabulary and ``recorded`` date shape (G6)."""
     if lesson.category not in CATEGORIES:
         raise InvalidInput(
             f"--category '{lesson.category}' not in vocabulary: {', '.join(CATEGORIES)} (G6)"
@@ -459,10 +499,75 @@ def _validate_new_lesson(lesson: NewLesson) -> None:
         )
     if lesson.recorded and not DATE_RE.match(lesson.recorded):
         raise InvalidInput(f"--recorded '{lesson.recorded}' is not YYYY-MM-DD (G6)")
+
+
+def _validate_optional_single_line(lesson: NewLesson) -> None:
+    """Optional ``--prevention/--references``, when given, single line without tabs (G6)."""
     for name in ("prevention", "references"):
         value = getattr(lesson, name)
         if value and ("\t" in value or "\n" in value):
             raise InvalidInput(f"--{name} must be a single line without tabs (G6)")
+
+
+def _validate_new_lesson(lesson: NewLesson) -> None:
+    """Guard the ``add`` inputs (G6 vocabulary/shape guards).
+
+    Order is pinned: required fields (title, context, pitfall, solution),
+    then category, severity, recorded date shape, then the optional
+    prevention/references single-line checks.
+
+    Raises:
+        InvalidInput: the first violated guard, with its pinned message.
+    """
+    _validate_required(lesson)
+    _validate_vocabularies(lesson)
+    _validate_optional_single_line(lesson)
+
+
+def _supersede_target(text: str, entries: list[Entry], lesson: NewLesson) -> str:
+    """Flip the ``Supersedes`` target's ``Status`` to superseded (G7).
+
+    Raises:
+        InvalidInput: the pinned supersession guards, in order (id shape,
+            target existence, target active).
+    """
+    lines = text.split("\n")
+    if not ID_RE.match(lesson.supersedes):
+        raise InvalidInput(f"--supersedes '{lesson.supersedes}' must be an LLT-NNNN id (G7)")
+    target = next((e for e in entries if e.id == lesson.supersedes), None)
+    if target is None:
+        raise InvalidInput(f"--supersedes {lesson.supersedes}: no such entry (G7)")
+    if target.fields.get("Status") != "active":
+        raise InvalidInput(
+            f"--supersedes {lesson.supersedes}: that entry is not active; "
+            "supersede the newest replacement instead (G7)"
+        )
+    for i in range(target.start - 1, target.end):
+        if lines[i].startswith("- **Status:**"):
+            lines[i] = "- **Status:** superseded"
+            break
+    return "\n".join(lines)
+
+
+def _assign_entry_id(entries: list[Entry], lesson: NewLesson) -> str:
+    """The new entry's id: a validated explicit ``--id`` or max+1 (G4).
+
+    Raises:
+        InvalidInput: the pinned id guards, in order (shape, not reused,
+            above the current maximum).
+    """
+    if lesson.id:
+        if not ID_RE.match(lesson.id):
+            raise InvalidInput(f"--id '{lesson.id}' must match LLT-[0-9]{{4}} (G4)")
+        if any(e.id == lesson.id for e in entries):
+            raise InvalidInput(f"--id {lesson.id} already exists; ids are never reused (G4)")
+        if int(lesson.id[4:]) <= max_id(entries):
+            raise InvalidInput(
+                f"--id {lesson.id} must be greater than the current maximum "
+                f"LLT-{max_id(entries):04d}; entries are appended in id order (G4)"
+            )
+        return lesson.id
+    return f"LLT-{max_id(entries) + 1:04d}"
 
 
 def add_lesson(text: str, lesson: NewLesson, today: str) -> AddResult:
@@ -491,35 +596,9 @@ def add_lesson(text: str, lesson: NewLesson, today: str) -> AddResult:
     _validate_new_lesson(lesson)
 
     if lesson.supersedes:
-        if not ID_RE.match(lesson.supersedes):
-            raise InvalidInput(f"--supersedes '{lesson.supersedes}' must be an LLT-NNNN id (G7)")
-        target = next((e for e in entries if e.id == lesson.supersedes), None)
-        if target is None:
-            raise InvalidInput(f"--supersedes {lesson.supersedes}: no such entry (G7)")
-        if target.fields.get("Status") != "active":
-            raise InvalidInput(
-                f"--supersedes {lesson.supersedes}: that entry is not active; "
-                "supersede the newest replacement instead (G7)"
-            )
-        for i in range(target.start - 1, target.end):
-            if lines[i].startswith("- **Status:**"):
-                lines[i] = "- **Status:** superseded"
-                break
-        text = "\n".join(lines)
+        text = _supersede_target(text, entries, lesson)
 
-    if lesson.id:
-        if not ID_RE.match(lesson.id):
-            raise InvalidInput(f"--id '{lesson.id}' must match LLT-[0-9]{{4}} (G4)")
-        if any(e.id == lesson.id for e in entries):
-            raise InvalidInput(f"--id {lesson.id} already exists; ids are never reused (G4)")
-        if int(lesson.id[4:]) <= max_id(entries):
-            raise InvalidInput(
-                f"--id {lesson.id} must be greater than the current maximum "
-                f"LLT-{max_id(entries):04d}; entries are appended in id order (G4)"
-            )
-        entry_id = lesson.id
-    else:
-        entry_id = f"LLT-{max_id(entries) + 1:04d}"
+    entry_id = _assign_entry_id(entries, lesson)
 
     rendered = render_entry(
         NewLesson(
