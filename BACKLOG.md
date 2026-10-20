@@ -11,9 +11,9 @@ B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	L
 B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
 B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	293
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	294	324
-CONSTRAINTS	-	-	-	325	333
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	IN_PROGRESS	Low	259	294
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	IN_PROGRESS	Low	295	325
+CONSTRAINTS	-	-	-	326	334
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -290,6 +290,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-19 — WI 4 (increment 3, S1192 ×5): module constants before `CATALOG` — `BACKLOG_DOC` / `LESSONS_DOC` / `PYPROJECT_TOML` / `SEPARATOR_3` / `SEPARATOR_4` — replacing every code occurrence (4+4+3 file-name sites in CATALOG/FIXED/state parsers; 3+3 separator sites across the 5 renderers); human-readable remediation prose in CATALOG left untouched (format description, not code); each literal now appears exactly once; output byte-identical (goldens pass, no regeneration); no doc change (algorithm unchanged); `make gate` green (155 tests)
   - 2026-10-19 — WI 5 (increment 4, S8786 ×2): record.py HEADING_RE/FIELD_RE value groups → linear-time `\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`; index.py MARKER_RE → anchored alternation-free KIND_MARKER_RE + ITEM_MARKER_RE + private `_marker_on_line` helper (reserved-kind validation in Python — unknown kinds and bare `ITEM` still ignored); guard order + all error strings unchanged (pinned tests pass); docs synced same change (ALRK rule 5): lessons-record.md → 0.1.2, line-index-sync.md → 0.1.1, registry rows updated; `make gate` green (155 tests)
   - 2026-10-19 — WI 6 (increment 5, S3776 ×4): `parse_entries` → `_check_heading`/`_parse_fields`/`_check_required_fields`/`_check_field_vocabularies`/`_check_optional_fields` (+ `_find_heading`); `check_consistency` → `_check_supersession`/`_check_superseded_have_successor`/`_check_id_order`; `_validate_new_lesson` → `_validate_required`/`_validate_vocabularies`/`_validate_optional_single_line`; `add_lesson` → `_supersede_target`/`_assign_entry_id`; every error string and its emission order byte-identical (pinned tests pass); no doc change (algorithm unchanged — doc cites the public entry points only); `make gate` green (155 tests)
+  - 2026-10-19 — WI 7 (increment 6, S5778 ×12): 12 exception tests in `tests/lessons/test_record.py` carried setup constructors (TEMPLATE/BASE/TWO/lesson(...)) inside the `pytest.raises` body beside `add_lesson` — setup objects hoisted to module-level constants (pure constructors, safe at import) so each flagged body is exactly one throwing invocation; unflagged exception tests (single-call bodies) and non-exception tests untouched; no doc change (test-only); `make gate` green (155 tests)
 
 <!-- BACKLOG:ITEM:B8 -->
 ## B8. Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI) — **IN PROGRESS**

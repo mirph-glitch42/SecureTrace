@@ -65,6 +65,26 @@ def replace_after(text: str, anchor: str, old: str, new: str) -> str:
     return head + sep + tail.replace(old, new, 1)
 
 
+# Exception-test fixtures (Sonar S5778): an exception-test body may carry
+# exactly one invocation possibly throwing an exception, so every setup
+# object a flagged test passes to record.add_lesson is prebuilt here.
+TEMPLATE = record.build_template()
+BASE = base_record()
+TWO = two_entry_record()
+EMPTY_TITLE = lesson(title="")
+BLANK_CONTEXT = lesson(context="   ")
+TAB_SOLUTION = lesson(solution="sol\tA")
+BANANA_CATEGORY = lesson(category="banana")
+URGENT_SEVERITY = lesson(severity="urgent")
+BAD_DATE = lesson(recorded="2026-1-1")
+DUPLICATE_ID = lesson(id="LLT-0001")
+BELOW_MAX_ID = lesson(id="LLT-0004")
+MALFORMED_ID = lesson(id="LLT-1")
+UNKNOWN_SUPERSEDES = lesson(supersedes="LLT-9999")
+SUPERSEDED_TARGET = lesson(supersedes="LLT-0001")
+MALFORMED_SUPERSEDES = lesson(supersedes="nope")
+
+
 # --- model and constants ------------------------------------------------------
 
 
@@ -194,24 +214,24 @@ def test_add_optional_fields_rendered() -> None:
 
 def test_add_missing_title_rejected() -> None:
     with pytest.raises(InvalidInput, match="--title is required and must be non-empty \\(G6\\)"):
-        record.add_lesson(record.build_template(), lesson(title=""), today=TODAY)
+        record.add_lesson(TEMPLATE, EMPTY_TITLE, today=TODAY)
 
 
 def test_add_blank_context_rejected() -> None:
     with pytest.raises(InvalidInput, match="--context is required and must be non-empty \\(G6\\)"):
-        record.add_lesson(record.build_template(), lesson(context="   "), today=TODAY)
+        record.add_lesson(TEMPLATE, BLANK_CONTEXT, today=TODAY)
 
 
 def test_add_tab_in_solution_rejected() -> None:
     with pytest.raises(
         InvalidInput, match="--solution must be a single line without tabs \\(G6\\)"
     ):
-        record.add_lesson(record.build_template(), lesson(solution="sol\tA"), today=TODAY)
+        record.add_lesson(TEMPLATE, TAB_SOLUTION, today=TODAY)
 
 
 def test_add_out_of_vocabulary_category_rejected() -> None:
     with pytest.raises(InvalidInput, match="--category 'banana' not in vocabulary:.*\\(G6\\)"):
-        record.add_lesson(record.build_template(), lesson(category="banana"), today=TODAY)
+        record.add_lesson(TEMPLATE, BANANA_CATEGORY, today=TODAY)
 
 
 def test_add_out_of_vocabulary_severity_rejected() -> None:
@@ -219,12 +239,12 @@ def test_add_out_of_vocabulary_severity_rejected() -> None:
         InvalidInput,
         match="--severity 'urgent' not in vocabulary: low, medium, high, critical \\(G6\\)",
     ):
-        record.add_lesson(record.build_template(), lesson(severity="urgent"), today=TODAY)
+        record.add_lesson(TEMPLATE, URGENT_SEVERITY, today=TODAY)
 
 
 def test_add_bad_date_shape_rejected() -> None:
     with pytest.raises(InvalidInput, match="--recorded '2026-1-1' is not YYYY-MM-DD \\(G6\\)"):
-        record.add_lesson(record.build_template(), lesson(recorded="2026-1-1"), today=TODAY)
+        record.add_lesson(TEMPLATE, BAD_DATE, today=TODAY)
 
 
 def test_add_format_only_date_accepted() -> None:
@@ -244,7 +264,7 @@ def test_add_duplicate_id_rejected() -> None:
     with pytest.raises(
         InvalidInput, match="--id LLT-0001 already exists; ids are never reused \\(G4\\)"
     ):
-        record.add_lesson(base_record(), lesson(id="LLT-0001"), today=TODAY)
+        record.add_lesson(BASE, DUPLICATE_ID, today=TODAY)
 
 
 def test_add_id_below_max_rejected() -> None:
@@ -253,17 +273,17 @@ def test_add_id_below_max_rejected() -> None:
         InvalidInput,
         match="--id LLT-0004 must be greater than the current maximum LLT-0005",
     ):
-        record.add_lesson(text, lesson(id="LLT-0004"), today=TODAY)
+        record.add_lesson(text, BELOW_MAX_ID, today=TODAY)
 
 
 def test_add_malformed_id_rejected() -> None:
     with pytest.raises(InvalidInput, match="--id 'LLT-1' must match LLT-\\[0-9\\]\\{4\\} \\(G4\\)"):
-        record.add_lesson(record.build_template(), lesson(id="LLT-1"), today=TODAY)
+        record.add_lesson(TEMPLATE, MALFORMED_ID, today=TODAY)
 
 
 def test_add_supersedes_unknown_rejected() -> None:
     with pytest.raises(InvalidInput, match="--supersedes LLT-9999: no such entry \\(G7\\)"):
-        record.add_lesson(base_record(), lesson(supersedes="LLT-9999"), today=TODAY)
+        record.add_lesson(BASE, UNKNOWN_SUPERSEDES, today=TODAY)
 
 
 def test_add_supersedes_superseded_rejected() -> None:
@@ -271,12 +291,12 @@ def test_add_supersedes_superseded_rejected() -> None:
         InvalidInput,
         match="--supersedes LLT-0001: that entry is not active; supersede the newest replacement",
     ):
-        record.add_lesson(two_entry_record(), lesson(supersedes="LLT-0001"), today=TODAY)
+        record.add_lesson(TWO, SUPERSEDED_TARGET, today=TODAY)
 
 
 def test_add_supersedes_malformed_rejected() -> None:
     with pytest.raises(InvalidInput, match="--supersedes 'nope' must be an LLT-NNNN id \\(G7\\)"):
-        record.add_lesson(base_record(), lesson(supersedes="nope"), today=TODAY)
+        record.add_lesson(BASE, MALFORMED_SUPERSEDES, today=TODAY)
 
 
 # --- structural errors (L14–L17d, G4–G8) ---------------------------------------
