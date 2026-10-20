@@ -2,18 +2,19 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	17
-HEADER	-	-	-	19	25
-QUEUE	-	-	-	26	32
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	33	72
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	73	101
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	102	140
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	141	181
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	182	218
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	219	257
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	258	303
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	304	341
-CONSTRAINTS	-	-	-	342	350
+INDEX_BLOCK	-	-	-	3	18
+HEADER	-	-	-	20	26
+QUEUE	-	-	-	27	33
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	34	73
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	74	102
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	103	141
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	142	182
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	183	219
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	259	304
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	305	342
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	IN_PROGRESS	Low	343	370
+CONSTRAINTS	-	-	-	371	379
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -21,12 +22,12 @@ CONSTRAINTS	-	-	-	342	350
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** — | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6, B7, B8 | **Updated:** 2026-10-19
+**Queue:** B9 | **In progress:** B9 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8 | **Updated:** 2026-10-20
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-— (queue is empty; all items done)
+1. **B9** (High) — agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset
 
 Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate) — see their closeouts.
 
@@ -338,6 +339,34 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Sonar note:** one new S8707 hotspot in the checker itself (`scripts/check_workflow_yaml.py` L86, key `AaFWGkrR-FZCSHT58nSu`) triaged WONTFIX per the LLT-0008 precedent (local-CLI file-read path, not exploitable in this context) — outside B7/B8 acceptance scope (security hotspots tracked separately from the 41 code smells).
   - **Acceptance:** duplicate-key workflow rejected locally at pre-commit stage 4/6 (red-proof: `duplicate key 'on' at line 2`, make Error 1) and by the CI quality job (TDD RED→GREEN evidence in `tests/scripts/test_workflow_yaml.py`, 9 tests); `make gate` green (155 tests); `pyyaml==6.0.3` pinned + hashed (`requirements-dev.txt`); both current workflow files (`ci.yml`, `release.yml`) pass the new check.
   - **Lessons:** LLT-0028 (YAMLError constructor kwargs), LLT-0029 (YAML 1.1 bool key reporting).
+
+<!-- BACKLOG:ITEM:B9 -->
+## B9. Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset — **IN PROGRESS**
+
+- **Source:** user
+- **Requested:** 2026-10-20
+- **Priority:** High
+- **Request (verbatim):** "using the instructions in @create-skill, develop and maintain a SKILL file would provide agents the information needed to properly utilize the tools in SecureTrace. THIS IS NOT A SKILL FOR INSTALLATION AT THIS TIME, but a SKILL.md file that maintains the information for running the tools."
+- **Problem / evidence:** the repo has no agent-facing usage guide: the CLI surface (4 subcommands, 13 leaf commands) is discoverable only via `--help`; the README targets humans; nothing tells an agent which tool manages which document, what the index/entry contracts are, or how local gates chain into CI. Measured 2026-10-20 via `securetrace --help` (all subcommands), `make help`, `hooks/`, `.github/workflows/ci.yml` — no single reference exists.
+- **Chosen approach:** one self-contained `skills/securetrace/SKILL.md` in Bionic skill layout (folder name == front-matter name `securetrace`, kebab-case, description ≤ 150 chars) so it can be installed later with zero rework — but kept in the repo and NOT installed this round (no `~/.lmstudio/skills/`, no `.agents/skills/`); a pytest guard (`tests/test_skill_doc.py`) pins front-matter validity + every core command reference so the doc cannot silently rot (the "maintain" requirement).
+- **Work items (in order):**
+  1. This backlog entry (done with this file)
+  2. Test guard RED — `tests/test_skill_doc.py` fails while `skills/securetrace/SKILL.md` is absent
+  3. SKILL.md GREEN — front matter + all core commands, gates, and document contracts documented
+  4. README pointer (layout tree + Documentation bullet)
+  5. `make gate` green → Conventional Commit → push → CI green
+  6. Closeout with evidence
+- **Blast radius:** new `skills/securetrace/SKILL.md`, new `tests/test_skill_doc.py`, README links; no package code, gate, hook, CI, or dependency changes.
+- **Acceptance criteria:**
+  - `skills/securetrace/SKILL.md` exists with valid front matter (name `securetrace` == folder name, kebab-case, non-empty description ≤ 300 chars, model invocation enabled) and documents all four CLI subcommands (backlog/lessons/algorithms/rmf) with their exact leaf commands, the `scripts/` wrappers, the gate matrix (Makefile/hooks/CI), the document contracts, and the RMF entry point (`make rmf-bundle` / `securetrace rmf build`)
+  - `tests/test_skill_doc.py` RED→GREEN and green inside `make gate`; CI quality + security + SonarCloud green on the landing commit
+  - not installed: no new entries under `~/.lmstudio/skills/` or `.agents/skills/`
+- **Ordering:** after B1–B8 — it documents the stable CLI/gate surface they established.
+- **Progress:**
+  - 2026-10-20 — status → IN PROGRESS; WI 1 done (this entry); header + queue updated; index regenerated + `--check` green
+  - 2026-10-20 — WI 2 RED: `tests/test_skill_doc.py` (front-matter validity + 20 required command/contract references) — 23 failed while `skills/securetrace/SKILL.md` was absent
+  - 2026-10-20 — WI 3 GREEN: `skills/securetrace/SKILL.md` drafted from the verified CLI surface (`securetrace … --help` all subcommands, `make help`, `hooks/`, `ci.yml`); 23/23 skill-doc tests pass
+  - 2026-10-20 — WI 4: README layout tree + Documentation bullet; `make gate` green (178 tests)
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints

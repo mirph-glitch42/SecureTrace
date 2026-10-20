@@ -50,6 +50,7 @@ thin wrappers. **Adding a gate means adding it to all three in the same change.*
 ├── hooks/                # git hooks (wired via core.hooksPath)
 ├── tests/                # 1:1 mirror of src/securetrace + tests/scripts
 ├── docs/                 # requirements & design documents (dow-requirements.md, …)
+├── skills/securetrace/   # agent-facing usage guide for this toolset (SKILL.md)
 ├── .github/workflows/    # ci.yml, release.yml (SHA-pinned actions)
 └── Makefile              # the single gate entrypoint
 ```
@@ -64,6 +65,9 @@ Note the deliberate split: `algorithms/` holds algorithm *documents*;
   Acquisition Pathway requirements (the "why" of this project)
 - [BACKLOG.md](BACKLOG.md) — what is being built, in what order, with evidence
 - [LESSONS_LEARNED.md](LESSONS_LEARNED.md) — what went wrong and the correct fix
+- [skills/securetrace/SKILL.md](skills/securetrace/SKILL.md) — the agent-facing
+  usage guide: CLI, `scripts/` wrappers, gates, document contracts, RMF
+  bundles (kept current by `tests/test_skill_doc.py`)
 
 ## License
 
