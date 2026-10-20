@@ -13,8 +13,8 @@ B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Lo
 B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	220	258
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	259	304
 B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	305	342
-B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	IN_PROGRESS	Low	343	370
-CONSTRAINTS	-	-	-	371	379
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	343	377
+CONSTRAINTS	-	-	-	378	386
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -22,14 +22,14 @@ CONSTRAINTS	-	-	-	371	379
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B9 | **In progress:** B9 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8 | **Updated:** 2026-10-20
+**Queue:** — | **In progress:** — | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-20
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
-1. **B9** (High) — agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset
+— (queue is empty; all items done)
 
-Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate) — see their closeouts.
+Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate), **B9** (agent-facing SKILL.md usage guide) — see their closeouts.
 
 <!-- BACKLOG:ITEM:B1 -->
 ## B1. Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton) — **DONE**
@@ -341,7 +341,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - **Lessons:** LLT-0028 (YAMLError constructor kwargs), LLT-0029 (YAML 1.1 bool key reporting).
 
 <!-- BACKLOG:ITEM:B9 -->
-## B9. Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset — **IN PROGRESS**
+## B9. Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset — **DONE**
 
 - **Source:** user
 - **Requested:** 2026-10-20
@@ -367,6 +367,13 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-20 — WI 2 RED: `tests/test_skill_doc.py` (front-matter validity + 20 required command/contract references) — 23 failed while `skills/securetrace/SKILL.md` was absent
   - 2026-10-20 — WI 3 GREEN: `skills/securetrace/SKILL.md` drafted from the verified CLI surface (`securetrace … --help` all subcommands, `make help`, `hooks/`, `ci.yml`); 23/23 skill-doc tests pass
   - 2026-10-20 — WI 4: README layout tree + Documentation bullet; `make gate` green (178 tests)
+  - 2026-10-20 — WI 5: committed `2ea1ace` (4 files: SKILL.md, test guard, README, BACKLOG); pre-commit + pre-push gates green; pushed; CI on `2ea1ace` all green on first poll — SonarCloud Code Analysis success, quality success, security success (check-runs API)
+- **Closeout (2026-10-20, DONE):**
+  - **Version:** none (documentation + test guard; no package API or CLI surface change, no release).
+  - **Commits:** `2ea1ace` (B9 entry + WI 2–4: `tests/test_skill_doc.py` RED→GREEN, `skills/securetrace/SKILL.md`, README pointers).
+  - **CI:** on `2ea1ace` — SonarCloud Code Analysis success, quality success, security success (check-runs API, first poll).
+  - **Acceptance:** front matter valid — name `securetrace` == folder name, kebab-case, display-name present, description 135 chars (≤ 150 guideline, ≤ 300 hard limit), model invocation enabled; all 20 required command/contract references documented (23/23 in `tests/test_skill_doc.py`, RED 23-fail → GREEN); covers all four CLI subcommands (backlog/lessons/algorithms/rmf) with exact leaf commands, the five `scripts/` wrappers, the full gate matrix (Makefile/hooks/CI), the six document contracts, the agent working loop, the RMF entry point (`make rmf-bundle` / `securetrace rmf build`), and the lesson-grounded pitfalls; `make gate` green (178 tests = 155 + 23); not installed — `~/.lmstudio/skills/` unchanged (9 pre-existing skills, no `securetrace`) and `.agents/` absent; installable later as-is (folder name == front-matter name).
+  - **Lessons:** none new — every pitfall the guide cites already exists in LESSONS_LEARNED.md (LLT-0002/0003/0004/0005/0016/0017/0018/0031/0033).
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
