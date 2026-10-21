@@ -96,6 +96,7 @@ Full requirements + sources: [`docs/dow-requirements.md`](docs/dow-requirements.
 | DevSecOps discipline (SSDF SP 800-218) | this repo's own gates as reference implementation (B1) | done |
 | Deterministic process records (SWP QC expectation) | BACKLOG.md, LESSONS_LEARNED.md, algorithms/ (B1) | done |
 | Supply-chain evidence | pinned hashed lockfiles + per-run and per-release SBOM (B1) | done |
+| Code consistency discipline (code-consistency-monitor project requirement) | CONSISTENCY.md registry (rules CC-001+; exception G3) enforced on all work; B11 integration into SecureTrace | registered (B11 OPEN, Medium — do-not-work hold) |
 
 ## 4. Data flow (target, B4)
 

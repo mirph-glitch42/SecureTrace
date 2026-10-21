@@ -2,20 +2,21 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	19
-HEADER	-	-	-	21	27
-QUEUE	-	-	-	28	34
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	35	74
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	75	103
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	104	142
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	143	183
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	184	220
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	221	259
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	260	305
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	306	343
-B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	344	378
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	379	422
-CONSTRAINTS	-	-	-	423	431
+INDEX_BLOCK	-	-	-	3	20
+HEADER	-	-	-	22	28
+QUEUE	-	-	-	29	37
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	38	77
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	78	106
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	107	145
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	146	186
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	187	223
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	224	262
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	263	308
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	309	346
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	347	381
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	382	425
+B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	426	448
+CONSTRAINTS	-	-	-	449	457
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -23,12 +24,14 @@ CONSTRAINTS	-	-	-	423	431
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B10 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-21
+**Queue:** B10, B11 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-21
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
 
 **B10** (deterministic document pipeline — CLI-only store → rendered docs + tamper detection)
+
+**B11** (code-consistency monitor integration into SecureTrace — Medium, **DO NOT WORK** until the user lifts the hold)
 
 Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate), **B9** (agent-facing SKILL.md usage guide) — see their closeouts.
 
@@ -419,6 +422,29 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-20 — WI 6 done: registry parser + renderer (TDD red→green) — `registry_doc.py` (parse_registry/render_registry over the strict 6-cell grammar: backticked slug/status, `[<file>](<file>)` link-text-equals-target, rules numbered 1..N; FormatError for grammar violations, SchemaError via `validate_registry` for unsorted/duplicate/bad-status data); T4 golden byte-compare vs the real `algorithms/INDEX.md` (offset 8); caught + fixed a latent pre-existing bug — `line-index-sync`/`lessons-record` rows were not code-point-sorted, violating the file's own rule 1 (grandfathered content-preserving swap); ALRK doc → v0.1.3 (§5.1 pins the registry grammar, status history, index regen 8 entries) + registry row; `tests/docs/test_registry_doc.py` (19 tests incl. roundtrip identity + 10 parse/3 render rejections); 278 tests green; commit `16cbc25`; CI green (SonarCloud/quality/security 3× success); LLT-0037 recorded (declared invariant without an enforcing check silently rots); next WI 7 (tamper detection: manifest sha256, `DOC_MODIFIED_OUTSIDE_APP`/`STORE_DRIFT`, 0/1/2 exits)
   - 2026-10-20 — WI 7 done: tamper-detection `check` diagnostics (TDD red→green) — `integrity.py` per the normative §3 pseudocode: pure `check_doc` (re-render vs on-doc byte compare, discriminated by the manifest-pinned store hash), `check_paths` I/O wrapper (spec-ordered failures: store→`MALFORMED_STORE`, doc→`DOC_MISSING`, manifest→`MALFORMED_MANIFEST`), `check_message` (stderr names the exact remediation command); diagnoses `IN_SYNC`(0) / `STORE_DRIFT`, `DOC_MODIFIED_OUTSIDE_APP`, `STORE_DRIFT_OR_DOC_DRIFT`(1) / `MALFORMED_STORE`, `MALFORMED_DOC`, `MALFORMED_MANIFEST`, `DOC_MISSING`(2); T6 (store moved, doc stale) = `STORE_DRIFT_OR_DOC_DRIFT`, the store-side diagnosis distinct from T5's `DOC_MODIFIED_OUTSIDE_APP` — the first test pinned the prose paraphrase instead of the pseudocode constant, corrected per spec (LLT-0038); ALRK doc → v0.1.4 (§5.3 lists all three exit-1 diagnoses, status history, index regen 8 entries) + registry row; `tests/docs/test_integrity.py` +22 tests (T5 doc flip, T6 store drift, T7 duplicate id, malformed store/doc/manifest, missing doc, unknown kind, file-level precedence, message wording); 300 tests green; commit `82544c7`; CI green (SonarCloud/quality/security 3× success); next WI 8 (CLI wiring: `upsert/progress/add/show/render/check` + `docs render-all|check-all` + `migrate`)
   - 2026-10-21 — WI 8 done: store-based CLI command layer (TDD red→green) — `src/securetrace/docs/mutations.py` pure mutation core (`upsert_backlog_item`/`append_backlog_progress`/`add_lesson`/`upsert_registry_row`/`refresh_backlog_status`; no clock/IO, auto-covered by the T9 AST guard), `src/securetrace/cli_docs.py` command layer (agent design decisions D11 `migrate` resolves a missing given doc path → kind default while printing the given path, D13 `show` verbatim via `sys.stdout.write(canonical_json(...))`, D14 verb line only after a successful commit — flagged in ALRK v0.1.5 status history as pending user review), `src/securetrace/__main__.py` dispatch re-pointed to the store-based surface (positional `store` path, `--doc`/`--manifest` overrides, exit 0/1/2 per verb); legacy verbs `backlog sync`/`lessons sync|next-id`/`algorithms sync` now rejected exit 2 — dual-surface coexists with the `scripts/` wrappers until WI 10 (CONSISTENCY.md exception G3); `tests/test_cli_docs.py` (53 tests incl. `test_migrate_registry_rows` D11 pin + single-capture capsys assertions — LLT-0039); SKILL repoint `skills/securetrace/SKILL.md` (store-based surface, ⚠️ no-manual-editing for pipeline docs, repo map gains `data/*.json` + manifest + CONSISTENCY.md) + guard `tests/test_skill_doc.py` 29 references (32 tests); ALRK doc → v0.1.5 (§5.1 module layout + `mutations.py`/`cli_docs.py`, §5.3 command-layer contract block, status history, TSV index regen 8 entries) + registry row 0.1.5; `make gate` green (390 tests); next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
+
+<!-- BACKLOG:ITEM:B11 -->
+## B11. Code-consistency monitor integration into SecureTrace — **OPEN**
+
+- **Source:** user
+- **Requested:** 2026-10-21
+- **Priority:** Medium
+- **Request (verbatim):** "WE need to add @code-consistency-monitor as a requirement for this project to ensure consistency throughout the code base. This also needs to be added to SecureTrace to guard for the same when using the tool. Start enforcing NOW for project work. Add this to the backlog for integration with SecureTrace- DO NOT WORK IT Immediately. This is a medium priority"
+- **Problem / evidence:** the code-consistency-monitor skill requires a project-root `CONSISTENCY.md` registry (rules CC-### with file:line evidence, registered exceptions with reason + approver, change log, review cadence). SecureTrace enforces its own consistency by convention only (shared helpers, single render path, exit-code discipline); when agents build other applications with SecureTrace, nothing carries or checks the consistency contract.
+- **Chosen approach:** register `CONSISTENCY.md` now (done in the B10 WI 8 closeout — baseline rules CC-001…CC-009 with verified file:line evidence + exception G3 for the WI 8→10 dual surface, enforced on all current work); integrate a consistency guard into SecureTrace so the tool checks the registry and wires it into gate/CI (design proposed — G8).
+- **Work items (in order, proposed — G8):**
+  1. Design the guard surface: `securetrace consistency check` (registry parse + evidence verification) or an extension of `docs check-all`
+  2. Wire the guard into `make gate`, pre-commit stage 3, and CI quality
+  3. Update `skills/securetrace/SKILL.md` + guard test + README + ARCHITECTURE.md
+  4. Close via `make gate` + CI + closeout
+- **Acceptance criteria (proposed — G8):**
+  - `CONSISTENCY.md` parses under a strict grammar; rules, IDs, and exception fields verified (file:line evidence resolves, exceptions carry reason + approver)
+  - the guard runs in the local gate, pre-commit, and CI quality; a registry with broken evidence fails the gate (RED→GREEN tested)
+  - SKILL.md documents the consistency discipline + guard command; README + ARCHITECTURE.md carry the requirement
+- **Ordering:** after B10 (exception G3 is removed at B10 WI 10, so the guard lands on a single-surface codebase).
+- **Hold:** **DO NOT WORK** until the user lifts the hold (explicit instruction 2026-10-21).
+- **Progress:**
+  - 2026-10-21 — registered (user request; Medium); DO NOT WORK per user instruction; `CONSISTENCY.md` created as the enforcement baseline (CC-001…CC-009 + exception G3, all locations verified file:line); ARCHITECTURE.md §3 requirement row added; consistency discipline enforced on all current work
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
