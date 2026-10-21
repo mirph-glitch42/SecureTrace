@@ -145,6 +145,70 @@ def _parse_entry_section(lines: list[str], i: int, eid: str) -> tuple[str, list[
     return hm.group("title"), fields, j
 
 
+def _parse_intro_and_index(lines: list[str], cursor: int) -> tuple[list[str], int]:
+    """Parse the intro prose and locate the TSV index block.
+
+    Returns the intro lines (a free ordered list) and the index of the
+    ``<!-- LLT:INDEX:END -->`` marker line.
+
+    Raises:
+        FormatError: BEGIN marker missing, intro empty or not blank-
+            terminated, END marker missing, or the index block empty.
+    """
+    begin = next((i for i in range(cursor, len(lines)) if BEGIN_RE.match(lines[i])), None)
+    if begin is None:
+        raise FormatError("the document is missing the <!-- LLT:INDEX:BEGIN --> marker")
+    if begin < cursor + 2:
+        raise FormatError(
+            "the intro must be non-empty and end with a blank line before the index block"
+        )
+    if lines[begin - 1] != "":
+        raise FormatError("the intro must be followed by a blank line before the index block")
+    intro = list(lines[cursor : begin - 1])
+    end = next((i for i in range(begin + 1, len(lines)) if END_RE.match(lines[i])), None)
+    if end is None:
+        raise FormatError("the index block is missing its <!-- LLT:INDEX:END --> marker")
+    if end <= begin + 1:
+        raise FormatError("the index block is empty or malformed")
+    return intro, end
+
+
+def _parse_entry_loop(lines: list[str], i: int) -> list[dict]:
+    """Parse consecutive entry sections starting at marker line *i*.
+
+    Each entry is ``<!-- LLT:ENTRY:<id> -->`` + heading + fields, separated
+    by one blank line; the last entry ends the document.
+
+    Raises:
+        FormatError: a line is not an entry marker, an entry is not
+            blank-terminated, or a separator is not followed by the next
+            entry marker.
+    """
+    lessons: list[dict] = []
+    while i < len(lines):
+        m = ENTRY_MARKER_RE.match(lines[i])
+        if m is None:
+            raise FormatError(
+                f"line {i + 1} is not an entry marker (entries are separated by one blank line)"
+            )
+        eid = m.group("id")
+        title, fields, j = _parse_entry_section(lines, i, eid)
+        if j >= len(lines):
+            lessons.append({"id": eid, "title": title, "fields": fields})
+            break
+        if lines[j] != "":
+            raise FormatError(f"entry {eid}: the line after its fields must be a blank line")
+        k = j + 1
+        if k >= len(lines) or not ENTRY_MARKER_RE.match(lines[k]):
+            raise FormatError(
+                f"entry {eid} must be followed by a blank line and the next entry marker; "
+                f"line {j + 2} (if present) is not an entry marker"
+            )
+        lessons.append({"id": eid, "title": title, "fields": fields})
+        i = k
+    return lessons
+
+
 def parse_lessons(text: str) -> dict:
     """Parse a ``LESSONS_LEARNED.md`` text into the ``lessons`` store (pure).
 
@@ -171,25 +235,7 @@ def parse_lessons(text: str) -> dict:
     if len(lines) < 2 or lines[1] != "":
         raise FormatError("line 2 of the lessons document must be blank")
     cursor = skip_generated_header(lines, 2)
-
-    # --- intro: prose lines (a free ordered list in the store)
-    begin = next((i for i in range(cursor, len(lines)) if BEGIN_RE.match(lines[i])), None)
-    if begin is None:
-        raise FormatError("the document is missing the <!-- LLT:INDEX:BEGIN --> marker")
-    if begin < cursor + 2:
-        raise FormatError(
-            "the intro must be non-empty and end with a blank line before the index block"
-        )
-    if lines[begin - 1] != "":
-        raise FormatError("the intro must be followed by a blank line before the index block")
-    intro = list(lines[cursor : begin - 1])
-
-    # --- index block skeleton
-    end = next((i for i in range(begin + 1, len(lines)) if END_RE.match(lines[i])), None)
-    if end is None:
-        raise FormatError("the index block is missing its <!-- LLT:INDEX:END --> marker")
-    if end <= begin + 1:
-        raise FormatError("the index block is empty or malformed")
+    intro, end = _parse_intro_and_index(lines, cursor)
 
     # --- entry sections
     if end + 2 >= len(lines) or lines[end + 1] != "":
@@ -200,29 +246,7 @@ def parse_lessons(text: str) -> dict:
         raise FormatError(
             "the lessons document must contain at least one entry after the index block"
         )
-    lessons: list[dict] = []
-    i = end + 2
-    while i < len(lines):
-        m = ENTRY_MARKER_RE.match(lines[i])
-        if m is None:
-            raise FormatError(
-                f"line {i + 1} is not an entry marker (entries are separated by one blank line)"
-            )
-        eid = m.group("id")
-        title, fields, j = _parse_entry_section(lines, i, eid)
-        if j >= len(lines):
-            lessons.append({"id": eid, "title": title, "fields": fields})
-            break
-        if lines[j] != "":
-            raise FormatError(f"entry {eid}: the line after its fields must be a blank line")
-        k = j + 1
-        if k >= len(lines) or not ENTRY_MARKER_RE.match(lines[k]):
-            raise FormatError(
-                f"entry {eid} must be followed by a blank line and the next entry marker; "
-                f"line {j + 2} (if present) is not an entry marker"
-            )
-        lessons.append({"id": eid, "title": title, "fields": fields})
-        i = k
+    lessons = _parse_entry_loop(lines, end + 2)
 
     errors = structural_errors(text)
     if errors:

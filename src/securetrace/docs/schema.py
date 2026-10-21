@@ -190,6 +190,27 @@ def validate_backlog(store: object) -> None:
 # --------------------------------------------------------------------- lessons
 
 
+def _check_field_vocab(what: str, values: dict[str, str]) -> None:
+    """Check the closed vocabularies of a lesson's optional fields.
+
+    Raises:
+        SchemaError: ``Category``/``Severity``/``Status`` outside the closed
+            set, or ``Recorded`` not a YYYY-MM-DD date.
+    """
+    category = values.get("Category")
+    if category is not None and category not in CATEGORIES:
+        raise SchemaError(f"{what}.Category must be one of: {', '.join(CATEGORIES)}")
+    severity = values.get("Severity")
+    if severity is not None and severity not in SEVERITIES:
+        raise SchemaError(f"{what}.Severity must be one of: {', '.join(SEVERITIES)}")
+    status = values.get("Status")
+    if status is not None and status not in STATUSES:
+        raise SchemaError(f"{what}.Status must be one of: {', '.join(STATUSES)}")
+    recorded = values.get("Recorded")
+    if recorded is not None and not DATE_RE.fullmatch(recorded):
+        raise SchemaError(f"{what}.Recorded must be a YYYY-MM-DD date string, got {recorded!r}")
+
+
 def _validate_lesson(lesson: object, index: int) -> str:
     what = f"lessons[{index}]"
     if not isinstance(lesson, dict):
@@ -220,18 +241,7 @@ def _validate_lesson(lesson: object, index: int) -> str:
     unknown = names - set(ALL_FIELDS)
     if unknown:
         raise SchemaError(f"{what} has unknown field(s): {', '.join(sorted(unknown))}")
-    category = values.get("Category")
-    if category is not None and category not in CATEGORIES:
-        raise SchemaError(f"{what}.Category must be one of: {', '.join(CATEGORIES)}")
-    severity = values.get("Severity")
-    if severity is not None and severity not in SEVERITIES:
-        raise SchemaError(f"{what}.Severity must be one of: {', '.join(SEVERITIES)}")
-    status = values.get("Status")
-    if status is not None and status not in STATUSES:
-        raise SchemaError(f"{what}.Status must be one of: {', '.join(STATUSES)}")
-    recorded = values.get("Recorded")
-    if recorded is not None and not DATE_RE.fullmatch(recorded):
-        raise SchemaError(f"{what}.Recorded must be a YYYY-MM-DD date string, got {recorded!r}")
+    _check_field_vocab(what, values)
     return lesson_id
 
 

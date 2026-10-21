@@ -97,10 +97,13 @@ def make_entry(
     }
 
 
-def validate_manifest(manifest: object) -> None:
-    """Validate a manifest dict. Raises :class:`SchemaError` on any violation."""
-    if not isinstance(manifest, dict):
-        raise SchemaError(f"manifest must be a JSON object, got {type(manifest).__name__}")
+def _validate_manifest_header(manifest: dict) -> dict:
+    """Check the manifest header fields; return the ``docs`` mapping.
+
+    Raises:
+        SchemaError: ``manifest_version`` mismatch, empty ``renderer_version``,
+            or ``docs`` not an object.
+    """
     if manifest.get("manifest_version") != MANIFEST_VERSION:
         raise SchemaError(
             "manifest_version must be "
@@ -111,18 +114,36 @@ def validate_manifest(manifest: object) -> None:
     docs = manifest.get("docs")
     if not isinstance(docs, dict):
         raise SchemaError("manifest.docs must be an object")
+    return docs
+
+
+def _validate_manifest_entry(kind: str, entry: object) -> None:
+    """Validate one ``manifest.docs[kind]`` entry.
+
+    Raises:
+        SchemaError: wrong key set, empty ``doc``/``store`` path, or a
+            non-lowercase-hex sha256.
+    """
+    what = f"manifest.docs[{kind}]"
+    if not isinstance(entry, dict) or set(entry) != set(_ENTRY_KEYS):
+        raise SchemaError(f"{what} must have exactly the keys: {', '.join(_ENTRY_KEYS)}")
+    for key in ("doc", "store"):
+        if not isinstance(entry[key], str) or not entry[key].strip():
+            raise SchemaError(f"{what}.{key} must be a non-empty string")
+    for key in ("store_sha256", "doc_sha256"):
+        if not isinstance(entry[key], str) or not _SHA256_RE.fullmatch(entry[key]):
+            raise SchemaError(f"{what}.{key} must be a lowercase hex sha256")
+
+
+def validate_manifest(manifest: object) -> None:
+    """Validate a manifest dict. Raises :class:`SchemaError` on any violation."""
+    if not isinstance(manifest, dict):
+        raise SchemaError(f"manifest must be a JSON object, got {type(manifest).__name__}")
+    docs = _validate_manifest_header(manifest)
     for kind, entry in docs.items():
         if kind not in DOC_KINDS:
             raise SchemaError(f"manifest.docs has unknown kind: {kind!r}")
-        what = f"manifest.docs[{kind}]"
-        if not isinstance(entry, dict) or set(entry) != set(_ENTRY_KEYS):
-            raise SchemaError(f"{what} must have exactly the keys: {', '.join(_ENTRY_KEYS)}")
-        for key in ("doc", "store"):
-            if not isinstance(entry[key], str) or not entry[key].strip():
-                raise SchemaError(f"{what}.{key} must be a non-empty string")
-        for key in ("store_sha256", "doc_sha256"):
-            if not isinstance(entry[key], str) or not _SHA256_RE.fullmatch(entry[key]):
-                raise SchemaError(f"{what}.{key} must be a lowercase hex sha256")
+        _validate_manifest_entry(kind, entry)
 
 
 def manifest_text(manifest: object) -> str:
@@ -196,6 +217,25 @@ _RENDER_DOC = {
 }
 
 
+def _decode_or_none(data: bytes | str) -> str | None:
+    """UTF-8 decode *data* (str passes through); None when undecodable."""
+    if isinstance(data, str):
+        return data
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def _parse_store(text: str) -> dict | None:
+    """Parse store JSON text; None unless it is a JSON object."""
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
 def check_doc(kind: str, store_bytes: bytes | str, doc_bytes: bytes | str, entry: dict | None) -> tuple[int, str]:
     """Pure check core (no I/O). Returns ``(exit_code, diagnosis)``.
 
@@ -213,18 +253,11 @@ def check_doc(kind: str, store_bytes: bytes | str, doc_bytes: bytes | str, entry
     if kind not in DOC_KINDS:
         raise SchemaError(f"unknown doc kind: {kind!r}")
 
-    if isinstance(store_bytes, bytes):
-        try:
-            store_text = store_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            return 2, MALFORMED_STORE
-    else:
-        store_text = store_bytes
-    try:
-        store = json.loads(store_text)
-    except json.JSONDecodeError:
+    store_text = _decode_or_none(store_bytes)
+    if store_text is None:
         return 2, MALFORMED_STORE
-    if not isinstance(store, dict) or store.get("doc") != kind:
+    store = _parse_store(store_text)
+    if store is None or store.get("doc") != kind:
         return 2, MALFORMED_STORE
     try:
         validate_store(store)
@@ -232,13 +265,9 @@ def check_doc(kind: str, store_bytes: bytes | str, doc_bytes: bytes | str, entry
         return 2, MALFORMED_STORE
 
     expected = _RENDER_DOC[kind](store)
-    if isinstance(doc_bytes, bytes):
-        try:
-            actual = doc_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            return 2, MALFORMED_DOC
-    else:
-        actual = doc_bytes
+    actual = _decode_or_none(doc_bytes)
+    if actual is None:
+        return 2, MALFORMED_DOC
 
     if entry is None:
         return 2, MALFORMED_MANIFEST

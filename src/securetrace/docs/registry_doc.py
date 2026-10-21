@@ -198,6 +198,60 @@ def _parse_rules(lines: list[str], start: int, expected: int) -> list[str]:
     return rules
 
 
+def _parse_table_section(lines: list[str], cursor: int) -> tuple[list[str], list[dict], int]:
+    """Parse the intro prose and the slug table.
+
+    Returns the intro lines, the row records, and the index of the first
+    blank line after the table.
+
+    Raises:
+        FormatError: table header missing, intro empty or not blank-
+            terminated, separator line missing, or the table has no rows.
+    """
+    header = next((i for i in range(cursor, len(lines)) if lines[i] == TABLE_HEADER), None)
+    if header is None:
+        raise FormatError(
+            f"the registry document is missing its table header line {TABLE_HEADER!r}"
+        )
+    if header < cursor + 2:
+        raise FormatError(
+            "the intro must be non-empty and end with a blank line before the table"
+        )
+    if lines[header - 1] != "":
+        raise FormatError("the intro must be followed by a blank line before the table")
+    intro = list(lines[cursor : header - 1])
+    if header + 1 >= len(lines) or lines[header + 1] != TABLE_SEPARATOR:
+        raise FormatError(
+            f"the table header must be followed by the separator line {TABLE_SEPARATOR!r}"
+        )
+    j = header + 2
+    while j < len(lines) and lines[j] != "":
+        j += 1
+    rows = [_parse_row(lines[k], k + 1) for k in range(header + 2, j)]
+    if not rows:
+        raise FormatError("the registry table must contain at least one row")
+    return intro, rows, j
+
+
+def _parse_rules_section(lines: list[str], j: int) -> list[str]:
+    """Parse the ``## Rules`` section that follows the table blank line.
+
+    Raises:
+        FormatError: the blank-line / rules-heading preamble is missing, or
+            the rules block is empty or mis-numbered.
+    """
+    if j >= len(lines):
+        raise FormatError("the table must be followed by a blank line before the rules section")
+    if j + 2 >= len(lines) or lines[j + 1] != RULES_HEADING or lines[j + 2] != "":
+        raise FormatError(
+            "the table must be followed by a blank line and the '## Rules' heading"
+        )
+    rules_start = j + 3
+    if rules_start >= len(lines):
+        raise FormatError("the rules section must contain at least one rule line")
+    return _parse_rules(lines, rules_start, len(lines) - rules_start)
+
+
 def parse_registry(text: str) -> dict:
     """Parse an ``algorithms/INDEX.md`` text into the ``registry`` store (pure).
 
@@ -222,46 +276,8 @@ def parse_registry(text: str) -> dict:
     if len(lines) < 2 or lines[1] != "":
         raise FormatError("line 2 of the registry document must be blank")
     cursor = skip_generated_header(lines, 2)
-
-    # --- intro: blockquote prose lines up to the blank before the table
-    header = next((i for i in range(cursor, len(lines)) if lines[i] == TABLE_HEADER), None)
-    if header is None:
-        raise FormatError(
-            f"the registry document is missing its table header line {TABLE_HEADER!r}"
-        )
-    if header < cursor + 2:
-        raise FormatError(
-            "the intro must be non-empty and end with a blank line before the table"
-        )
-    if lines[header - 1] != "":
-        raise FormatError("the intro must be followed by a blank line before the table")
-    intro = list(lines[cursor : header - 1])
-
-    # --- table separator + rows
-    if header + 1 >= len(lines) or lines[header + 1] != TABLE_SEPARATOR:
-        raise FormatError(
-            f"the table header must be followed by the separator line {TABLE_SEPARATOR!r}"
-        )
-    j = header + 2
-    while j < len(lines) and lines[j] != "":
-        j += 1
-    rows = [_parse_row(lines[k], k + 1) for k in range(header + 2, j)]
-    if not rows:
-        raise FormatError("the registry table must contain at least one row")
-    if j >= len(lines):
-        raise FormatError(
-            "the table must be followed by a blank line before the rules section"
-        )
-
-    # --- rules section
-    if j + 2 >= len(lines) or lines[j + 1] != RULES_HEADING or lines[j + 2] != "":
-        raise FormatError(
-            "the table must be followed by a blank line and the '## Rules' heading"
-        )
-    rules_start = j + 3
-    if rules_start >= len(lines):
-        raise FormatError("the rules section must contain at least one rule line")
-    rules = _parse_rules(lines, rules_start, len(lines) - rules_start)
+    intro, rows, j = _parse_table_section(lines, cursor)
+    rules = _parse_rules_section(lines, j)
 
     store = {
         "doc": "registry",

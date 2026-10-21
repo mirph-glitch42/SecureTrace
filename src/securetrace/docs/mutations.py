@@ -189,6 +189,30 @@ def upsert_backlog_item(store: dict, item: dict, date: str) -> dict:
     return refreshed
 
 
+def _find_item(items: list, item_id: str) -> dict | None:
+    """Return the first item in *items* whose ``id`` equals *item_id*.
+
+    Non-dict entries are skipped.
+    """
+    for item in items:
+        if isinstance(item, dict) and item.get("id") == item_id:
+            return item
+    return None
+
+
+def _append_field_line(fields: list, name: str, line: str) -> None:
+    """Append *line* to the field named *name*, creating it at the end."""
+    for field in fields:
+        if isinstance(field, dict) and field.get("name") == name:
+            lines = field.get("lines")
+            if not isinstance(lines, list):
+                lines = []
+                field["lines"] = lines
+            lines.append(line)
+            return
+    fields.append({"name": name, "lines": [line]})
+
+
 def append_backlog_progress(store: dict, item_id: str, line: str, date: str) -> dict:
     """Return a NEW store with *line* appended to the item's Progress field.
 
@@ -206,33 +230,39 @@ def append_backlog_progress(store: dict, item_id: str, line: str, date: str) -> 
         raise InvalidInput(f"progress line must be a string, got {type(line).__name__}")
     out = copy.deepcopy(store)
     items = out.get("items") if isinstance(out.get("items"), list) else []
-    target = None
-    for item in items:
-        if isinstance(item, dict) and item.get("id") == item_id:
-            target = item
-            break
+    target = _find_item(items, item_id)
     if target is None:
         raise InvalidInput(f"backlog item {item_id!r} not found")
     fields = target.get("fields")
     if not isinstance(fields, list):
         fields = []
         target["fields"] = fields
-    for field in fields:
-        if isinstance(field, dict) and field.get("name") == _PROGRESS_FIELD:
-            lines = field.get("lines")
-            if not isinstance(lines, list):
-                lines = []
-                field["lines"] = lines
-            lines.append(line)
-            break
-    else:
-        fields.append({"name": _PROGRESS_FIELD, "lines": [line]})
+    _append_field_line(fields, _PROGRESS_FIELD, line)
     refreshed = refresh_backlog_status(out, date)
     validate_store(refreshed)
     return refreshed
 
 
 # --------------------------------------------------------------------- lessons
+
+
+def _apply_supersedes(new_lesson: dict, lessons: list) -> None:
+    """Flip the ``Supersedes`` target to ``superseded`` (if one is named).
+
+    A missing or em-dash ``Supersedes`` value is a no-op.
+
+    Raises:
+        InvalidInput: the named target does not exist, or is not ``active``.
+    """
+    supersedes = _field_value(new_lesson, "Supersedes")
+    if supersedes is None or supersedes == _EM_DASH:
+        return
+    target = _find_item(lessons, supersedes)
+    if target is None:
+        raise InvalidInput(f"supersedes target {supersedes!r} not found")
+    if _field_value(target, "Status") != "active":
+        raise InvalidInput(f"superseded lesson {supersedes!r} is not active")
+    _set_field(target, "Status", "superseded")
 
 
 def add_lesson(store: dict, lesson: dict) -> dict:
@@ -264,18 +294,7 @@ def add_lesson(store: dict, lesson: dict) -> dict:
     if new_lesson.get("id") is None:
         new_lesson["id"] = _next_lesson_id(lessons)
     _set_field(new_lesson, "Status", "active")
-    supersedes = _field_value(new_lesson, "Supersedes")
-    if supersedes is not None and supersedes != _EM_DASH:
-        target = None
-        for existing in lessons:
-            if isinstance(existing, dict) and existing.get("id") == supersedes:
-                target = existing
-                break
-        if target is None:
-            raise InvalidInput(f"supersedes target {supersedes!r} not found")
-        if _field_value(target, "Status") != "active":
-            raise InvalidInput(f"superseded lesson {supersedes!r} is not active")
-        _set_field(target, "Status", "superseded")
+    _apply_supersedes(new_lesson, lessons)
     lessons.append(new_lesson)
     validate_store(out)
     return out
