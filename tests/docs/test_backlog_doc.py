@@ -181,7 +181,7 @@ def test_roundtrip_real_backlog_golden():
     real = REAL_BACKLOG.read_text(encoding="utf-8")
     store = parse_backlog(real)
     assert [item["id"] for item in store["items"]] == [f"B{n}" for n in range(1, 11)]
-    assert store["updated"] == "2026-10-20"
+    assert store["updated"] == "2026-10-21"
     rendered = render_backlog(store)
 
     def index_begin(text: str) -> int:
