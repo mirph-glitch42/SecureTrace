@@ -10,44 +10,45 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	51
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	53	66
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	67	80
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	81	94
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	95	108
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	109	122
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	123	136
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	137	150
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	151	164
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	165	178
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	179	192
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	193	206
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	207	220
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	221	234
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	235	248
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	249	262
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	263	276
-LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	277	290
-LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	291	304
-LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	305	318
-LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	319	332
-LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	333	346
-LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	347	360
-LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	361	374
-LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	375	388
-LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	389	402
-LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	403	416
-LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	417	430
-LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	431	444
-LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	445	458
-LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	459	472
-LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	473	486
-LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	487	500
-LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	501	514
-LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	515	528
-LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	529	542
-LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	543	556
-LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)	data	low	active	2026-10-20	557	570
+LLT_INDEX_BLOCK	—	—	—	—	—	11	52
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	54	67
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	68	81
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	82	95
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	96	109
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	110	123
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	124	137
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	138	151
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	152	165
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	166	179
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	180	193
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	194	207
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	208	221
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	222	235
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	236	249
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	250	263
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	264	277
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	278	291
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	292	305
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	306	319
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	320	333
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	334	347
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	348	361
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	362	375
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	376	389
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	390	403
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	404	417
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	418	431
+LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	432	445
+LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	446	459
+LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	460	473
+LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	474	487
+LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	488	501
+LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	502	515
+LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	516	529
+LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	530	543
+LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	544	557
+LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)	data	low	active	2026-10-20	558	571
+LLT-0038	Test expectations must pin the exact diagnosis constant from the normative pseudocode, not the prose paraphrase in the spec test table	testing	medium	active	2026-10-20	572	585
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -567,3 +568,17 @@ LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-
 - **Supersedes:** —
 - **Prevention:** When a document gains a 'keep X sorted/unique/increasing' rule, land the enforcing check (schema assertion or CI gate) in the same change; verify 'looks sorted' with an explicit sorted() comparison, never by eye.
 - **References:** —
+
+<!-- LLT:ENTRY:LLT-0038 -->
+## LLT-0038 — Test expectations must pin the exact diagnosis constant from the normative pseudocode, not the prose paraphrase in the spec test table
+
+- **Recorded:** 2026-10-20
+- **Category:** testing
+- **Severity:** medium
+- **Status:** active
+- **Context:** B10 WI 7 (check diagnostics). The spec test table T6 row says 'diagnosis is store drift, distinct from T5', but the normative §3 pseudocode returns STORE_DRIFT_OR_DOC_DRIFT in the 'store hash moved AND doc mismatches' case — exactly the T6 scenario (store edited after render, doc stale). The first T6 test pinned (1, STORE_DRIFT) and went red against the pseudocode-faithful implementation. The implementation was correct; the test was wrong: the prose paraphrase was ambiguous between two distinct exit-1 diagnoses, the pseudocode was unambiguous.
+- **Pitfall:** When a spec carries both a prose test table and normative pseudocode, the table wording can be ambiguous ('store drift' names a family, not a constant). A test pinning the prose reading instead of the pseudocode constant creates a false RED against a correct implementation and pressures the implementer to weaken the implementation (or the spec) to fit the test — exactly the spec-implementation divergence the record exists to prevent.
+- **Solution:** Treat the pseudocode as the normative contract for diagnosis/exit-code behavior and write tests against the exact closed-vocabulary constant: T6 (store moved, doc stale) is STORE_DRIFT_OR_DOC_DRIFT, distinct from T5's DOC_MODIFIED_OUTSIDE_APP, as the pseudocode states. Fix the test to the pseudocode reading, and make the doc unambiguous — v0.1.4 status history now states which diagnosis T6 receives and §5.3 lists all three exit-1 diagnoses.
+- **Supersedes:** —
+- **Prevention:** When a spec defines behavior with prose plus pseudocode, tests pin the exact constant from the pseudocode. If a test expectation conflicts with a spec-faithful implementation, re-derive the expectation from the pseudocode before touching the implementation — the implementation that follows the pseudocode is the one that is right.
+- **References:** algorithms/deterministic-doc-pipeline.md §3 pseudocode + §6 T5/T6 rows (v0.1.4); tests/docs/test_integrity.py::test_check_store_drift; LLT-0037 (declared invariant without an enforcing check, related discipline)
