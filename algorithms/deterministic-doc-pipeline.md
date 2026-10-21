@@ -19,12 +19,12 @@ REFERENCES	286	294
 |---|---|
 | Name | Deterministic Document Pipeline (canonical store → pure render → integrity verify) |
 | Slug | deterministic-doc-pipeline |
-| Version | 0.1.3 |
+| Version | 0.1.4 |
 | Status | draft |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-20 |
 | Last modified | 2026-10-20 |
-| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted)<br>0.1.3 (2026-10-20): WI 6 — registry parser/renderer implemented; §5.1 pins the registry doc grammar (fixed six-column table, backticked slug/status, `File` cell `[<file>](<file>)` with link text equal to target, rules numbered strictly 1..N); the real `algorithms/INDEX.md` row order (`line-index-sync` before `lessons-record`) was not code-point-sorted — a violation of the file's own rule 1 — normalized as a grandfathered manual edit ahead of the T4 golden |
+| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted)<br>0.1.3 (2026-10-20): WI 6 — registry parser/renderer implemented; §5.1 pins the registry doc grammar (fixed six-column table, backticked slug/status, `File` cell `[<file>](<file>)` with link text equal to target, rules numbered strictly 1..N); the real `algorithms/INDEX.md` row order (`line-index-sync` before `lessons-record`) was not code-point-sorted — a violation of the file's own rule 1 — normalized as a grandfathered manual edit ahead of the T4 golden<br>0.1.4 (2026-10-20): WI 7 — `check` diagnostics implemented in `integrity.py` (pure `check_doc`, I/O wrapper `check_paths`, `check_message` naming the exact remediation command); §3 pseudocode is unchanged and normative — the T6 case (store moved after render, doc stale) diagnoses `STORE_DRIFT_OR_DOC_DRIFT`, the store-side diagnosis distinct from T5's `DOC_MODIFIED_OUTSIDE_APP`; §5.3 lists all three exit-1 diagnoses |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | — (B10 WI 3–8; expected `src/securetrace/docs/` + `securetrace.cli`/`__main__` wiring) |
 | Time complexity | O(D) for parse, render, and check (D = document size in bytes) |
@@ -257,9 +257,9 @@ Store: the one-item backlog store of test T1 (§6).
 - `upsert` / `progress` / `add` / `show` / `render` / `migrate`: 0 ok;
   2 rejected input (schema violation, missing store, id collision, store
   already present without `--force` on `migrate`).
-- `check`: 0 in sync; 1 stale — `DOC_MODIFIED_OUTSIDE_APP` or
-  `STORE_DRIFT` (diagnosis + remediation command on stderr); 2 malformed
-  (store, manifest, or doc unreadable/missing).
+- `check`: 0 in sync; 1 stale — `DOC_MODIFIED_OUTSIDE_APP`, `STORE_DRIFT`,
+  or `STORE_DRIFT_OR_DOC_DRIFT` (diagnosis + remediation command on stderr);
+  2 malformed (store, manifest, or doc unreadable/missing).
 - `render` and `check` compute expected bytes the same way — one `RENDER_DOC`
   on the same loaded store — so they can never disagree.
 - The positional file argument of the re-pointed `backlog` / `lessons` /
