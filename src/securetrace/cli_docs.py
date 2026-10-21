@@ -28,6 +28,12 @@ manifest to ``<store_dir>/manifest.json``; both are overridable with
 standard repo layout (``canonical.DEFAULT_*_PATHS``, CWD-relative) with the
 manifest defaulting to ``data/manifest.json``.
 
+Path containment (C4, ``docs.paths``, S8707): every user-supplied path is
+validated to resolve inside the working directory before any file I/O; an
+escaping path fails with exit 2 (``securetrace: {msg}``) and is never read
+or written. Trusted constants (``canonical.DEFAULT_*_PATHS``) are exempt —
+they are code, not input.
+
 The clock lives in this module only (it is not T9-scanned): ``make_lesson``
 defaults ``Recorded`` to today, and ``__main__`` defaults ``--date`` to
 today; the pure core (``docs.mutations``) receives dates as explicit
@@ -52,6 +58,7 @@ from securetrace.docs.mutations import (
     upsert_backlog_item,
     upsert_registry_row,
 )
+from securetrace.docs.paths import resolve_within
 from securetrace.docs.registry_doc import parse_registry
 from securetrace.docs.schema import SchemaError
 from securetrace.errors import FormatError, InvalidInput
@@ -156,11 +163,26 @@ def _default_manifest_path(store_path: Path) -> Path:
 def _resolve(
     kind: str, store_path: object, doc_path: object, manifest_path: object
 ) -> tuple[Path, Path, Path]:
-    """Resolve (store, doc, manifest) paths, applying the D5 defaults."""
-    sp = Path(store_path)
-    doc = Path(doc_path) if doc_path is not None else _default_doc_path(kind, sp)
-    man = Path(manifest_path) if manifest_path is not None else _default_manifest_path(sp)
+    """Resolve (store, doc, manifest) paths, applying the D5 defaults.
+
+    Every user-supplied path is contained within the workspace base
+    (C4); the callers catch the resulting ``ValueError`` and fail with
+    exit 2.
+    """
+    sp = resolve_within(store_path)
+    doc = resolve_within(doc_path) if doc_path is not None else _default_doc_path(kind, sp)
+    man = resolve_within(manifest_path) if manifest_path is not None else _default_manifest_path(sp)
     return sp, doc, man
+
+
+def _validated_manifest(manifest_path: str | Path | None) -> Path:
+    """Resolve the ``--manifest`` override within the workspace base (C4).
+
+    The default (``data/manifest.json``, CWD-relative) is a trusted constant.
+    """
+    if manifest_path is None:
+        return Path("data/manifest.json")
+    return resolve_within(manifest_path)
 
 
 def _render_line(doc: Path, sp: Path, man: Path) -> str:
@@ -204,8 +226,8 @@ def run_backlog_upsert(
 
     Returns:
         0: mutation + render committed (stdout: mutation line + render line).
-        2: store unreadable, rejected input, schema violation, or a failed
-          commit (stderr: ``securetrace: {msg}``).
+        2: path escapes the workspace base, store unreadable, rejected input,
+          schema violation, or a failed commit (stderr: ``securetrace: {msg}``).
     """
     kind = "backlog"
     try:
@@ -250,8 +272,8 @@ def run_backlog_progress(
 
     Returns:
         0: appended + rendered (stdout: progress line + render line).
-        2: store unreadable, unknown item id, schema violation, failed commit
-          (stderr: ``securetrace: {msg}``).
+        2: path escapes the workspace base, store unreadable, unknown item
+          id, schema violation, failed commit (stderr: ``securetrace: {msg}``).
     """
     kind = "backlog"
     try:
@@ -287,10 +309,13 @@ def run_backlog_show(
 
     Returns:
         0: printed to stdout.
-        2: store unreadable, or the item id is not in the store
-          (stderr: ``securetrace: backlog item {id!r} not found``).
+        2: store path escapes the workspace base, store unreadable, or the
+          item id is not in the store (stderr: ``securetrace: {msg}``).
     """
-    sp = Path(store_path)
+    try:
+        sp = resolve_within(store_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     try:
         store = _read_store(sp)
     except _StoreReadError as exc:
@@ -365,8 +390,8 @@ def run_lessons_add(
 
     Returns:
         0: recorded + rendered (stdout: add line + render line).
-        2: store unreadable, rejected input, schema violation, failed commit
-          (stderr: ``securetrace: {msg}``).
+        2: path escapes the workspace base, store unreadable, rejected input,
+          schema violation, failed commit (stderr: ``securetrace: {msg}``).
     """
     kind = "lessons"
     try:
@@ -400,10 +425,13 @@ def run_lessons_show(
 
     Returns:
         0: printed to stdout.
-        2: store unreadable, or the lesson id is not in the store
-          (stderr: ``securetrace: lesson {id!r} not found``).
+        2: store path escapes the workspace base, store unreadable, or the
+          lesson id is not in the store (stderr: ``securetrace: {msg}``).
     """
-    sp = Path(store_path)
+    try:
+        sp = resolve_within(store_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     try:
         store = _read_store(sp)
     except _StoreReadError as exc:
@@ -438,8 +466,8 @@ def run_algorithms_upsert(
 
     Returns:
         0: upserted + rendered (stdout: upsert line + render line).
-        2: store unreadable, rejected row, schema violation, failed commit
-          (stderr: ``securetrace: {msg}``).
+        2: path escapes the workspace base, store unreadable, rejected row,
+          schema violation, failed commit (stderr: ``securetrace: {msg}``).
     """
     kind = "registry"
     try:
@@ -477,10 +505,13 @@ def run_algorithms_show(
 
     Returns:
         0: printed to stdout.
-        2: store unreadable, or the slug is not in the store
-          (stderr: ``securetrace: registry row {slug!r} not found``).
+        2: store path escapes the workspace base, store unreadable, or the
+          slug is not in the store (stderr: ``securetrace: {msg}``).
     """
-    sp = Path(store_path)
+    try:
+        sp = resolve_within(store_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     try:
         store = _read_store(sp)
     except _StoreReadError as exc:
@@ -514,8 +545,8 @@ def run_render(
 
     Returns:
         0: rendered (stdout: the render line).
-        2: unknown kind, store unreadable/malformed, failed commit
-          (stderr: ``securetrace: {msg}``).
+        2: unknown kind, path escapes the workspace base,
+          store unreadable/malformed, failed commit (stderr: ``securetrace: {msg}``).
     """
     try:
         sp, doc, man = _resolve(kind, store_path, doc_path, manifest_path)
@@ -546,7 +577,8 @@ def run_check(
         0: in sync (message on stdout).
         1: stale — doc modified outside the app, or store/doc drifted since
           the last render (diagnosis + remediation on stderr).
-        2: malformed store/doc/manifest (diagnosis on stderr).
+        2: malformed store/doc/manifest, or a path escapes the workspace
+          base (diagnosis on stderr).
     """
     try:
         sp, doc, man = _resolve(kind, store_path, doc_path, manifest_path)
@@ -571,7 +603,10 @@ def run_render_all(*, manifest_path: str | Path | None = None, prog: str = PROG)
     failure stops the run (exit 2) after printing only the successful render
     lines.
     """
-    man = Path(manifest_path) if manifest_path is not None else Path("data/manifest.json")
+    try:
+        man = _validated_manifest(manifest_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     for kind in DOC_KINDS:
         sp = Path(canonical.DEFAULT_STORE_PATHS[kind])
         doc = Path(canonical.DEFAULT_DOC_PATHS[kind])
@@ -592,7 +627,10 @@ def run_check_all(*, manifest_path: str | Path | None = None, prog: str = PROG) 
     One ``check_message`` line per kind (stdout when 0, stderr when 1/2);
     the run always checks all three kinds and returns the maximum exit code.
     """
-    man = Path(manifest_path) if manifest_path is not None else Path("data/manifest.json")
+    try:
+        man = _validated_manifest(manifest_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     worst = 0
     for kind in DOC_KINDS:
         sp = Path(canonical.DEFAULT_STORE_PATHS[kind])
@@ -632,11 +670,14 @@ def run_migrate(
 
     Returns:
         0: migrated + rendered (stdout: migrate line + render line).
-        2: kind not inferable, store exists without ``--force``, doc
-          unreadable/malformed, failed commit (stderr:
-          ``securetrace: {msg}``).
+        2: path escapes the workspace base, kind not inferable, store exists
+          without ``--force``, doc unreadable/malformed, failed commit
+          (stderr: ``securetrace: {msg}``).
     """
-    doc = Path(doc_path)
+    try:
+        doc = resolve_within(doc_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
     if kind is None:
         kind = _KIND_BY_BASENAME.get(doc.name)
         if kind is None:
@@ -645,7 +686,20 @@ def run_migrate(
                 f"cannot infer doc kind from {doc.name}; "
                 "pass --kind one of: backlog, lessons, registry",
             )
-    sp = Path(store_path) if store_path is not None else Path(canonical.DEFAULT_STORE_PATHS[kind])
+    if store_path is not None:
+        try:
+            sp = resolve_within(store_path)
+        except ValueError as exc:
+            return _fail(prog, str(exc))
+    else:
+        sp = Path(canonical.DEFAULT_STORE_PATHS[kind])
+    if manifest_path is not None:
+        try:
+            man = resolve_within(manifest_path)
+        except ValueError as exc:
+            return _fail(prog, str(exc))
+    else:
+        man = _default_manifest_path(sp)
     if sp.exists() and not force:
         return _fail(prog, f"store {sp} already exists; use --force to replace")
     # Resolve the doc: the path as given, else the kind's default doc path
@@ -665,7 +719,6 @@ def run_migrate(
         store = _KIND_PARSERS[kind](text)
     except (FormatError, SchemaError) as exc:
         return _fail(prog, str(exc))
-    man = Path(manifest_path) if manifest_path is not None else _default_manifest_path(sp)
     failed = _commit(kind, store, sp, doc, man, prog)
     if failed is not None:
         return failed
