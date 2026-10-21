@@ -10,43 +10,44 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	50
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	52	65
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	66	79
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	80	93
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	94	107
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	108	121
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	122	135
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	136	149
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	150	163
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	164	177
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	178	191
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	192	205
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	206	219
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	220	233
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	234	247
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	248	261
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	262	275
-LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	276	289
-LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	290	303
-LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	304	317
-LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	318	331
-LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	332	345
-LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	346	359
-LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	360	373
-LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	374	387
-LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	388	401
-LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	402	415
-LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	416	429
-LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	430	443
-LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	444	457
-LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	458	471
-LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	472	485
-LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	486	499
-LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	500	513
-LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	514	527
-LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	528	541
-LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	542	555
+LLT_INDEX_BLOCK	—	—	—	—	—	11	51
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	53	66
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	67	80
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	81	94
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	95	108
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	109	122
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	123	136
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	137	150
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	151	164
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	165	178
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	179	192
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	193	206
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	207	220
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	221	234
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	235	248
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	249	262
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	263	276
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	277	290
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	291	304
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	305	318
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	319	332
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	333	346
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	347	360
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	361	374
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	375	388
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	389	402
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	403	416
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	417	430
+LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	431	444
+LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	445	458
+LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	459	472
+LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	473	486
+LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	487	500
+LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	501	514
+LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	515	528
+LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	529	542
+LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	543	556
+LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)	data	low	active	2026-10-20	557	570
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -552,3 +553,17 @@ LLT-0036	strict section scans must stop at the blank separator, not only at the 
 - **Supersedes:** —
 - **Prevention:** When porting a lenient legacy parser into a strict one, enumerate every terminator of the strict grammar (blank line, marker, EOF) and write the loop condition from that list; keep a roundtrip test (parse o render == identity) as the inverse check, since it fails on exactly this class of terminator bug.
 - **References:** src/securetrace/docs/lessons_doc.py; src/securetrace/lessons/record.py (parse_entries span scan); LLT-0012 (scan-window off-by-one, related but distinct)
+
+<!-- LLT:ENTRY:LLT-0037 -->
+## LLT-0037 — A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)
+
+- **Recorded:** 2026-10-20
+- **Category:** data
+- **Severity:** low
+- **Status:** active
+- **Context:** B10 WI 6 (registry parser/renderer). The real algorithms/INDEX.md declares 'Keep sorted by slug' (rule 1 + intro blockquote), yet its row order placed line-index-sync before lessons-record — visually adjacent and plausibly sorted, but code-point sorted() puts lessons-record first ('e' < 'i'). No legacy check, CI check, or eyeball caught it; it surfaced only when schema.validate_registry (rows must be slug-sorted) met the live file in the T4 golden roundtrip.
+- **Pitfall:** A declared ordering invariant (sorted registry, increasing ids) is only as strong as the check that enforces it. An order that looks sorted to the eye can violate code-point sort order, and the drift persists silently through every commit that does not touch the affected rows.
+- **Solution:** Close the invariant with a schema assertion (validate_registry rejects unsorted rows and duplicate slugs) and pin the canonical order with the golden roundtrip (T4: parse → render == committed bytes). When the live file violates a declared invariant, normalize the file (grandfathered manual edit here: swap the two rows) before running the golden — do not relax the schema to match the data.
+- **Supersedes:** —
+- **Prevention:** When a document gains a 'keep X sorted/unique/increasing' rule, land the enforcing check (schema assertion or CI gate) in the same change; verify 'looks sorted' with an explicit sorted() comparison, never by eye.
+- **References:** —
