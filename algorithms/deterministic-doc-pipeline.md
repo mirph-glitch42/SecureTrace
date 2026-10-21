@@ -7,9 +7,9 @@ METADATA	15	36
 THEORY	37	131
 PSEUDOCODE	132	170
 WALKTHROUGH	171	210
-IMPLEMENTATION	211	260
-TESTS	261	276
-REFERENCES	277	285
+IMPLEMENTATION	211	269
+TESTS	270	285
+REFERENCES	286	294
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,12 +19,12 @@ REFERENCES	277	285
 |---|---|
 | Name | Deterministic Document Pipeline (canonical store → pure render → integrity verify) |
 | Slug | deterministic-doc-pipeline |
-| Version | 0.1.2 |
+| Version | 0.1.3 |
 | Status | draft |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-20 |
 | Last modified | 2026-10-20 |
-| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted) |
+| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted)<br>0.1.3 (2026-10-20): WI 6 — registry parser/renderer implemented; §5.1 pins the registry doc grammar (fixed six-column table, backticked slug/status, `File` cell `[<file>](<file>)` with link text equal to target, rules numbered strictly 1..N); the real `algorithms/INDEX.md` row order (`line-index-sync` before `lessons-record`) was not code-point-sorted — a violation of the file's own rule 1 — normalized as a grandfathered manual edit ahead of the T4 golden |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | — (B10 WI 3–8; expected `src/securetrace/docs/` + `securetrace.cli`/`__main__` wiring) |
 | Time complexity | O(D) for parse, render, and check (D = document size in bytes) |
@@ -223,6 +223,15 @@ Store: the one-item backlog store of test T1 (§6).
 - `src/securetrace/docs/backlog_doc.py` — `parse_backlog` / `render_backlog`.
 - `src/securetrace/docs/lessons_doc.py` — `parse_lessons` / `render_lessons`.
 - `src/securetrace/docs/registry_doc.py` — `parse_registry` / `render_registry`.
+  The registry doc is a markdown table, not a TSV-indexed doc: title, blank,
+  generated header, blank, the intro blockquote lines, blank, the fixed
+  six-column table (`Slug`/`Name`/`Version`/`Status`/`File`/`One-line
+  summary` header + `|---|…|` separator + one row per algorithm), blank,
+  `## Rules` + the rule lines numbered strictly 1..N. Row cell grammar: the
+  slug and status are backticked, the `File` cell is `[<file>](<file>)` with
+  link text equal to the target (the relative .md path), the three prose
+  cells are plain; a row cell containing ` | ` is unparseable by construction
+  (the split must yield exactly six cells).
 - `src/securetrace/docs/integrity.py` — manifest model + `check` diagnostics.
 - `src/securetrace/cli.py` + `src/securetrace/__main__.py` — command wiring
   (`upsert/progress/add/show/render/check`, `docs render-all|check-all`, `migrate`).
