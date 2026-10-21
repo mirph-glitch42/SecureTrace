@@ -1,10 +1,18 @@
-"""``securetrace`` console entrypoint: argparse dispatch to ``securetrace.cli``.
+"""``securetrace`` console entrypoint: argparse dispatch to ``securetrace.cli_docs``.
 
 Usage:
-    securetrace backlog {check,sync} <file>
-    securetrace lessons {init,add,sync,check,next-id} …
-    securetrace algorithms {check,sync} <doc>
+    securetrace backlog {upsert,progress,show,render,check} <store> …
+    securetrace lessons {add,show,render,check} <store> …
+    securetrace algorithms {upsert,show,render,check} <store> …
+    securetrace docs {render-all,check-all} [--manifest FILE]
+    securetrace migrate <doc> [--kind K] [--store FILE] [--force] [--manifest FILE]
     securetrace rmf build <repo> [--outdir DIR]
+
+The positional file argument of every store-based command is the **store**
+path (the in-repo JSON data store); the rendered ``.md`` doc and the
+manifest default relative to the store (design D5, see
+``algorithms/deterministic-doc-pipeline.md``). ``.md`` docs are never
+edited directly — they are re-rendered from the store by every mutation.
 
 ``main(argv)`` returns the process exit code for command-level failures
 (0/1/2); argparse-level failures (missing subcommand, unknown subcommand,
@@ -14,70 +22,159 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
 import sys
 
-from securetrace import __version__, cli
-from securetrace.lessons import record
+from securetrace import __version__, cli, cli_docs
+
+
+def _compose_fields(specs: list[str] | None) -> list[dict]:
+    """Turn repeated ``--field "Name: line"`` specs into item fields.
+
+    Specs whose names match append to that field's ``lines``; the order of
+    first appearance is preserved. Returns ``[]`` when no spec was given.
+    """
+    fields: list[dict] = []
+    for spec in specs or []:
+        name, _, line = spec.partition(":")
+        name = name.strip()
+        line = line.strip()
+        for field in fields:
+            if field["name"] == name:
+                field["lines"].append(line)
+                break
+        else:
+            fields.append({"name": name, "lines": [line]})
+    return fields
+
+
+def _store_options(sp: argparse.ArgumentParser) -> None:
+    """The two D5 override options shared by every store-based subcommand."""
+    sp.add_argument("--doc", default=None, help="doc path (default: <store_dir>/../<kind doc>)")
+    sp.add_argument(
+        "--manifest", default=None, help="manifest path (default: <store_dir>/manifest.json)"
+    )
+
+
+def _render_check(sub: argparse._SubParsersAction, kind_help: str) -> None:
+    """Add the shared ``render`` / ``check`` subcommands to *sub*."""
+    rd = sub.add_parser("render", help=f"re-render the {kind_help} doc from the store")
+    rd.add_argument("store", help="path to the JSON store")
+    _store_options(rd)
+    ck = sub.add_parser(
+        "check", help=f"check the {kind_help} doc; exit 0 in sync / 1 stale / 2 malformed"
+    )
+    ck.add_argument("store", help="path to the JSON store")
+    _store_options(ck)
 
 
 def _add_backlog(sub: argparse._SubParsersAction) -> None:
-    sp = sub.add_parser("backlog", help="manage the BACKLOG.md line index")
+    sp = sub.add_parser("backlog", help="manage the backlog store (default data/backlog.json)")
     bsub = sp.add_subparsers(dest="backlog_command", required=True)
-    bcheck = bsub.add_parser("check", help="verify the index is current; exit 1 if stale")
-    bcheck.add_argument("file", help="path to BACKLOG.md")
-    bsync = bsub.add_parser("sync", help="rewrite the index in place (idempotent)")
-    bsync.add_argument("file", help="path to BACKLOG.md")
+
+    up = bsub.add_parser("upsert", help="add or update a backlog item, then commit the render")
+    up.add_argument("store", help="path to the backlog store JSON")
+    up.add_argument("--id", required=True, help="item id (B-<n>)")
+    up.add_argument("--title", required=True, help="item title")
+    up.add_argument("--status", required=True, help="OPEN | IN PROGRESS | DONE")
+    up.add_argument(
+        "--field",
+        action="append",
+        default=None,
+        metavar="NAME: LINE",
+        help="field line (repeatable; the same name appends to that field)",
+    )
+    up.add_argument("--date", default=None, help="YYYY-MM-DD status-line date (default: today)")
+    _store_options(up)
+
+    pg = bsub.add_parser("progress", help="append a progress line to an item, then commit")
+    pg.add_argument("store", help="path to the backlog store JSON")
+    pg.add_argument("--id", required=True, help="item id (B-<n>)")
+    pg.add_argument("--text", required=True, help="progress text")
+    pg.add_argument("--date", default=None, help="YYYY-MM-DD (default: today)")
+    _store_options(pg)
+
+    sh = bsub.add_parser("show", help="print the store as canonical JSON")
+    sh.add_argument("store", help="path to the backlog store JSON")
+    sh.add_argument("--id", default=None, help="print only this item")
+
+    _render_check(bsub, "backlog")
 
 
 def _add_lessons(sub: argparse._SubParsersAction) -> None:
-    sp = sub.add_parser("lessons", help="manage a LESSONS_LEARNED.md record")
+    sp = sub.add_parser("lessons", help="manage the lessons store (default data/lessons.json)")
     lsub = sp.add_subparsers(dest="lessons_command", required=True)
 
-    linit = lsub.add_parser("init", help="create a new LESSONS_LEARNED.md")
-    linit.add_argument("file")
-    linit.add_argument(
-        "--force", action="store_true", help="replace an existing non-LLT file with the template"
-    )
+    add = lsub.add_parser("add", help="record a new lesson, then commit the render")
+    add.add_argument("store", help="path to the lessons store JSON")
+    add.add_argument("--title", required=True, help="lesson title")
+    add.add_argument("--context", required=True, help="context (what happened)")
+    add.add_argument("--pitfall", required=True, help="pitfall (what went wrong)")
+    add.add_argument("--solution", required=True, help="solution (what works)")
+    add.add_argument("--id", default=None, help="explicit LLT-NNNN id (default: next free id)")
+    add.add_argument("--category", default="other", help="lesson category (default: other)")
+    add.add_argument("--severity", default="medium", help="low | medium | high (default: medium)")
+    add.add_argument("--recorded", default=None, help="YYYY-MM-DD (default: today)")
+    add.add_argument("--supersedes", default=None, help="LLT-NNNN of the lesson this one replaces")
+    add.add_argument("--prevention", default=None, help="prevention note")
+    add.add_argument("--references", default=None, help="references")
+    _store_options(add)
 
-    ladd = lsub.add_parser("add", help="record a new lesson and update the index")
-    ladd.add_argument("file")
-    ladd.add_argument("--title", required=True)
-    ladd.add_argument("--context", required=True)
-    ladd.add_argument("--pitfall", required=True)
-    ladd.add_argument("--solution", required=True)
-    ladd.add_argument(
-        "--id", default=None, help="explicit LLT-NNNN id (must be unused and greater than the max)"
-    )
-    ladd.add_argument("--category", default="other", help="one of: " + ", ".join(record.CATEGORIES))
-    ladd.add_argument(
-        "--severity", default="medium", help="one of: " + ", ".join(record.SEVERITIES)
-    )
-    ladd.add_argument("--recorded", default=None, help="YYYY-MM-DD (default: today)")
-    ladd.add_argument(
-        "--supersedes",
-        default=None,
-        help="LLT-NNNN of the lesson this one replaces (flips its status)",
-    )
-    ladd.add_argument("--prevention", default=None)
-    ladd.add_argument("--references", default=None)
+    sh = lsub.add_parser("show", help="print the store as canonical JSON")
+    sh.add_argument("store", help="path to the lessons store JSON")
+    sh.add_argument("--id", default=None, help="print only this lesson")
 
-    lsync = lsub.add_parser("sync", help="regenerate the index block from the entries")
-    lsync.add_argument("file")
-
-    lcheck = lsub.add_parser("check", help="validate structure, fields, and index freshness")
-    lcheck.add_argument("file")
-
-    lnext = lsub.add_parser("next-id", help="print the next LLT-NNNN id")
-    lnext.add_argument("file")
+    _render_check(lsub, "lessons")
 
 
 def _add_algorithms(sub: argparse._SubParsersAction) -> None:
-    sp = sub.add_parser("algorithms", help="manage algorithm-document line indexes")
+    sp = sub.add_parser(
+        "algorithms", help="manage the algorithm-registry store (default data/algorithms.json)"
+    )
     asub = sp.add_subparsers(dest="algorithms_command", required=True)
-    acheck = asub.add_parser("check", help="verify the index is current; exit 1 if stale")
-    acheck.add_argument("doc", help="path to the algorithm document")
-    as_sync = asub.add_parser("sync", help="rewrite the index in place (idempotent)")
-    as_sync.add_argument("doc", help="path to the algorithm document")
+
+    up = asub.add_parser("upsert", help="add or update a registry row, then commit the render")
+    up.add_argument("store", help="path to the registry store JSON")
+    up.add_argument("--slug", required=True, help="row slug")
+    up.add_argument("--name", required=True, help="algorithm name")
+    up.add_argument("--version", required=True, help="document version")
+    up.add_argument("--status", required=True, help="draft | implemented | superseded")
+    up.add_argument("--file", required=True, help="path to the algorithm document")
+    up.add_argument("--summary", required=True, help="one-line summary")
+    _store_options(up)
+
+    sh = asub.add_parser("show", help="print the store as canonical JSON")
+    sh.add_argument("store", help="path to the registry store JSON")
+    sh.add_argument("--slug", default=None, help="print only this row")
+
+    _render_check(asub, "registry")
+
+
+def _add_docs(sub: argparse._SubParsersAction) -> None:
+    sp = sub.add_parser("docs", help="render or check all three pipeline docs")
+    dsub = sp.add_subparsers(dest="docs_command", required=True)
+
+    ra = dsub.add_parser("render-all", help="render all three docs from their stores")
+    ra.add_argument("--manifest", default=None, help="manifest path (default: data/manifest.json)")
+    ca = dsub.add_parser("check-all", help="check all three docs; exit = worst code")
+    ca.add_argument("--manifest", default=None, help="manifest path (default: data/manifest.json)")
+
+
+def _add_migrate(sub: argparse._SubParsersAction) -> None:
+    mg = sub.add_parser(
+        "migrate", help="parse a markdown doc into its store, then commit the render"
+    )
+    mg.add_argument("doc", help="path to the markdown doc")
+    mg.add_argument(
+        "--kind",
+        default=None,
+        help="backlog | lessons | registry (default: infer from the doc basename)",
+    )
+    mg.add_argument("--store", default=None, help="store path (default: data/<kind>.json)")
+    mg.add_argument("--force", action="store_true", help="replace an existing store")
+    mg.add_argument(
+        "--manifest", default=None, help="manifest path (default: <store_dir>/manifest.json)"
+    )
 
 
 def _add_rmf(sub: argparse._SubParsersAction) -> None:
@@ -96,39 +193,82 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="securetrace",
         description="Agentic tooling for secure, traceable software development.",
-        epilog="Exit codes: 0 = ok, 1 = stale index, 2 = malformed file or rejected input.",
+        epilog=(
+            "Exit codes: 0 = ok / in sync, 1 = doc stale (check), "
+            "2 = malformed file or rejected input."
+        ),
     )
     parser.add_argument("--version", action="version", version=f"securetrace {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     _add_backlog(sub)
     _add_lessons(sub)
     _add_algorithms(sub)
+    _add_docs(sub)
+    _add_migrate(sub)
     _add_rmf(sub)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Parse arguments, dispatch to ``securetrace.cli``, and return the exit code.
+    """Parse arguments, dispatch to ``securetrace.cli_docs``, return the exit code.
 
     argparse-level failures (missing/unknown subcommand, ``--version``) raise
     ``SystemExit``; command-level failures return 0/1/2.
     """
     args = _build_parser().parse_args(argv)
     if args.command == "backlog":
-        path = args.file
-        if args.backlog_command == "check":
-            return cli.run_backlog_check(path, prog="securetrace")
-        return cli.run_backlog_sync(path, prog="securetrace")
+        if args.backlog_command == "upsert":
+            item = {
+                "id": args.id,
+                "title": args.title,
+                "status": args.status,
+                "fields": _compose_fields(args.field),
+            }
+            date = args.date or datetime.date.today().isoformat()
+            return cli_docs.run_backlog_upsert(
+                args.store,
+                item,
+                date,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        if args.backlog_command == "progress":
+            date = args.date or datetime.date.today().isoformat()
+            line = f"  - {date} — {args.text}"
+            return cli_docs.run_backlog_progress(
+                args.store,
+                args.id,
+                line,
+                date,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        if args.backlog_command == "show":
+            return cli_docs.run_backlog_show(args.store, item_id=args.id)
+        if args.backlog_command == "render":
+            return cli_docs.run_render(
+                "backlog",
+                args.store,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        return cli_docs.run_check(
+            "backlog",
+            args.store,
+            doc_path=args.doc,
+            manifest_path=args.manifest,
+            prog="securetrace",
+        )
     if args.command == "lessons":
-        path = args.file
-        if args.lessons_command == "init":
-            return cli.run_lessons_init(path, force=args.force, prog="securetrace")
         if args.lessons_command == "add":
-            lesson = record.NewLesson(
-                title=args.title,
-                context=args.context,
-                pitfall=args.pitfall,
-                solution=args.solution,
+            lesson = cli_docs.make_lesson(
+                args.title,
+                args.context,
+                args.pitfall,
+                args.solution,
                 id=args.id,
                 category=args.category,
                 severity=args.severity,
@@ -137,20 +277,79 @@ def main(argv: list[str] | None = None) -> int:
                 prevention=args.prevention,
                 references=args.references,
             )
-            return cli.run_lessons_add(path, lesson, prog="securetrace")
-        if args.lessons_command == "sync":
-            return cli.run_lessons_sync(path, prog="securetrace")
-        if args.lessons_command == "check":
-            return cli.run_lessons_check(path, prog="securetrace")
-        return cli.run_lessons_next_id(path, prog="securetrace")
+            return cli_docs.run_lessons_add(
+                args.store,
+                lesson,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        if args.lessons_command == "show":
+            return cli_docs.run_lessons_show(args.store, lesson_id=args.id)
+        if args.lessons_command == "render":
+            return cli_docs.run_render(
+                "lessons",
+                args.store,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        return cli_docs.run_check(
+            "lessons",
+            args.store,
+            doc_path=args.doc,
+            manifest_path=args.manifest,
+            prog="securetrace",
+        )
+    if args.command == "algorithms":
+        if args.algorithms_command == "upsert":
+            row = {
+                "slug": args.slug,
+                "name": args.name,
+                "version": args.version,
+                "status": args.status,
+                "file": args.file,
+                "summary": args.summary,
+            }
+            return cli_docs.run_algorithms_upsert(
+                args.store,
+                row,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        if args.algorithms_command == "show":
+            return cli_docs.run_algorithms_show(args.store, slug=args.slug)
+        if args.algorithms_command == "render":
+            return cli_docs.run_render(
+                "registry",
+                args.store,
+                doc_path=args.doc,
+                manifest_path=args.manifest,
+                prog="securetrace",
+            )
+        return cli_docs.run_check(
+            "registry",
+            args.store,
+            doc_path=args.doc,
+            manifest_path=args.manifest,
+            prog="securetrace",
+        )
+    if args.command == "docs":
+        if args.docs_command == "render-all":
+            return cli_docs.run_render_all(manifest_path=args.manifest, prog="securetrace")
+        return cli_docs.run_check_all(manifest_path=args.manifest, prog="securetrace")
+    if args.command == "migrate":
+        return cli_docs.run_migrate(
+            args.doc,
+            kind=args.kind,
+            store_path=args.store,
+            force=args.force,
+            manifest_path=args.manifest,
+            prog="securetrace",
+        )
     # rmf
-    if args.command == "rmf":
-        return cli.run_rmf_build(args.repo, outdir=args.outdir, prog="securetrace")
-    # algorithms
-    path = args.doc
-    if args.algorithms_command == "check":
-        return cli.run_algorithm_check(path, prog="securetrace")
-    return cli.run_algorithm_sync(path, prog="securetrace")
+    return cli.run_rmf_build(args.repo, outdir=args.outdir, prog="securetrace")
 
 
 if __name__ == "__main__":

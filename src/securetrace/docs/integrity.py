@@ -14,6 +14,12 @@ pure diagnosis (validate store → re-render → byte-compare → discriminate t
 drift direction via the manifest entry); :func:`check_paths` is the I/O
 wrapper; :func:`check_message` builds the stderr line with the exact
 remediation command.
+
+WI 8 adds the render commit path (spec §3 ``COMMIT``): :func:`write_store`
+writes a validated store in canonical JSON, and :func:`commit_render` is the
+one-shot store-write + doc-render + manifest-refresh pipeline that every
+mutating command goes through, so the store, the rendered document, and the
+manifest can never diverge silently.
 """
 
 from __future__ import annotations
@@ -24,6 +30,7 @@ import re
 import tempfile
 from pathlib import Path
 
+from securetrace.docs import RENDERER_VERSION
 from securetrace.docs.backlog_doc import render_backlog
 from securetrace.docs.canonical import CLI_VERBS, canonical_json, sha256_hex
 from securetrace.docs.lessons_doc import render_lessons
@@ -44,6 +51,7 @@ __all__ = [
     "check_doc",
     "check_message",
     "check_paths",
+    "commit_render",
     "entry_matches",
     "load_manifest",
     "make_entry",
@@ -51,6 +59,7 @@ __all__ = [
     "new_manifest",
     "save_manifest",
     "validate_manifest",
+    "write_store",
 ]
 
 MANIFEST_VERSION = 1
@@ -313,3 +322,76 @@ def check_message(kind: str, diagnosis: str, store_path: str) -> str:
         return messages[diagnosis]
     except KeyError:
         raise ValueError(f"unknown diagnosis: {diagnosis!r}") from None
+
+
+# ------------------------------------------------------------------- render commit (WI 8; spec §3 COMMIT)
+
+
+def _write_text(path: Path, text: str) -> None:
+    """Atomically replace *path* with *text* (temp file + ``os.replace``).
+
+    Same pattern as :func:`save_manifest`; parent directories are created.
+    """
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(p.parent), prefix=".securetrace-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+        os.replace(tmp, p)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def write_store(path: str | Path, store: object) -> None:
+    """Validate *store* and atomically write it in canonical JSON (C1).
+
+    The canonical text (``canonical_json``) is the store's byte form of
+    record; the same text's sha256 is what :func:`commit_render` pins in the
+    manifest, so a store that passes here is exactly what ``check`` compares.
+
+    Raises:
+        SchemaError: *store* fails schema validation (nothing is written).
+    """
+    validate_store(store)
+    _write_text(Path(path), canonical_json(store))
+
+
+def commit_render(
+    kind: str,
+    store: object,
+    store_path: str | Path,
+    doc_path: str | Path,
+    manifest_path: str | Path,
+) -> None:
+    """Commit one render: write the store, render the doc, refresh the manifest.
+
+    The pipeline (spec §3 ``COMMIT``) is: validate the store → write it in
+    canonical JSON (atomic) → render the document with the per-kind renderer
+    → write the document (atomic) → refresh the manifest entry for *kind*
+    (store + doc sha256s, preserving the other kinds' entries) → save the
+    manifest (atomic). ``render`` and ``check`` compute expected bytes the
+    same way (``_RENDER_DOC``), so they can never disagree (spec §5.3).
+
+    Raises:
+        SchemaError: *kind* is unknown, the store fails validation, or the
+          existing manifest is malformed (nothing after that step is written).
+    """
+    if kind not in DOC_KINDS:
+        raise SchemaError(f"unknown doc kind: {kind!r}")
+    validate_store(store)
+    store_text = canonical_json(store)
+    write_store(store_path, store)
+    doc_text = _RENDER_DOC[kind](store)
+    _write_text(Path(doc_path), doc_text)
+    manifest_path_p = Path(manifest_path)
+    if manifest_path_p.exists():
+        manifest = load_manifest(manifest_path_p)
+    else:
+        manifest = new_manifest(RENDERER_VERSION)
+    manifest["docs"][kind] = make_entry(kind, str(doc_path), str(store_path), store_text, doc_text)
+    save_manifest(manifest_path_p, manifest)

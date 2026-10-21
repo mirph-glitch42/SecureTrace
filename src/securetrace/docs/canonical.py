@@ -19,6 +19,7 @@ from securetrace.errors import FormatError
 
 __all__ = [
     "CLI_VERBS",
+    "DEFAULT_DOC_PATHS",
     "DOC_TITLES",
     "DEFAULT_STORE_PATHS",
     "GENERATED_BEGIN_PREFIX",
@@ -44,6 +45,14 @@ DEFAULT_STORE_PATHS = {
     "backlog": "data/backlog.json",
     "lessons": "data/lessons.json",
     "registry": "data/algorithms.json",
+}
+
+#: Default rendered-doc path per kind (standard repo layout, relative to the
+#: repo root; ``docs render-all`` / ``docs check-all`` use these CWD-relative).
+DEFAULT_DOC_PATHS = {
+    "backlog": "BACKLOG.md",
+    "lessons": "LESSONS_LEARNED.md",
+    "registry": "algorithms/INDEX.md",
 }
 
 

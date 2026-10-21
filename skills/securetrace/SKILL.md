@@ -15,67 +15,133 @@ This skill tells an agent **how to use the tools** in a SecureTrace-managed
 repository (SecureTrace itself, or a downstream project that adopts the
 toolset). Read it before running SecureTrace commands.
 
+## ⚠️ The three pipeline documents are generated — manual editing is not permitted
+
+`BACKLOG.md`, `LESSONS_LEARNED.md`, and `algorithms/INDEX.md` are **pure
+renders** of canonical-JSON stores under `data/` (B10). Every rendered doc
+carries a generated header stating that manual editing is not permitted and
+naming the CLI path that changes it.
+
+- **All creation and update goes through the `securetrace` CLI.** The store
+  is the source of truth; the `.md` is a byte-deterministic render of it.
+- A hand edit is *detected and diagnosed*: `securetrace … check` exits 1
+  naming `DOC_MODIFIED_OUTSIDE_APP` (doc touched outside the app) or
+  `STORE_DRIFT` (store moved after render), plus the exact remediation
+  command; `make docs-check` blocks commit and CI.
+- To change data, mutate the store via the CLI (`upsert` / `progress` /
+  `add`) — each verb re-renders the doc and refreshes the manifest in one
+  commit. To repair a drifted doc, run the verb's `render`.
+- **Transition (until B10 WI 10):** the hooks/Makefile/CI still run the
+  legacy markdown-index checks via the `scripts/` wrappers; both surfaces
+  must stay green. New work must use the store-based surface.
+
 ## Repository map (what lives where)
 
 | Path | What it is | Managed by |
 |---|---|---|
-| `BACKLOG.md` | Work queue + evidence, machine-indexed | `securetrace backlog` / `scripts/backlog_index.py` |
-| `LESSONS_LEARNED.md` | Lessons log + machine index | `securetrace lessons` / `scripts/manage_lessons.py` |
-| `algorithms/INDEX.md` | Algorithm-document registry (one row per doc) | `@algorithm-records-keeper` conventions |
-| `algorithms/<slug>.md` | Algorithm documents (design records, doc-before-code) | `securetrace algorithms` / `scripts/algorithm_index.py` |
-| `src/securetrace/` | The tool package (pure core + CLI) | tests (1:1 mirror in `tests/`) |
-| `scripts/` | Thin CLI wrappers for hooks/Makefile/CI | vendored, surface pinned by tests |
+| `data/backlog.json` | **Store** — source of truth for the backlog (canonical JSON) | `securetrace backlog …` |
+| `data/lessons.json` | **Store** — source of truth for the lessons record | `securetrace lessons …` |
+| `data/registry.json` | **Store** — source of truth for the algorithm registry | `securetrace algorithms …` |
+| `data/manifest.json` | per-doc `store_sha256` + `doc_sha256` + renderer version | refreshed by every committing verb |
+| `BACKLOG.md` | rendered backlog (work queue + evidence) — **generated, do not hand-edit** | `securetrace backlog render` |
+| `LESSONS_LEARNED.md` | rendered lessons record — **generated, do not hand-edit** | `securetrace lessons render` |
+| `algorithms/INDEX.md` | rendered algorithm registry — **generated, do not hand-edit** | `securetrace algorithms render` |
+| `algorithms/<slug>.md` | algorithm documents (design records, doc-before-code) | `@algorithm-records-keeper` conventions; registry rows via `securetrace algorithms upsert` |
+| `CONSISTENCY.md` | consistency registry (rules CC-001+; code-consistency-monitor) | agent — updated on every enforcement and every exception |
+| `src/securetrace/` | the tool package (pure core + command layer) | tests (1:1 mirror in `tests/`) |
+| `scripts/` | thin CLI wrappers for hooks/Makefile/CI | vendored, surface pinned by tests |
 | `hooks/` | git hooks (pre-commit, commit-msg, pre-push) | `core.hooksPath` |
-| `Makefile` | The single gate entrypoint | mirrored by `hooks/` + `.github/workflows/` |
+| `Makefile` | the single gate entrypoint | mirrored by `hooks/` + `.github/workflows/` |
 | `docs/dow-requirements.md` | DoW/DoD RMF + Software Acquisition Pathway requirements (the "why") | research record |
-| `artifacts/rmf/<date>/` | Built RMF evidence bundles | `securetrace rmf build` / `make rmf-bundle` |
+| `artifacts/rmf/<date>/` | built RMF evidence bundles | `securetrace rmf build` / `make rmf-bundle` |
 
-## The `securetrace` CLI
+## The `securetrace` CLI (store-based surface)
 
 Console entrypoint: `securetrace` (or `.venv/bin/python -m securetrace`).
-**Exit codes: 0 = ok, 1 = stale index, 2 = malformed file or rejected input.**
 
-### backlog — BACKLOG.md line index
+For the `backlog` / `lessons` / `algorithms` verbs, the **positional
+argument is the store JSON path** (default `data/<kind>.json`). The doc path
+defaults to the standard repo layout (`<store_dir>/../BACKLOG.md` etc.) and
+is overridable with `--doc`; `--manifest` overrides `data/manifest.json`.
 
-- `securetrace backlog sync <BACKLOG.md>` — rewrite the index in place
-  (idempotent). **Run after every BACKLOG.md edit.**
-- `securetrace backlog check <BACKLOG.md>` — verify the index is current;
-  exit 1 if stale. This is the CI gate form (in `make docs-check`).
+**Exit codes: 0 = ok, 1 = stale (diagnosed on stderr with the remediation
+command), 2 = malformed file or rejected input.**
 
-### lessons — LESSONS_LEARNED.md record
+### backlog — `data/backlog.json` → `BACKLOG.md`
 
-- `securetrace lessons init <file>` — create a new record.
-- `securetrace lessons add <file> --title T --context C --pitfall P
-  --solution S [--category …] [--severity …] [--recorded YYYY-MM-DD]
-  [--supersedes LLT-NNNN] [--prevention …] [--references …]` — append a
-  lesson and update the index. **Never hand-edit the index block or the
-  `<!-- LLT:ENTRY:… -->` markers.**
-- `securetrace lessons sync <file>` — regenerate the index from the entries.
-- `securetrace lessons check <file>` — validate structure, fields, and index
-  freshness (the CI gate form).
-- `securetrace lessons next-id <file>` — print the next `LLT-NNNN` id.
+- `securetrace backlog upsert <store> --id B11 --title T --status OPEN
+  --field NAME: LINE [--field NAME: LINE …] [--date YYYY-MM-DD]`
+  — add or update an item, then commit the render. `--field` is repeatable;
+  the same name appends to that field's line list.
+- `securetrace backlog progress <store> --id B10 --text T
+  [--date YYYY-MM-DD]` — append a progress line, then commit.
+- `securetrace backlog show <store> [--id B10]` — print the store (or one
+  item) as canonical JSON, verbatim (exactly one trailing newline).
+- `securetrace backlog render <store>` — re-render the doc from the store
+  (repairs a hand-touched doc).
+- `securetrace backlog check <store>` — exit 0 in sync / 1 stale (diagnosed)
+  / 2 malformed.
 
-Category vocabulary: debugging, architecture, testing, performance, security,
-dependencies, tooling, environment, process, data, other. Severity: low,
-medium, high, critical.
+### lessons — `data/lessons.json` → `LESSONS_LEARNED.md`
 
-### algorithms — algorithm-document indexes
+- `securetrace lessons add <store> --title T --context C --pitfall P
+  --solution S [--id LLT-NNNN] [--category …] [--severity low|medium|high]
+  [--recorded YYYY-MM-DD] [--supersedes LLT-NNNN] [--prevention …]
+  [--references …]` — append a lesson, then commit. `--id` defaults to the
+  next free id (the old `next-id` verb is gone).
+- `securetrace lessons show <store> [--id LLT-0039]` — canonical JSON,
+  verbatim.
+- `securetrace lessons render <store>` / `securetrace lessons check
+  <store>` — as above.
 
-- `securetrace algorithms sync <doc.md>` — rewrite the doc's line index.
-- `securetrace algorithms check <doc.md>` — exit 1 if stale. `make docs-check`
-  runs `check` over every `algorithms/*.md` except `INDEX.md`.
+Category vocabulary: debugging, architecture, testing, performance,
+security, dependencies, tooling, environment, process, data, other.
+Severity: low, medium, high.
 
-### rmf — RMF evidence bundles
+### algorithms — `data/registry.json` → `algorithms/INDEX.md`
+
+- `securetrace algorithms upsert <store> --slug S --name N --version V
+  --status draft|implemented|superseded --file F --summary S` — add or
+  update a registry row, then commit.
+- `securetrace algorithms show <store> [--slug S]` /
+  `securetrace algorithms render <store>` /
+  `securetrace algorithms check <store>` — as above.
+
+### docs — all three at once
+
+- `securetrace docs render-all [--manifest M]` — render all three docs from
+  their stores (one commit per doc).
+- `securetrace docs check-all [--manifest M]` — check all three; exit code
+  is the worst of the three.
+
+### migrate — one-time doc → store
+
+- `securetrace migrate <doc.md> [--kind backlog|lessons|registry]
+  [--store data/<kind>.json] [--force]` — parse a rendered (or grandfathered)
+  doc into a new store, then render + commit. `--force` replaces an existing
+  store. Kind is inferred from the doc basename when `--kind` is omitted.
+
+### rmf — RMF evidence bundles (unchanged)
 
 - `securetrace rmf build <repo-root> [--outdir DIR]` — build the dated
   SSP/SAP/SAR/POA&M bundle + canonical manifest from repository state
   (deterministic, zero network; default outdir `artifacts/rmf/<today>`).
   `make rmf-bundle` wraps it.
 
+### Deprecated — legacy markdown-index surface (until B10 WI 10)
+
+The legacy verbs — `backlog sync|check`, `lessons init|add|sync|check|next-id`,
+`algorithms sync|check` — are **no longer `securetrace` subcommands**
+(argparse rejects them with `invalid choice`, exit 2). They survive only in
+the vendored `scripts/` wrappers, which the hooks/Makefile/CI still invoke
+during the transition (B10 WI 10 rewires the gates to `docs check-all` and
+removes them). **Use the store-based surface for all new work.**
+
 ## scripts/ wrappers (what hooks, Makefile, and CI actually call)
 
 Hooks/Makefile/CI invoke the vendored wrappers — never machine-local skill
-paths (LLT-0002). They expose the same surface as the CLI:
+paths (LLT-0002). During the B10 WI 8→10 transition they expose the legacy
+markdown-index surface:
 
 - `scripts/backlog_index.py <BACKLOG.md> [--check]`
 - `scripts/manage_lessons.py {init,add,sync,check,next-id} …`
@@ -103,25 +169,35 @@ a gate failure blocks commit/push/CI.
 | CI `security` | Actions | gitleaks (full history) + pip-audit + CycloneDX SBOM |
 | Release | Actions (tag `v*`) | gate → sdist + wheel → cosign keyless signing + SLSA provenance → immutable GitHub release with release attestation |
 
+Note (transition): `docs-check` currently runs the legacy index checks
+(`scripts/backlog_index.py --check`, `scripts/manage_lessons.py check`,
+`scripts/algorithm_index.py --check` per `algorithms/*.md`); B10 WI 10
+rewires it to `securetrace docs check-all`.
+
 Useful targets: `make setup` (fresh clone: venv + pinned deps + hooks),
 `make lock` (regenerate pinned hashed lockfiles), `make sbom`,
 `make dependency-audit`, `make rmf-bundle`, `make help` (everything).
 
 ## Document contracts (the parts that must stay true)
 
-1. **BACKLOG.md** — one `<!-- BACKLOG:ITEM:B<n> -->` marker per item; heading
-   `## B<n>. Title — **STATUS**` with STATUS ∈ OPEN / IN PROGRESS / DONE /
-   CANCELLED; a `**Priority:**` field (High/Medium/Low); index TSV between
-   `<!-- INDEX:BEGIN/END -->` regenerated after **every** edit
-   (`sync` then `check`); closeouts carry commit shas + CI + verification
-   numbers + version (or `none`).
-2. **LESSONS_LEARNED.md** — entries with bold field lines between
-   `<!-- LLT:ENTRY:… -->` markers; index TSV between `LLT:INDEX:BEGIN/END`;
-   never hand-edit markers or index — `add`/`sync`/`check` only.
-3. **algorithms/** — one registry row per doc in `algorithms/INDEX.md`; the
+1. **Pipeline docs** (`BACKLOG.md`, `LESSONS_LEARNED.md`,
+   `algorithms/INDEX.md`) — pure renders of the `data/*.json` stores; each
+   carries a generated header (manual editing not permitted + the CLI path);
+   canonical JSON (sorted keys, indent 2, LF, exactly one trailing newline);
+   `data/manifest.json` pins `store_sha256` + `doc_sha256` + renderer
+   version; mutation only via the CLI; `check` diagnoses `IN_SYNC` /
+   `STORE_DRIFT` / `DOC_MODIFIED_OUTSIDE_APP` / `STORE_DRIFT_OR_DOC_DRIFT`
+   / `MALFORMED_*` — see `algorithms/deterministic-doc-pipeline.md`.
+2. **algorithms/ documents** — one registry row per doc (in the store); the
    row `Version` must equal the doc's `METADATA` version; doc before code,
    and doc + code land atomically; rows are never deleted (mark
-   `deprecated`).
+   `superseded`).
+3. **CONSISTENCY.md** — the consistency registry: every rule has an id
+   (`CC-###`), canonical implementation, file:line locations, rationale, and
+   last-updated date; every exception has a reason + approver; unregistered
+   exceptions are defects; updated on every enforcement (the
+   code-consistency-monitor requirement; B11 tracks the SecureTrace
+   integration — deferred).
 4. **.github/workflows** — pure ASCII, no duplicate mapping keys; both files
    pass `scripts/check_workflow_yaml.py` in every gate.
 5. **Dependencies** — pinned + hashed (`requirements*.txt` via pip-compile);
@@ -131,17 +207,19 @@ Useful targets: `make setup` (fresh clone: venv + pinned deps + hooks),
 
 ## The agent's working loop
 
-1. Backlog entry first (work item 1), with acceptance criteria.
-2. Doc cycle if an algorithm/design is involved (`algorithms/`).
+1. Backlog entry first (work item 1), with acceptance criteria —
+   `securetrace backlog upsert`.
+2. Doc cycle if an algorithm/design is involved (`algorithms/` doc first,
+   registry row via `securetrace algorithms upsert`).
 3. Tests RED → 4. implementation GREEN → 5. `make gate` green.
 6. Conventional Commit (pre-commit gate) → 7. `git push` (pre-push gate).
 8. CI green (quality + security + SonarCloud) — verify check-runs on the
    pushed sha.
-9. Closeout in the backlog with evidence, index regenerated, then the next
-   item.
+9. Closeout: progress line via `securetrace backlog progress`, `check`
+   green, then the next item.
 
-Record lessons **as they are learned** (dedupe against
-`LESSONS_LEARNED.md` first), not in a batch at the end.
+Record lessons **as they are learned** (`securetrace lessons add`; dedupe
+against the store first), not in a batch at the end.
 
 ## RMF bundles (the DoW deliverables)
 

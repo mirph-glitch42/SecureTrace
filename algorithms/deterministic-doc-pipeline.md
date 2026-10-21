@@ -7,9 +7,9 @@ METADATA	15	36
 THEORY	37	131
 PSEUDOCODE	132	170
 WALKTHROUGH	171	210
-IMPLEMENTATION	211	269
-TESTS	270	285
-REFERENCES	286	294
+IMPLEMENTATION	211	305
+TESTS	306	322
+REFERENCES	323	333
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,14 +19,14 @@ REFERENCES	286	294
 |---|---|
 | Name | Deterministic Document Pipeline (canonical store → pure render → integrity verify) |
 | Slug | deterministic-doc-pipeline |
-| Version | 0.1.4 |
+| Version | 0.1.5 |
 | Status | draft |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-20 |
-| Last modified | 2026-10-20 |
-| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted)<br>0.1.3 (2026-10-20): WI 6 — registry parser/renderer implemented; §5.1 pins the registry doc grammar (fixed six-column table, backticked slug/status, `File` cell `[<file>](<file>)` with link text equal to target, rules numbered strictly 1..N); the real `algorithms/INDEX.md` row order (`line-index-sync` before `lessons-record`) was not code-point-sorted — a violation of the file's own rule 1 — normalized as a grandfathered manual edit ahead of the T4 golden<br>0.1.4 (2026-10-20): WI 7 — `check` diagnostics implemented in `integrity.py` (pure `check_doc`, I/O wrapper `check_paths`, `check_message` naming the exact remediation command); §3 pseudocode is unchanged and normative — the T6 case (store moved after render, doc stale) diagnoses `STORE_DRIFT_OR_DOC_DRIFT`, the store-side diagnosis distinct from T5's `DOC_MODIFIED_OUTSIDE_APP`; §5.3 lists all three exit-1 diagnoses |
+| Last modified | 2026-10-21 |
+| Status history | 0.1.0 (2026-10-20): initial draft (B10, documented before implementation per G1)<br>0.1.1 (2026-10-20): WI 4 — live counts corrected (10 backlog items, 5 registry rows); §5.1 lists the shared constants (`DOC_TITLES`/`CLI_VERBS`/`DEFAULT_STORE_PATHS`/`generated_header`); §5.2 rule 1 + T9 ban the top-level imports `os`/`subprocess`/`socket`/`urllib` with `integrity.py` as the documented I/O exception; T2 golden wording includes the TSV line numbers the generated header shifts<br>0.1.2 (2026-10-20): WI 5 — lessons parser/renderer implemented; §5.1 `canonical.py` lists the shared `skip_generated_header` parse-skip helper (`backlog_doc` refactored to import it; the private copy was deleted)<br>0.1.3 (2026-10-20): WI 6 — registry parser/renderer implemented; §5.1 pins the registry doc grammar (fixed six-column table, backticked slug/status, `File` cell `[<file>](<file>)` with link text equal to target, rules numbered strictly 1..N); the real `algorithms/INDEX.md` row order (`line-index-sync` before `lessons-record`) was not code-point-sorted — a violation of the file's own rule 1 — normalized as a grandfathered manual edit ahead of the T4 golden<br>0.1.4 (2026-10-20): WI 7 — `check` diagnostics implemented in `integrity.py` (pure `check_doc`, I/O wrapper `check_paths`, `check_message` naming the exact remediation command); §3 pseudocode is unchanged and normative — the T6 case (store moved after render, doc stale) diagnoses `STORE_DRIFT_OR_DOC_DRIFT`, the store-side diagnosis distinct from T5's `DOC_MODIFIED_OUTSIDE_APP`; §5.3 lists all three exit-1 diagnoses<br>0.1.5 (2026-10-21): WI 8 — CLI wiring implemented: `src/securetrace/docs/mutations.py` (pure mutation core: `upsert_backlog_item`, `append_backlog_progress`, `add_lesson`, `upsert_registry_row`, `refresh_backlog_status`) + `src/securetrace/cli_docs.py` (command layer: `_fail` / `_read_store` / `_render_line` / `_commit`, `run_*` per verb, `run_migrate`) + `src/securetrace/__main__.py` dispatch re-pointed to the store-based surface (legacy markdown-index verbs removed from the CLI; `rmf build` and the `scripts/` wrappers keep the legacy surface until B10 WI 10); §5.1 module layout updated; §5.3 gains the command-layer contract — D11 (`migrate` resolves a missing given doc path to the kind default for read + commit while printing the path as given), D13 (`show` writes the canonical JSON verbatim), D14 (the verb line prints only after a successful commit) — agent design decisions pending user review; §6 adds T11 (command-layer contract, pinned in `tests/test_cli_docs.py`); `skills/securetrace/SKILL.md` + `tests/test_skill_doc.py` re-pointed to the store-based surface (29 references) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
-| Implementation location | — (B10 WI 3–8; expected `src/securetrace/docs/` + `securetrace.cli`/`__main__` wiring) |
+| Implementation location | `src/securetrace/docs/` (canonical, schema, mutations, backlog_doc, lessons_doc, registry_doc, integrity) + `src/securetrace/cli_docs.py` (command layer) + `src/securetrace/__main__.py` (dispatch, WI 8); WI 9–12 (real-doc migration, gate rewire, SKILL/README/ARCHITECTURE, closeout) pending |
 | Time complexity | O(D) for parse, render, and check (D = document size in bytes) |
 | Space complexity | O(D) — store, rendered text, and manifest held in memory at once |
 | Determinism | deterministic — pure functions only: no wall clock, no randomness, no environment reads inside parse/render; entry order fixed by id/slug; canonical JSON (sorted keys, indent 2, LF, one trailing newline) |
@@ -233,9 +233,29 @@ Store: the one-item backlog store of test T1 (§6).
   cells are plain; a row cell containing ` | ` is unparseable by construction
   (the split must yield exactly six cells).
 - `src/securetrace/docs/integrity.py` — manifest model + `check` diagnostics.
-- `src/securetrace/cli.py` + `src/securetrace/__main__.py` — command wiring
-  (`upsert/progress/add/show/render/check`, `docs render-all|check-all`, `migrate`).
-- `tests/docs/` — mirrors the package; golden fixtures in `tests/fixtures/docs/`.
+- `src/securetrace/docs/mutations.py` — pure mutation core (no I/O, no
+  clock): `upsert_backlog_item`, `append_backlog_progress`, `add_lesson`,
+  `upsert_registry_row` (each `store → store`, validated by `schema` before
+  and after), plus `refresh_backlog_status` (derives the `**Queue** /`
+  `**In progress** / **Done**` line from item statuses) and the id/slug
+  helpers (`_next_lesson_id`, `_sorted_slug_index`).
+- `src/securetrace/cli_docs.py` — the command layer (C4 boundary): `_fail`
+  (stderr `securetrace: {msg}` + exit 2), `_read_store` / `_StoreReadError`,
+  the single `_render_line` success-line helper, `_commit` (store → doc →
+  manifest via `integrity.commit_render`), `run_*` for every verb, and
+  `run_migrate`. The wall clock is allowed **only here** (date defaults),
+  never in the core.
+- `src/securetrace/__main__.py` — dispatch, re-pointed in WI 8:
+  `backlog`/`lessons`/`algorithms` → `cli_docs` (positional = store path),
+  plus `docs render-all|check-all` and `migrate`; `rmf build` → legacy
+  `cli.run_rmf_build`. The legacy markdown-index verbs are gone from the CLI
+  (argparse rejects them, exit 2).
+- `src/securetrace/cli.py` — legacy markdown surface (`backlog sync|check`,
+  `lessons init|add|sync|check|next-id`, `algorithms sync|check`) kept alive
+  for the `scripts/` wrappers and `rmf build` until B10 WI 10 removes it.
+- `tests/docs/` — mirrors the package (`test_mutations.py`, golden fixtures
+  in `tests/fixtures/docs/`); `tests/test_cli_docs.py` pins the command
+  layer (T11); `tests/test_cli.py` pins the surviving dispatch contracts.
 
 ### 5.2 Determinism rules (each enforced by a test)
 
@@ -267,6 +287,22 @@ Store: the one-item backlog store of test T1 (§6).
   the standard repo layout (`<store_dir>/../BACKLOG.md` etc.) and is
   overridable with `--doc`.
 
+Command-layer behavior (WI 8; D11/D13/D14 are agent design decisions pending
+user review — flagged here and in the status history):
+
+- **D11 (migrate resolution):** if the given doc path does not exist but the
+  kind's default doc path does (from the repo root a user types
+  `migrate INDEX.md` for `algorithms/INDEX.md`), the default is used for
+  the read *and* the render commit; both printed lines (migrate line +
+  render line) carry the path **as given** (`tests/test_cli_docs.py::test_migrate_registry_rows` pins it).
+- **D13 (verbatim show):** `show` writes `canonical_json(store)` — or one
+  item/lesson/row — with `sys.stdout.write`, exactly one trailing newline,
+  no `print`-added newline, no reformatting.
+- **D14 (print after commit):** the verb success line (`upsert: …`,
+  `progress: …`, `add: …`, `render: …`) is printed only after the store +
+  doc + manifest commit succeeds; a failed commit prints the stderr line and
+  nothing else.
+
 <!-- SECTION:TESTS -->
 ## 6. Tests
 
@@ -282,6 +318,7 @@ Store: the one-item backlog store of test T1 (§6).
 | T8 | `canonical_json({"b": 1, "a": {"d": 2, "c": 3}})` | `{\n  "a": {\n    "c": 3,\n    "d": 2\n  },\n  "b": 1\n}\n` | the canonical byte form is unique (T8 pins sorted keys, indent 2, trailing newline) |
 | T9 | source of the `securetrace.docs` core modules (discovered dynamically; `integrity.py` excluded) | AST: no top-level imports of `datetime`/`time`/`random`/`uuid`/`os`/`subprocess`/`socket`/`urllib` | no-clock/no-env discipline (C5) |
 | T10 | same store with items in different JSON order | rendered output identical | ordering comes from the id, never from input order |
+| T11 | command layer (D11/D13/D14): `migrate INDEX.md` with the store absent; `show` after a mutation; a mutation verb whose commit fails | migrate resolves to `algorithms/INDEX.md` for read + commit but prints `migrate: N rows from INDEX.md → …`; `show` stdout is byte-equal to `canonical_json` (one trailing `\n`); on commit failure the verb line is absent and the stderr line present | the user-facing CLI contract is part of the algorithm's guarantee, not an afterthought — pinned in `tests/test_cli_docs.py` |
 
 <!-- SECTION:REFERENCES -->
 ## 7. References
@@ -291,4 +328,6 @@ Store: the one-item backlog store of test T1 (§6).
 - `algorithms/lessons-record.md` — the lesson-entry grammar (fields, vocabularies, exit model).
 - `algorithms/rmf-evidence-bundle.md` — canonical-JSON + no-clock precedent this pipeline shares.
 - LLT-0009 (priority-line parsing), LLT-0012 (scan-window off-by-one) — parser edge cases already hit by the legacy cores; the new parser must not regress them.
+- `tests/test_cli_docs.py` — command-layer contract (D11/D13/D14, T11); 53 tests at v0.1.5.
+- `skills/securetrace/SKILL.md` + `tests/test_skill_doc.py` — the agent-facing surface this pipeline defines (29 pinned references at v0.1.5).
 - `docs/dow-requirements.md` — DoD RMF / SWP config-management context for why the audit trail must be verifiable.

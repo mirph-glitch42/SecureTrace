@@ -383,30 +383,10 @@ def test_lessons_check_missing_file_exit2(
 
 
 # --- __main__ dispatch -------------------------------------------------------------
-
-
-def test_main_dispatch_backlog_sync(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    p = write(tmp_path / "BACKLOG.md", BACKLOG_FIXTURE)
-    assert main(["backlog", "sync", str(p)]) == 0
-    assert f"{p}: index updated (5 entries)" in capsys.readouterr().out
-    assert main(["backlog", "check", str(p)]) == 0
-    assert f"{p}: index OK (5 entries)" in capsys.readouterr().out
-
-
-def test_main_dispatch_lessons_next_id(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    p = tmp_path / "LESSONS_LEARNED.md"
-    assert main(["lessons", "init", str(p)]) == 0
-    capsys.readouterr()
-    assert main(["lessons", "next-id", str(p)]) == 0
-    assert capsys.readouterr().out == "LLT-0001\n"
-
-
-def test_main_dispatch_algorithms_check(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    p = write(tmp_path / "doc.md", ALGORITHM_FIXTURE)
-    assert main(["algorithms", "sync", str(p)]) == 0
-    capsys.readouterr()
-    assert main(["algorithms", "check", str(p)]) == 0
-    assert f"{p}: index OK (3 entries)" in capsys.readouterr().out
+# WI 8: the legacy md-file dispatch tests (backlog sync / lessons next-id /
+# algorithms check / legacy lessons add) were retired when __main__ was
+# re-pointed at the store-based surface in securetrace.cli_docs; the new
+# dispatch contract is pinned in tests/test_cli_docs.py.
 
 
 def test_main_no_subcommand_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
@@ -421,33 +401,6 @@ def test_main_version_exits_0(capsys: pytest.CaptureFixture[str]) -> None:
         main(["--version"])
     assert excinfo.value.code == 0
     assert securetrace.__version__ in capsys.readouterr().out
-
-
-def test_main_lessons_add_rejected_input_returns_2(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    p = tmp_path / "LESSONS_LEARNED.md"
-    main(["lessons", "init", str(p)])
-    capsys.readouterr()
-    code = main(
-        [
-            "lessons",
-            "add",
-            str(p),
-            "--title",
-            "t",
-            "--context",
-            "c",
-            "--pitfall",
-            "p",
-            "--solution",
-            "s",
-            "--category",
-            "banana",
-        ]
-    )
-    assert code == 2
-    assert "securetrace: --category 'banana' not in vocabulary:" in capsys.readouterr().err
 
 
 def test_main_unknown_subcommand_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
