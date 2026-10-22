@@ -648,6 +648,59 @@ def run_check_all(*, manifest_path: str | Path | None = None, prog: str = PROG) 
 # --------------------------------------------------------------------- migrate
 
 
+def _migrate_targets(
+    doc_path: str | Path,
+    kind: str | None,
+    store_path: str | Path | None,
+    manifest_path: str | Path | None,
+    force: bool,
+) -> tuple[str, Path, Path, Path]:
+    """Resolve the migrate targets (kind, store, manifest, source doc).
+
+    Order is significant (CLI contract): doc-path containment, kind
+    inference, store-path containment (or the kind default), manifest-path
+    containment (or the store-relative default), then the ``--force`` guard.
+    Violations raise ``ValueError`` (incl. ``PathEscapeError``) for the
+    caller to map to ``_fail`` (exit 2) — the CC-004 helper pattern.
+    """
+    doc = resolve_within(doc_path)
+    if kind is None:
+        kind = _KIND_BY_BASENAME.get(doc.name)
+        if kind is None:
+            raise ValueError(
+                f"cannot infer doc kind from {doc.name}; "
+                "pass --kind one of: backlog, lessons, registry"
+            )
+    if store_path is not None:
+        sp = resolve_within(store_path)
+    else:
+        sp = Path(canonical.DEFAULT_STORE_PATHS[kind])
+    man = resolve_within(manifest_path) if manifest_path is not None else _default_manifest_path(sp)
+    if sp.exists() and not force:
+        raise ValueError(f"store {sp} already exists; use --force to replace")
+    return kind, sp, man, doc
+
+
+def _migrate_source(doc: Path, kind: str) -> tuple[dict, Path]:
+    """Read + parse the source doc; return (store, resolved doc path).
+
+    Doc fallback (design D11): the path as given, else the kind's default
+    doc path (from the repo root a user types ``migrate INDEX.md`` for
+    ``algorithms/INDEX.md``); the commit targets the resolved path.
+    Unreadable docs raise ``ValueError``; ``FormatError`` / ``SchemaError``
+    propagate for the caller to map to ``_fail`` (exit 2).
+    """
+    if not doc.exists():
+        default_doc = Path(canonical.DEFAULT_DOC_PATHS[kind])
+        if default_doc.exists():
+            doc = default_doc
+    try:
+        text = doc.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise ValueError(f"cannot read {doc}: {exc}") from exc
+    return _KIND_PARSERS[kind](text), doc
+
+
 def run_migrate(
     doc_path: str | Path,
     *,
@@ -674,50 +727,11 @@ def run_migrate(
           without ``--force``, doc unreadable/malformed, failed commit
           (stderr: ``securetrace: {msg}``).
     """
-    try:
-        doc = resolve_within(doc_path)
-    except ValueError as exc:
-        return _fail(prog, str(exc))
-    if kind is None:
-        kind = _KIND_BY_BASENAME.get(doc.name)
-        if kind is None:
-            return _fail(
-                prog,
-                f"cannot infer doc kind from {doc.name}; "
-                "pass --kind one of: backlog, lessons, registry",
-            )
-    if store_path is not None:
-        try:
-            sp = resolve_within(store_path)
-        except ValueError as exc:
-            return _fail(prog, str(exc))
-    else:
-        sp = Path(canonical.DEFAULT_STORE_PATHS[kind])
-    if manifest_path is not None:
-        try:
-            man = resolve_within(manifest_path)
-        except ValueError as exc:
-            return _fail(prog, str(exc))
-    else:
-        man = _default_manifest_path(sp)
-    if sp.exists() and not force:
-        return _fail(prog, f"store {sp} already exists; use --force to replace")
-    # Resolve the doc: the path as given, else the kind's default doc path
-    # (from the repo root a user types ``migrate INDEX.md`` for
-    # ``algorithms/INDEX.md``). The commit targets the resolved path; the
-    # printed lines carry the path as given (design D11).
     given = Path(doc_path)
-    if not doc.exists():
-        default_doc = Path(canonical.DEFAULT_DOC_PATHS[kind])
-        if default_doc.exists():
-            doc = default_doc
     try:
-        text = doc.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        return _fail(prog, f"cannot read {doc}: {exc}")
-    try:
-        store = _KIND_PARSERS[kind](text)
-    except (FormatError, SchemaError) as exc:
+        kind, sp, man, doc = _migrate_targets(doc_path, kind, store_path, manifest_path, force)
+        store, doc = _migrate_source(doc, kind)
+    except (ValueError, FormatError, SchemaError) as exc:
         return _fail(prog, str(exc))
     failed = _commit(kind, store, sp, doc, man, prog)
     if failed is not None:
