@@ -10,46 +10,47 @@ line range.
 
 <!-- LLT:INDEX:BEGIN -->
 id	title	category	severity	status	recorded	start_line	end_line
-LLT_INDEX_BLOCK	—	—	—	—	—	11	53
-LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	55	68
-LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	69	82
-LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	83	96
-LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	97	110
-LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	111	124
-LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	125	138
-LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	139	152
-LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	153	166
-LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	167	180
-LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	181	194
-LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	195	208
-LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	209	222
-LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	223	236
-LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	237	250
-LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	251	264
-LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	265	278
-LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	279	292
-LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	293	306
-LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	307	320
-LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	321	334
-LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	335	348
-LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	349	362
-LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	363	376
-LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	377	390
-LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	391	404
-LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	405	418
-LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	419	432
-LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	433	446
-LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	447	460
-LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	461	474
-LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	475	488
-LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	489	502
-LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	503	516
-LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	517	530
-LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	531	544
-LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	545	558
-LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)	data	low	active	2026-10-20	559	572
-LLT-0038	Test expectations must pin the exact diagnosis constant from the normative pseudocode, not the prose paraphrase in the spec test table	testing	medium	active	2026-10-20	573	586
-LLT-0039	capsys.readouterr() drains the captured buffer, so a second call always returns empty	testing	low	active	2026-10-21	587	600
+LLT_INDEX_BLOCK	—	—	—	—	—	11	54
+LLT-0001	cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom	tooling	medium	active	2026-10-18	56	69
+LLT-0002	skill scripts must be vendored into the repo for CI and hooks	architecture	medium	active	2026-10-18	70	83
+LLT-0003	zsh does not word-split unquoted variables	environment	low	active	2026-10-18	84	97
+LLT-0004	gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)	security	high	active	2026-10-18	98	111
+LLT-0005	pip --require-hashes fails on clean runners when a transitive dep is unpinned	tooling	medium	active	2026-10-18	112	125
+LLT-0006	gitleaks full-history scan needs fetch-depth 0 on CI	tooling	medium	active	2026-10-18	126	139
+LLT-0007	Red-drill protocol for proving gates actually catch failures	process	medium	active	2026-10-18	140	153
+LLT-0008	SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset	tooling	high	active	2026-10-18	154	167
+LLT-0009	Priority regex silently misses bulleted `- **Priority:** X` lines	tooling	high	active	2026-10-18	168	181
+LLT-0010	Lessons-index staleness covers geometry + indexed fields, not body content	testing	medium	active	2026-10-18	182	195
+LLT-0011	Universal-newline reads make CRLF handling differ from code appearance	environment	low	active	2026-10-18	196	209
+LLT-0012	backlog scan window excludes the final line of a section (off-by-one)	tooling	medium	active	2026-10-18	210	223
+LLT-0013	Golden files generated inside the repo bake the real git HEAD into the manifest	testing	medium	active	2026-10-19	224	237
+LLT-0014	Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands	tooling	high	active	2026-10-19	238	251
+LLT-0015	Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit	testing	high	active	2026-10-19	252	265
+LLT-0016	zsh globbing and strict JSON parsing silently break curl API polling loops	environment	medium	active	2026-10-19	266	279
+LLT-0017	Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails	debugging	high	active	2026-10-19	280	293
+LLT-0018	Fallback-name workflow run with 0 jobs means a definition parse error	debugging	medium	active	2026-10-19	294	307
+LLT-0019	gh attestation create does not exist; use actions/attest	tooling	medium	active	2026-10-19	308	321
+LLT-0020	gh attestation verify: --signer-repo silently shadows --signer-workflow	security	high	active	2026-10-19	322	335
+LLT-0021	Verify action input names against the action.yml at the pinned SHA	dependencies	high	active	2026-10-19	336	349
+LLT-0022	gh release create uses --verify-tag, not --verify	tooling	low	active	2026-10-19	350	363
+LLT-0023	Keep workflow YAML pure ASCII	debugging	medium	active	2026-10-19	364	377
+LLT-0024	gh release verify is async: GitHub-created release attestations lag	security	high	active	2026-10-19	378	391
+LLT-0025	GitHub attestations list API is keyed by subject digest	tooling	medium	active	2026-10-19	392	405
+LLT-0026	GitHub can invisibly block re-creation of a specific tag name	environment	high	active	2026-10-19	406	419
+LLT-0027	RMF golden manifest embeds the live package version	testing	medium	active	2026-10-19	420	433
+LLT-0028	yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead	tooling	medium	active	2026-10-19	434	447
+LLT-0029	PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value	data	medium	active	2026-10-19	448	461
+LLT-0030	ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell	process	low	active	2026-10-19	462	475
+LLT-0031	SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit	tooling	medium	active	2026-10-19	476	489
+LLT-0032	Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths	debugging	high	active	2026-10-19	490	503
+LLT-0033	Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes	tooling	high	active	2026-10-19	504	517
+LLT-0034	New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it	dependencies	medium	active	2026-10-20	518	531
+LLT-0035	handing off an implementation that was never run leaves dead code that outlives the session	process	medium	active	2026-10-20	532	545
+LLT-0036	strict section scans must stop at the blank separator, not only at the next marker	debugging	medium	active	2026-10-20	546	559
+LLT-0037	A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)	data	low	active	2026-10-20	560	573
+LLT-0038	Test expectations must pin the exact diagnosis constant from the normative pseudocode, not the prose paraphrase in the spec test table	testing	medium	active	2026-10-20	574	587
+LLT-0039	capsys.readouterr() drains the captured buffer, so a second call always returns empty	testing	low	active	2026-10-21	588	601
+LLT-0040	Path traversal (S8707): validate CLI-supplied paths at the trust boundary, not at each sink	security	high	active	2026-10-21	602	615
 <!-- LLT:INDEX:END -->
 
 <!-- LLT:ENTRY:LLT-0001 -->
@@ -597,3 +598,17 @@ LLT-0039	capsys.readouterr() drains the captured buffer, so a second call always
 - **Supersedes:** —
 - **Prevention:** When a test must assert both what was printed and what was *not* printed under capsys, take one `readouterr()` and derive every assertion from that one string. If `readouterr()` appears twice in one test, the second call is vacuous — merge them into a single capture.
 - **References:** tests/test_cli_docs.py (B10 WI 8, capsys assertions); pytest CaptureFixture.readouterr docs (buffer is drained on each call); LLT-0038 (pinning exact expected values, related testing discipline)
+
+<!-- LLT:ENTRY:LLT-0040 -->
+## LLT-0040 — Path traversal (S8707): validate CLI-supplied paths at the trust boundary, not at each sink
+
+- **Recorded:** 2026-10-21
+- **Category:** security
+- **Severity:** high
+- **Status:** active
+- **Context:** SonarCloud flagged 9 S8707 (LLM path-traversal) findings on main — cli_docs.py ×2 and docs/integrity.py ×7: user-supplied store/doc/manifest paths flowed into file I/O with no containment against the workspace base. S8707 is a new 2026 LLM-security rule class that treats agent-driven code as untrusted input.
+- **Pitfall:** The tempting fix — sanitizing each sink — drifts as new commands are added, and because the taint flow runs through the command layer, fixing only the integrity.py sinks would still leave the boundary open. N per-sink checks is N places to maintain; one missed is a real escape.
+- **Solution:** Contain once, at the CLI trust boundary: docs/paths.py::resolve_within(raw, base) validates every CLI-supplied path against the workspace base before any I/O; PathEscapeError (a ValueError) maps to _fail → exit 2 in the command layer. Core modules stay path-agnostic; no Sonar suppressions; paths.py is pure pathlib (T9 bans os in the docs core). 18 tests in tests/docs/test_paths.py pin escape rejection.
+- **Supersedes:** —
+- **Prevention:** Any new CLI command that accepts a path must route it through resolve_within before I/O (CONSISTENCY.md CC-010; ALRK C6). Review boundary checks, not per-sink checks.
+- **References:** CONSISTENCY.md CC-010; algorithms/deterministic-doc-pipeline.md v0.1.6 (C6); tests/docs/test_paths.py; commit 650a466

@@ -31,6 +31,10 @@ naming the CLI path that changes it.
 - To change data, mutate the store via the CLI (`upsert` / `progress` /
   `add`) — each verb re-renders the doc and refreshes the manifest in one
   commit. To repair a drifted doc, run the verb's `render`.
+- **CLI paths stay inside the working directory:** every store/doc/manifest
+  path a command accepts is resolved against the workspace base before any
+  I/O; a path that would escape (a `../` chain, or an absolute path outside
+  the repo) is rejected with exit 2 (contract C6, rule CC-010).
 - **Transition (until B10 WI 10):** the hooks/Makefile/CI still run the
   legacy markdown-index checks via the `scripts/` wrappers; both surfaces
   must stay green. New work must use the store-based surface.
