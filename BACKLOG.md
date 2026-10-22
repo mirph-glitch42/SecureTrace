@@ -22,10 +22,10 @@ B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts
 B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	274	319
 B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	320	357
 B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	358	392
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	393	441
-B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	442	464
-B12	Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4)	OPEN	Low	465	488
-CONSTRAINTS	-	-	-	489	497
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	393	442
+B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	443	465
+B12	Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4)	DONE	Low	466	487
+CONSTRAINTS	-	-	-	488	496
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -33,7 +33,7 @@ CONSTRAINTS	-	-	-	489	497
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B10, B11, B12 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-22
+**Queue:** B10, B11 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9, B12 | **Updated:** 2026-10-22
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -438,6 +438,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-22 — WI 9 done: real docs migrated via `securetrace migrate` into `data/` stores — `data/backlog.json` (12 items), `data/lessons.json` (41 lessons), `data/algorithms.json` (5 rows) + shared `data/manifest.json` (each commit_render preserves the other kinds' entries); committed docs now carry the C4 generated header (7 comment lines + blank); `docs check-all` IN_SYNC ×3; legacy gate checks green post-migration; T2/T3/T4 goldens rewritten to byte-equal roundtrip pins (dead `strip_generated_header`/`shift_index_numbers` helpers deleted); ALRK v0.1.7 + registry row updated via the new CLI (dogfood, per B10 acceptance); `make gate` green (408 tests); next WI 10 (gate rewire: Makefile docs-check → docs check-all, pre-commit stage 3, CI; live hand-edit block demo)
   - 2026-10-22 — 2026-10-22 — WI 10 complete: gates on the store surface — `make docs-check` = `securetrace docs check-all` + ALRK TSV `--check` loop, `make docs-render` = `docs render-all` + TSV sync loop (repair path); legacy surface removed — `scripts/backlog_index.py` + `scripts/manage_lessons.py` + the legacy `cli` verbs deleted (their surface is `securetrace.cli_docs` over the B3 cores), `scripts/algorithm_index.py` rewritten self-contained over `securetrace.algorithms.registry` (pinned messages + exit codes preserved); new verb `lessons set-intro` added (tests → code) and used in situ (LESSONS_LEARNED intro now points at the `securetrace lessons` CLI); docs updated — SKILL.md (transition section removed, `set-intro` added, scripts/ row corrected), README (layout: data/ stores = source of truth) + ARCHITECTURE (invariants 2/3), CONSISTENCY (exception G3 RETIRED, CC-001…CC-010 anchors re-verified file:line, last full review 2026-10-22), ALRK docs version-bumped (line-index-sync 0.1.4 — DEV(1)/DEV(2) resolved; lessons-record 0.1.5; workflow-yaml-strict-parse 0.2.1) + TSV indexes re-synced; **acceptance demo (live)**: hand-edit of BACKLOG.md → `make docs-check` exit 1 with `DOC_MODIFIED_OUTSIDE_APP` diagnosis → `git commit` blocked at pre-commit stage 3/6 (docs-check) → `make docs-render` restored byte-identical (md5 239de5abf90787e3c78497ff2666ff87 pre/post) → gate green; lint fixed at source (E501 errors.py docstring wrap, I001 tests/test_cli.py import block); suite 342 green; `make gate` green
   - 2026-10-22 — 2026-10-22 — CI `quality` failure (run 39848496508 on b99915d) fixed at the source: `make setup-ci` installs pinned deps only (no editable install), so the direct `\ -m securetrace` invocations in docs-check/docs-render/rmf-bundle failed with `No module named securetrace` on CI — the local `make setup` editable install masked it (recorded LLT-0043); fixed with the `PYTHONPATH=src` prefix (mirrors pytest's `pythonpath=["src"]`), which also fixes the same latent bug in release.yml (setup-ci + make gate)
+  - 2026-10-22 — 2026-10-22 — WI 10 closeout verified: CI 3× consecutive all-success (quality, security, SonarCloud Code Analysis) on e447de6 (commits 244e977 gate fix + e447de6 B12); Sonar API: 0 open issues on main — the 17 B12 findings (14 at registration + 3 newer from the WI 10 rewrite) all closed at the source, no suppressions; B12 marked DONE. WI 11 / WI 12 remain pending user approval
 
 <!-- BACKLOG:ITEM:B11 -->
 ## B11. Code-consistency monitor integration into SecureTrace — **OPEN**
@@ -463,7 +464,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-21 — registered (user request; Medium); DO NOT WORK per user instruction; `CONSISTENCY.md` created as the enforcement baseline (CC-001…CC-009 + exception G3, all locations verified file:line); ARCHITECTURE.md §3 requirement row added; consistency discipline enforced on all current work
 
 <!-- BACKLOG:ITEM:B12 -->
-## B12. Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4) — **OPEN**
+## B12. Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4) — **DONE**
 
 - **Source:** agent (discovered during the sonar.tests/S3776 closeout verification, 2026-10-21) — proposed, pending user review (G8)
 - **Requested:** 2026-10-21
@@ -471,20 +472,18 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Request (verbatim):** — (agent-proposed; no user request)
 - **Problem / evidence:** 14 open code smells on main, all in the B10 WI 3–8 docs/ subpackage, created 2026-10-20T17:21Z…2026-10-21T00:53Z (pre-dating the sonar.tests/S3776 commits): `python:S5864` “store does not have this method” (type inference) ×9 — registry_doc.py:93,98,101; lessons_doc.py:71,77; backlog_doc.py:102,104,105,111; `python:S1481` unused local variable `begin` ×1 — backlog_doc.py:253; `python:S6395` unnecessarily grouped regex subpattern ×4 — schema.py:36,39. Non-blocking (quality gate green; check-run “Issues: passed”) but real findings per DevSecOps (fix at source, no suppressions).
 - **Chosen approach (proposed — G8):** fix each finding at the source: S1481 — drop the unused `begin` binding; S6395 — unwrap the redundant regex groups in schema.py; S5864 — make `store[…]` type-sound (type the store parameter so SonarPython type inference resolves `__getitem__`), or route through an explicit accessor. TDD where behavior is touched; no Sonar suppressions.
-- **Work items (proposed — G8):**
-  1. S1481: remove the unused `begin` binding (backlog_doc.py:253)
-  2. S6395: simplify the schema.py:36,39 regex (remove unnecessary grouping)
-  3. S5864: fix the store typing at the 9 sites in registry_doc.py / lessons_doc.py / backlog_doc.py
-  4. Close: Sonar API re-query → 0 open project-wide; `make gate` green; CI 3× consecutive all-success; closeout docs
-- **Acceptance criteria (proposed — G8):**
-  - all 14 findings resolved (Sonar API: 0 open project-wide); no new findings
-  - `make gate` green; CI quality + security + SonarCloud 3× consecutive all-success
-  - no Sonar suppressions added
+- **Work items (proposed — G8):** 1. S1481: remove the unused `begin` binding (backlog_doc.py:253)
+2. S6395: simplify the schema.py:36,39 regex (remove unnecessary grouping)
+3. S5864: fix the store typing at the 9 sites in registry_doc.py / lessons_doc.py / backlog_doc.py
+4. Close: Sonar API re-query → 0 open project-wide; `make gate` green; CI 3× consecutive all-success; closeout docs
+- **Acceptance criteria (proposed — G8):** - all 14 findings resolved (Sonar API: 0 open project-wide); no new findings
+- `make gate` green; CI quality + security + SonarCloud 3× consecutive all-success
+- no Sonar suppressions added
 - **Ordering:** after B11 (Medium tier first, G9).
 - **Hold:** agent-proposed (G8) — do not start until the user accepts or amends.
-- **Progress:**
-  - 2026-10-21 — registered during the sonar.tests/S3776 closeout verification (14 findings enumerated with file:line evidence from the Sonar issues API; created 2026-10-20…2026-10-21, pre-dating the sonar.tests/S3776 commits)
-  - 2026-10-22 — 2026-10-22 — all 17 open SonarCloud findings closed at the source (S5864×9: render signatures `store: object`→`dict` — validate_store already enforces dict, so the contract is honest and behavior-identical; S1481×1: unused `begin` binding dropped; S6395×4: redundant regex groups unwrapped — behavior-identical; S8707×2 + S5778×1: newer findings from the WI 10 rewrite, closed in the same pass — `_resolve_within_cwd` guard in scripts/algorithm_index.py (LLM-supplied path must resolve inside the working directory; escaping → exit 2 with pinned message; TDD red→green in tests/scripts/test_skill_scripts.py) and the store build hoisted out of the pytest.raises block; ALRK line-index-sync 0.1.5 (guard contract: §5.2 edge case, §6 test 14, implementation location re-cited L69-L151) + registry row bumped 0.1.3→0.1.5 (row lag from the WI 10 0.1.4 bump resolved); SKILL.md scripts/ bullet carries the path-containment contract + stale store-path/status-vocabulary references corrected; suite 392 green
+- **Progress:** - 2026-10-21 — registered during the sonar.tests/S3776 closeout verification (14 findings enumerated with file:line evidence from the Sonar issues API; created 2026-10-20…2026-10-21, pre-dating the sonar.tests/S3776 commits)
+- 2026-10-22 — all 17 open SonarCloud findings closed at the source (S5864×9: render signatures `store: object`→`dict` — validate_store already enforces dict, so the contract is honest and behavior-identical; S1481×1: unused `begin` binding dropped; S6395×4: redundant regex groups unwrapped — behavior-identical; S8707×2 + S5778×1: newer findings from the WI 10 rewrite, closed in the same pass — `_resolve_within_cwd` guard in scripts/algorithm_index.py (LLM-supplied path must resolve inside the working directory; escaping → exit 2 with pinned message; TDD red→green in tests/scripts/test_skill_scripts.py) and the store build hoisted out of the pytest.raises block; ALRK line-index-sync 0.1.5 (guard contract: §5.2 edge case, §6 test 14, implementation location re-cited L69-L151) + registry row bumped 0.1.3→0.1.5 (row lag from the WI 10 0.1.4 bump resolved); SKILL.md scripts/ bullet carries the path-containment contract + stale store-path/status-vocabulary references corrected; suite 392 green
+- 2026-10-22 — closeout verified: CI 3× consecutive all-success (quality, security, SonarCloud Code Analysis) on e447de6 (commits 244e977 gate fix + e447de6 B12); Sonar API: 0 open issues on main (17/17 closed — the 3 newer than registration, S8707×2 + S5778×1 from the WI 10 rewrite, closed in the same pass); no Sonar suppressions (DevSecOps); LLT-0043 recorded
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints
