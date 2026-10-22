@@ -164,8 +164,9 @@ def test_refresh_missing_status_line_raises_invalid_input() -> None:
 
 
 def test_refresh_rejects_bad_date() -> None:
+    store = backlog_store()
     with pytest.raises(InvalidInput, match="date"):
-        refresh_backlog_status(backlog_store(), "21/10/2026")
+        refresh_backlog_status(store, "21/10/2026")
 
 
 # --------------------------------------------------------------------- upsert_backlog_item
@@ -184,7 +185,9 @@ def test_upsert_appends_new_item_and_refreshes() -> None:
 
 
 def test_upsert_replaces_existing_item_in_place() -> None:
-    out = upsert_backlog_item(backlog_store(), item("B2", "Item two (revised)", "IN PROGRESS"), "2026-10-21")
+    out = upsert_backlog_item(
+        backlog_store(), item("B2", "Item two (revised)", "IN PROGRESS"), "2026-10-21"
+    )
     assert len(out["items"]) == 3
     assert out["items"][1]["title"] == "Item two (revised)"
     assert out["items"][1]["status"] == "IN PROGRESS"
@@ -194,23 +197,31 @@ def test_upsert_replaces_existing_item_in_place() -> None:
 
 
 def test_upsert_appended_id_below_max_raises_schema_error() -> None:
+    store = backlog_store()
+    bad = item("B0")
     with pytest.raises(SchemaError, match="strictly increasing: B0 after B3"):
-        upsert_backlog_item(backlog_store(), item("B0"), "2026-10-20")
+        upsert_backlog_item(store, bad, "2026-10-20")
 
 
 def test_upsert_bad_id_shape_raises_schema_error() -> None:
+    store = backlog_store()
+    bad = item("X9")
     with pytest.raises(SchemaError, match="must be B<digits>"):
-        upsert_backlog_item(backlog_store(), item("X9"), "2026-10-20")
+        upsert_backlog_item(store, bad, "2026-10-20")
 
 
 def test_upsert_bad_status_raises_schema_error() -> None:
+    store = backlog_store()
+    bad = item("B4", "Item four", "BOGUS")
     with pytest.raises(SchemaError, match="items\\[3\\].status must be one of:"):
-        upsert_backlog_item(backlog_store(), item("B4", "Item four", "BOGUS"), "2026-10-20")
+        upsert_backlog_item(store, bad, "2026-10-20")
 
 
 def test_upsert_malformed_item_raises_invalid_input() -> None:
+    store = backlog_store()
+    bad = {"id": "B4", "title": "no fields"}
     with pytest.raises(InvalidInput, match="item"):
-        upsert_backlog_item(backlog_store(), {"id": "B4", "title": "no fields"}, "2026-10-20")
+        upsert_backlog_item(store, bad, "2026-10-20")
 
 
 def test_upsert_result_passes_validate_store() -> None:
@@ -225,9 +236,7 @@ def test_upsert_result_passes_validate_store() -> None:
 
 def test_progress_appends_to_existing_field() -> None:
     store = backlog_store()
-    store["items"][0]["fields"].append(
-        {"name": "Progress", "lines": ["  - 2026-10-20 — started"]}
-    )
+    store["items"][0]["fields"].append({"name": "Progress", "lines": ["  - 2026-10-20 — started"]})
     frozen = copy.deepcopy(store)
     line = "  - 2026-10-21 — step done"
     out = append_backlog_progress(store, "B1", line, "2026-10-21")
@@ -246,8 +255,9 @@ def test_progress_creates_field_at_end_when_absent() -> None:
 
 
 def test_progress_unknown_item_raises_invalid_input() -> None:
+    store = backlog_store()
     with pytest.raises(InvalidInput, match="B99"):
-        append_backlog_progress(backlog_store(), "B99", "  - 2026-10-21 — x", "2026-10-21")
+        append_backlog_progress(store, "B99", "  - 2026-10-21 — x", "2026-10-21")
 
 
 # --------------------------------------------------------------------- add_lesson
@@ -267,14 +277,16 @@ def test_add_explicit_id_is_honored() -> None:
 
 def test_add_duplicate_id_raises_schema_error() -> None:
     new = {"id": "LLT-0001", "title": "New lesson", "fields": lesson(2)["fields"]}
+    store = lessons_store(1)
     with pytest.raises(SchemaError, match="duplicate lesson id: LLT-0001"):
-        add_lesson(lessons_store(1), new)
+        add_lesson(store, new)
 
 
 def test_add_id_below_max_raises_schema_error() -> None:
     new = {"id": "LLT-0002", "title": "New lesson", "fields": lesson(2)["fields"]}
+    store = lessons_store(5)
     with pytest.raises(SchemaError, match="strictly increasing: LLT-0002 after LLT-0005"):
-        add_lesson(lessons_store(5), new)
+        add_lesson(store, new)
 
 
 def test_add_supersedes_flips_target_to_superseded() -> None:
@@ -295,8 +307,10 @@ def test_add_supersedes_missing_target_raises_invalid_input() -> None:
     for field in fields:
         if field["name"] == "Supersedes":
             field["value"] = "LLT-0099"
+    store = lessons_store(1)
+    new = {"title": "New lesson", "fields": fields}
     with pytest.raises(InvalidInput, match="LLT-0099"):
-        add_lesson(lessons_store(1), {"title": "New lesson", "fields": fields})
+        add_lesson(store, new)
 
 
 def test_add_supersedes_already_superseded_raises_invalid_input() -> None:
@@ -308,8 +322,9 @@ def test_add_supersedes_already_superseded_raises_invalid_input() -> None:
     for field in fields:
         if field["name"] == "Supersedes":
             field["value"] = "LLT-0002"
+    new = {"title": "New lesson", "fields": fields}
     with pytest.raises(InvalidInput, match="not active"):
-        add_lesson(store, {"title": "New lesson", "fields": fields})
+        add_lesson(store, new)
 
 
 def test_add_forces_new_lesson_status_active() -> None:
@@ -326,8 +341,10 @@ def test_add_bad_category_raises_schema_error() -> None:
     for field in fields:
         if field["name"] == "Category":
             field["value"] = "banana"
+    store = lessons_store(1)
+    new = {"title": "New lesson", "fields": fields}
     with pytest.raises(SchemaError, match="lessons\\[1\\].Category must be one of:"):
-        add_lesson(lessons_store(1), {"title": "New lesson", "fields": fields})
+        add_lesson(store, new)
 
 
 def test_add_input_not_mutated() -> None:
@@ -355,20 +372,25 @@ def test_upsert_row_replaces_existing_in_place() -> None:
 
 
 def test_upsert_row_bad_status_raises_schema_error() -> None:
+    store = registry_store()
+    bad = row("bravo", status="shipped")
     with pytest.raises(SchemaError, match="status must be one of:"):
-        upsert_registry_row(registry_store(), row("bravo", status="shipped"))
+        upsert_registry_row(store, bad)
 
 
 def test_upsert_row_bad_slug_raises_schema_error() -> None:
+    store = registry_store()
+    bad = row("bravo!")
     with pytest.raises(SchemaError, match="rows\\[1\\].slug must be kebab-case, got 'bravo!'"):
-        upsert_registry_row(registry_store(), row("bravo!"))
+        upsert_registry_row(store, bad)
 
 
 def test_upsert_row_missing_key_raises_invalid_input() -> None:
     bad = row("bravo")
     del bad["summary"]
+    store = registry_store()
     with pytest.raises(InvalidInput, match="row"):
-        upsert_registry_row(registry_store(), bad)
+        upsert_registry_row(store, bad)
 
 
 def test_upsert_row_input_not_mutated() -> None:

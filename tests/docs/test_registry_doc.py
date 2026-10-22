@@ -218,24 +218,27 @@ def test_render_rejects_bad_status():
 
 def test_parse_rejects_wrong_title():
     base = rendered_t4()
+    text = "# Not Registry\n" + base.split("\n", 1)[1]
     with pytest.raises(FormatError, match="title"):
-        parse_registry("# Not Registry\n" + base.split("\n", 1)[1])
+        parse_registry(text)
 
 
 def test_parse_rejects_missing_table_header():
     lines = rendered_t4().split("\n")
     i = next(k for k, line in enumerate(lines) if line.startswith("| Slug |"))
     del lines[i]
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="table header"):
-        parse_registry("\n".join(lines))
+        parse_registry(text)
 
 
 def test_parse_rejects_missing_rules_heading():
     lines = rendered_t4().split("\n")
     i = next(k for k, line in enumerate(lines) if line == "## Rules")
     lines[i] = "## Other"
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="Rules"):
-        parse_registry("\n".join(lines))
+        parse_registry(text)
 
 
 def test_parse_rejects_bad_status_cell():
@@ -264,7 +267,9 @@ def test_parse_rejects_pipe_inside_cell():
 
 def test_parse_rejects_link_text_target_mismatch():
     base = rendered_t4()
-    text = base.replace("[alpha-pipeline.md](alpha-pipeline.md)", "[other.md](alpha-pipeline.md)", 1)
+    text = base.replace(
+        "[alpha-pipeline.md](alpha-pipeline.md)", "[other.md](alpha-pipeline.md)", 1
+    )
     assert text != base
     with pytest.raises(FormatError, match="File"):
         parse_registry(text)
@@ -291,5 +296,6 @@ def test_parse_rejects_unsorted_rows():
     a = next(k for k, line in enumerate(lines) if line.startswith("| `alpha-pipeline`"))
     b = next(k for k, line in enumerate(lines) if line.startswith("| `zeta-pipeline`"))
     lines[a], lines[b] = lines[b], lines[a]
+    text = "\n".join(lines)
     with pytest.raises(SchemaError, match="sorted"):
-        parse_registry("\n".join(lines))
+        parse_registry(text)

@@ -240,14 +240,16 @@ def test_parse_rejects_stale_index():
     real = REAL_LESSONS.read_text(encoding="utf-8")
     lines = real.split("\n")
     lines.insert(3, "a hand-added line (shifts every entry's line numbers)")
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="[Ii]ndex"):
-        parse_lessons("\n".join(lines))
+        parse_lessons(text)
 
 
 def test_parse_rejects_wrong_title():
     real = REAL_LESSONS.read_text(encoding="utf-8")
+    text = "# Not Lessons\n" + real.split("\n", 1)[1]
     with pytest.raises(FormatError, match="title"):
-        parse_lessons("# Not Lessons\n" + real.split("\n", 1)[1])
+        parse_lessons(text)
 
 
 def test_parse_rejects_missing_index_end():
@@ -255,8 +257,9 @@ def test_parse_rejects_missing_index_end():
     lines = real.split("\n")
     end = next(i for i, line in enumerate(lines) if line.startswith("<!-- LLT:INDEX:END"))
     del lines[end]
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="END"):
-        parse_lessons("\n".join(lines))
+        parse_lessons(text)
 
 
 def test_parse_rejects_missing_required_field():
@@ -264,8 +267,9 @@ def test_parse_rejects_missing_required_field():
     lines = real.split("\n")
     i = next(k for k, line in enumerate(lines) if line.startswith("- **Solution:**"))
     del lines[i]
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="Solution"):
-        parse_lessons("\n".join(lines))
+        parse_lessons(text)
 
 
 def test_parse_rejects_bad_category():
@@ -273,8 +277,9 @@ def test_parse_rejects_bad_category():
     lines = real.split("\n")
     i = next(k for k, line in enumerate(lines) if line.startswith("- **Category:** tooling"))
     lines[i] = lines[i].replace("tooling", "vibes")
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="Category"):
-        parse_lessons("\n".join(lines))
+        parse_lessons(text)
 
 
 def test_parse_rejects_duplicate_id():
@@ -292,5 +297,6 @@ def test_parse_rejects_empty_field_value():
     lines = real.split("\n")
     i = next(k for k, line in enumerate(lines) if line.startswith("- **Severity:**"))
     lines[i] = "- **Severity:**"
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="empty value"):
-        parse_lessons("\n".join(lines))
+        parse_lessons(text)

@@ -157,14 +157,16 @@ def test_backlog_duplicate_field_names_rejected():
             {"name": "Source", "lines": ["agent"]},
         ],
     )
+    store = backlog_store(items=[item])
     with pytest.raises(SchemaError, match="duplicate"):
-        validate_backlog(backlog_store(items=[item]))
+        validate_backlog(store)
 
 
 def test_backlog_field_must_carry_lines():
     item = backlog_item(1, fields=[{"name": "Source", "value": "user"}])
+    store = backlog_store(items=[item])
     with pytest.raises(SchemaError, match="lines"):
-        validate_backlog(backlog_store(items=[item]))
+        validate_backlog(store)
 
 
 # --------------------------------------------------------------------------- lessons
@@ -190,15 +192,17 @@ def test_lessons_ids_must_increase():
 def test_lessons_missing_required_field_rejected():
     l = lesson(1)
     l["fields"] = [f for f in l["fields"] if f["name"] != "Solution"]
+    store = lessons_store(lessons=[l])
     with pytest.raises(SchemaError, match="Solution"):
-        validate_lessons(lessons_store(lessons=[l]))
+        validate_lessons(store)
 
 
 def test_lessons_unknown_field_rejected():
     l = lesson(1)
     l["fields"].append({"name": "Vibes", "value": "good"})
+    store = lessons_store(lessons=[l])
     with pytest.raises(SchemaError, match="Vibes"):
-        validate_lessons(lessons_store(lessons=[l]))
+        validate_lessons(store)
 
 
 def test_lessons_bad_vocabulary_rejected():
@@ -207,8 +211,9 @@ def test_lessons_bad_vocabulary_rejected():
         for f in l["fields"]:
             if f["name"] == field_name:
                 f["value"] = bad
+        store = lessons_store(lessons=[l])
         with pytest.raises(SchemaError, match=field_name):
-            validate_lessons(lessons_store(lessons=[l]))
+            validate_lessons(store)
 
 
 def test_lessons_bad_recorded_date_rejected():
@@ -216,8 +221,9 @@ def test_lessons_bad_recorded_date_rejected():
     for f in l["fields"]:
         if f["name"] == "Recorded":
             f["value"] = "18/10/2026"
+    store = lessons_store(lessons=[l])
     with pytest.raises(SchemaError, match="Recorded"):
-        validate_lessons(lessons_store(lessons=[l]))
+        validate_lessons(store)
 
 
 # --------------------------------------------------------------------------- registry
@@ -267,8 +273,9 @@ def test_registry_bad_slug_rejected():
 
 
 def test_unknown_kind_rejected():
+    bad = {"doc": "notes", "schema_version": SCHEMA_VERSION}
     with pytest.raises(SchemaError, match="unknown"):
-        validate_store({"doc": "notes", "schema_version": SCHEMA_VERSION})
+        validate_store(bad)
 
 
 def test_bad_schema_version_rejected():
@@ -279,5 +286,6 @@ def test_bad_schema_version_rejected():
 
 
 def test_non_dict_store_rejected():
+    bad = [1, 2, 3]
     with pytest.raises(SchemaError):
-        validate_store([1, 2, 3])
+        validate_store(bad)

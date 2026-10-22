@@ -253,17 +253,21 @@ def test_parse_rejects_stale_index():
 
 def test_parse_rejects_wrong_title():
     real = REAL_BACKLOG.read_text(encoding="utf-8")
+    text = "# Not A Backlog\n" + real.split("\n", 1)[1]
     with pytest.raises(FormatError, match="title"):
-        parse_backlog("# Not A Backlog\n" + real.split("\n", 1)[1])
+        parse_backlog(text)
 
 
 def test_parse_rejects_missing_constraints_marker():
     real = REAL_BACKLOG.read_text(encoding="utf-8")
     lines = real.split("\n")
-    marker = next(i for i, line in enumerate(lines) if line.strip() == "<!-- BACKLOG:CONSTRAINTS -->")
+    marker = next(
+        i for i, line in enumerate(lines) if line.strip() == "<!-- BACKLOG:CONSTRAINTS -->"
+    )
     del lines[marker : marker + 3]  # marker + heading + separator blank; keep the constraint lines
+    text = "\n".join(lines)
     with pytest.raises(FormatError, match="CONSTRAINTS"):
-        parse_backlog("\n".join(lines))
+        parse_backlog(text)
 
 
 def test_parse_rejects_missing_updated_line():
