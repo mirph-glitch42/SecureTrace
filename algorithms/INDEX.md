@@ -1,12 +1,20 @@
 # Algorithm Registry
 
+<!-- GENERATED:BEGIN securetrace v0.1.0 -->
+<!-- This document is rendered by the SecureTrace CLI. DO NOT EDIT BY HAND — manual editing is not permitted. -->
+<!-- Authoritative store: data/algorithms.json (update it via the `algorithms` CLI commands, then re-render). -->
+<!-- Re-render: securetrace algorithms render data/algorithms.json -->
+<!-- Verify: securetrace algorithms check data/algorithms.json (re-render + byte-compare + manifest). -->
+<!-- Renderer: securetrace.docs v0.1.0 | Spec: algorithms/deterministic-doc-pipeline.md -->
+<!-- GENERATED:END -->
+
 > One row per algorithm document in this directory. Keep sorted by slug.
 > Update the row in the **same change** that changes the document (G8/G9).
 > Status values: `draft` · `implemented` · `backfilled` · `deprecated`.
 
 | Slug | Name | Version | Status | File | One-line summary |
 |---|---|---|---|---|---|
-| `deterministic-doc-pipeline` | Deterministic Document Pipeline (canonical store → pure render → integrity verify) | 0.1.6 | `draft` | [deterministic-doc-pipeline.md](deterministic-doc-pipeline.md) | Store-as-truth + pure renderer + sha256 integrity check: the three pipeline docs become a function of canonical-JSON data; out-of-band edits are diagnosed, not just detected (B10) |
+| `deterministic-doc-pipeline` | Deterministic Document Pipeline (canonical store → pure render → integrity verify) | 0.1.7 | `draft` | [algorithms/deterministic-doc-pipeline.md](algorithms/deterministic-doc-pipeline.md) | Store-as-truth + pure renderer + sha256 integrity check: the three pipeline docs become a function of canonical-JSON data; out-of-band edits are diagnosed, not just detected (B10) |
 | `lessons-record` | Lessons Record (append-only entry log with a derived self-describing TSV index) | 0.1.4 | `backfilled` | [lessons-record.md](lessons-record.md) | Append-only `LLT-NNNN` lesson log with closed vocabularies, bidirectional supersession, derived index, and the 0/1/2 exit model |
 | `line-index-sync` | Line-Index Sync (marker scan, delta computation, idempotent TSV rewrite) | 0.1.3 | `backfilled` | [line-index-sync.md](line-index-sync.md) | Self-describing TSV index blocks: one constant delta puts every reported line number in post-rewrite coordinates; `sync` idempotent, `check` detects drift (exit 1) |
 | `rmf-evidence-bundle` | RMF Evidence Bundle (deterministic collection, control mapping, rendering, packaging) | 0.2.0 | `implemented` | [rmf-evidence-bundle.md](rmf-evidence-bundle.md) | Fixed 11-control catalog + explicit evidence corpus → deterministic SSP/SAP/SAR/POA&M bundles + canonical manifest from repo state (zero network, byte-identical reruns); pinned CLI/Makefile contract |

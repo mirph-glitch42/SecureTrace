@@ -76,17 +76,6 @@ def rendered_t4() -> str:
     return render_registry(store_t4())
 
 
-def strip_generated_header(text: str) -> str:
-    """Drop the generated header block (and its following separator blank line)."""
-    lines = text.split("\n")
-    begin = next(i for i, line in enumerate(lines) if line.startswith("<!-- GENERATED:BEGIN"))
-    end = next(i for i in range(begin, len(lines)) if lines[i].startswith("<!-- GENERATED:END"))
-    del lines[begin : end + 1]
-    if begin < len(lines) and lines[begin] == "":
-        del lines[begin]
-    return "\n".join(lines)
-
-
 # --------------------------------------------------------------------- C1 / C2 / T10
 
 
@@ -148,25 +137,17 @@ def test_generated_header_contract():
 def test_roundtrip_real_registry_golden():
     """T4: parse → render reproduces the committed algorithms/INDEX.md.
 
-    The registry doc has no TSV index block, so the only difference from the
-    grandfathered committed file is the generated header block (7 lines + its
-    separator blank line). Strip the block and the bytes must be identical —
-    N/N rows lossless, N derived from the live file, never hardcoded.
+    Since the WI 9 migration the committed doc carries the generated
+    no-hand-edit header, so the roundtrip is exact: parse → render must
+    equal the committed bytes — N/N rows lossless, N derived from the live
+    file, never hardcoded.
     """
     real = REAL_REGISTRY.read_text(encoding="utf-8")
     store = parse_registry(real)
     n = len(store["rows"])
     assert n >= 1
     assert [r["slug"] for r in store["rows"]] == sorted(r["slug"] for r in store["rows"])
-    rendered = render_registry(store)
-    rendered_lines = rendered.split("\n")
-    real_lines = real.split("\n")
-    assert rendered_lines[2].startswith("<!-- GENERATED:BEGIN")
-    assert rendered_lines[8].startswith("<!-- GENERATED:END")
-    assert rendered_lines[9] == ""
-    assert rendered_lines[:2] == real_lines[:2]
-    assert rendered_lines[10:] == real_lines[2:]
-    assert strip_generated_header(rendered) == real
+    assert render_registry(store) == real
 
 
 def test_parse_real_registry_shape():

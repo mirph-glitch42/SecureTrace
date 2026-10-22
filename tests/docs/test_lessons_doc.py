@@ -57,35 +57,6 @@ def store_t3() -> dict:
     }
 
 
-def strip_generated_header(text: str) -> str:
-    """Drop the generated header block (and its following separator blank line)."""
-    lines = text.split("\n")
-    begin = next(i for i, line in enumerate(lines) if line.startswith("<!-- GENERATED:BEGIN"))
-    end = next(i for i in range(begin, len(lines)) if lines[i].startswith("<!-- GENERATED:END"))
-    del lines[begin : end + 1]
-    if begin < len(lines) and lines[begin] == "":
-        del lines[begin]
-    return "\n".join(lines)
-
-
-def shift_index_numbers(text: str, delta: int) -> str:
-    """Add *delta* to the start/end line-number cells of the lessons TSV index.
-
-    The lessons index has eight columns; the line numbers are the last two
-    cells (the ``LLT_INDEX_BLOCK`` self-row included).
-    """
-    lines = text.split("\n")
-    begin = next(i for i, line in enumerate(lines) if line.startswith("<!-- LLT:INDEX:BEGIN"))
-    end = next(i for i in range(begin, len(lines)) if lines[i].startswith("<!-- LLT:INDEX:END"))
-    for i in range(begin + 1, end):
-        cells = lines[i].split("\t")
-        if len(cells) == 8 and cells[6].isdigit() and cells[7].isdigit():
-            cells[6] = str(int(cells[6]) + delta)
-            cells[7] = str(int(cells[7]) + delta)
-            lines[i] = "\t".join(cells)
-    return "\n".join(lines)
-
-
 # --------------------------------------------------------------------- T3 / C1 / C2
 
 
@@ -170,29 +141,20 @@ def test_generated_header_contract():
 
 
 def test_roundtrip_real_lessons_golden():
-    """T3: parse → render reproduces the committed LESSONS_LEARNED.md (modulo header).
+    """T3: parse → render reproduces the committed LESSONS_LEARNED.md byte-for-byte.
 
-    The rendered doc's TSV line numbers describe the *rendered* layout
-    (index_is_fresh must hold on the file that exists), so the only
-    differences from the grandfathered committed file are the generated
-    header block and the TSV numbers it shifts. Strip the block, shift the
-    numbers back, and the bytes must be identical (N/N lessons, all fields
-    lossless; N is derived from the live file, never hardcoded).
+    Since the WI 9 migration the committed doc carries the generated
+    no-hand-edit header, and its TSV line numbers describe the rendered
+    layout (index_is_fresh must hold on the file that exists), so the
+    roundtrip is exact: parse → render must equal the committed bytes
+    (N/N lessons, all fields lossless; N is derived from the live file,
+    never hardcoded).
     """
     real = REAL_LESSONS.read_text(encoding="utf-8")
     store = parse_lessons(real)
     n = len(store["lessons"])
     assert [l["id"] for l in store["lessons"]] == [f"LLT-{i:04d}" for i in range(1, n + 1)]
-    rendered = render_lessons(store)
-
-    def index_begin(text: str) -> int:
-        return next(
-            i for i, line in enumerate(text.split("\n")) if line.startswith("<!-- LLT:INDEX:BEGIN")
-        )
-
-    offset = index_begin(rendered) - index_begin(real)
-    assert offset == 8  # 7 generated header lines + 1 separator blank line
-    assert shift_index_numbers(strip_generated_header(rendered), -offset) == real
+    assert render_lessons(store) == real
 
 
 def test_parse_real_lessons_shape():
@@ -239,7 +201,8 @@ def test_parse_rejects_stale_index():
     """A hand edit that shifts the entries leaves the stored index stale."""
     real = REAL_LESSONS.read_text(encoding="utf-8")
     lines = real.split("\n")
-    lines.insert(3, "a hand-added line (shifts every entry's line numbers)")
+    body = next(i for i, line in enumerate(lines) if line.startswith("Authoritative record"))
+    lines.insert(body, "a hand-added line (shifts every entry's line numbers)")
     text = "\n".join(lines)
     with pytest.raises(FormatError, match="[Ii]ndex"):
         parse_lessons(text)

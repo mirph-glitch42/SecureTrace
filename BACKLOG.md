@@ -1,23 +1,31 @@
 # Backlog
 
+<!-- GENERATED:BEGIN securetrace v0.1.0 -->
+<!-- This document is rendered by the SecureTrace CLI. DO NOT EDIT BY HAND — manual editing is not permitted. -->
+<!-- Authoritative store: data/backlog.json (update it via the `backlog` CLI commands, then re-render). -->
+<!-- Re-render: securetrace backlog render data/backlog.json -->
+<!-- Verify: securetrace backlog check data/backlog.json (re-render + byte-compare + manifest). -->
+<!-- Renderer: securetrace.docs v0.1.0 | Spec: algorithms/deterministic-doc-pipeline.md -->
+<!-- GENERATED:END -->
+
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	21
-HEADER	-	-	-	23	29
-QUEUE	-	-	-	30	40
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	41	80
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	81	109
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	110	148
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	149	189
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	190	226
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	227	265
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	266	311
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	312	349
-B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	350	384
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	385	430
-B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	431	453
-B12	Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4)	OPEN	Low	454	476
-CONSTRAINTS	-	-	-	477	485
+INDEX_BLOCK	-	-	-	11	29
+HEADER	-	-	-	31	37
+QUEUE	-	-	-	38	48
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	49	88
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	89	117
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	118	156
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	157	197
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	198	234
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	235	273
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	274	319
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	320	357
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	358	392
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	393	439
+B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	440	462
+B12	Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4)	OPEN	Low	463	485
+CONSTRAINTS	-	-	-	486	494
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -25,7 +33,7 @@ CONSTRAINTS	-	-	-	477	485
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B10, B11, B12 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-21
+**Queue:** B10, B11, B12 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-22
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -427,6 +435,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-21 — WI 8 done: store-based CLI command layer (TDD red→green) — `src/securetrace/docs/mutations.py` pure mutation core (`upsert_backlog_item`/`append_backlog_progress`/`add_lesson`/`upsert_registry_row`/`refresh_backlog_status`; no clock/IO, auto-covered by the T9 AST guard), `src/securetrace/cli_docs.py` command layer (agent design decisions D11 `migrate` resolves a missing given doc path → kind default while printing the given path, D13 `show` verbatim via `sys.stdout.write(canonical_json(...))`, D14 verb line only after a successful commit — flagged in ALRK v0.1.5 status history as pending user review), `src/securetrace/__main__.py` dispatch re-pointed to the store-based surface (positional `store` path, `--doc`/`--manifest` overrides, exit 0/1/2 per verb); legacy verbs `backlog sync`/`lessons sync|next-id`/`algorithms sync` now rejected exit 2 — dual-surface coexists with the `scripts/` wrappers until WI 10 (CONSISTENCY.md exception G3); `tests/test_cli_docs.py` (53 tests incl. `test_migrate_registry_rows` D11 pin + single-capture capsys assertions — LLT-0039); SKILL repoint `skills/securetrace/SKILL.md` (store-based surface, ⚠️ no-manual-editing for pipeline docs, repo map gains `data/*.json` + manifest + CONSISTENCY.md) + guard `tests/test_skill_doc.py` 29 references (32 tests); ALRK doc → v0.1.5 (§5.1 module layout + `mutations.py`/`cli_docs.py`, §5.3 command-layer contract block, status history, TSV index regen 8 entries) + registry row 0.1.5; `make gate` green (390 tests); next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
   - 2026-10-21 — CI remediation (D-new-8 closeout): all 51 SonarCloud new-code findings on main fixed in 3 commits — `650a466` S8707 path traversal: new `src/securetrace/docs/paths.py::resolve_within` containment at the CLI trust boundary (18 tests; LLT-0040; CONSISTENCY CC-010; ALRK C6), `8606918` S3776×8 complexity splits + S1192 help dedupe (S1172 resolved by commit 1's `_fail(prog, …)` usage — verified live via the Sonar API), `8a0c236` S5778 — one throwing call per `pytest.raises` body (32 hoists, 5 test files, AST-verified); `make gate` green (408 tests); closeout docs: LLT-0040, this line, ALRK v0.1.6 (C6 boundary contract + T12), CONSISTENCY CC-010 + full anchor re-verification, SKILL path-containment line; D-new-1…D-new-8 remain agent designs pending user review; CI 3× consecutive all-success on push; next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
   - 2026-10-21 — Sonar closeout part 2 (Hi-Priority `sonar.tests` + final S3776): `sonar.tests=tests` added to `sonar-project.properties` (commit `7618e1c`) resolving the SonarPython test-classification warning — the repo properties file demonstrably drives the cloud analysis, not the SonarCloud UI/settings API (empty before and after); final S3776 survivor fixed — `run_migrate` split 22→5 via `_migrate_targets`/`_migrate_source` (commit `a601b74`; CONSISTENCY CC-002/CC-003/CC-005/CC-010 anchors re-derived); post-push verification via the Sonar API: `python:S3776` = 0 open, no findings on `tests/**` (explicit test classification), all 5 rule sets (S8707/S3776/S1192/S1172/S5778) resolved on main, quality-gate issues condition passed; LLT-0041 recorded; `make gate` green (408 tests); CI 3× consecutive all-success on `a601b74`; discovery: 14 pre-existing open Sonar code smells in `src/securetrace/docs/` (S5864×9, S1481×1, S6395×4) registered as B12 (agent-proposed, G8); next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
+  - 2026-10-22 — WI 9 done: real docs migrated via `securetrace migrate` into `data/` stores — `data/backlog.json` (12 items), `data/lessons.json` (41 lessons), `data/algorithms.json` (5 rows) + shared `data/manifest.json` (each commit_render preserves the other kinds' entries); committed docs now carry the C4 generated header (7 comment lines + blank); `docs check-all` IN_SYNC ×3; legacy gate checks green post-migration; T2/T3/T4 goldens rewritten to byte-equal roundtrip pins (dead `strip_generated_header`/`shift_index_numbers` helpers deleted); ALRK v0.1.7 + registry row updated via the new CLI (dogfood, per B10 acceptance); `make gate` green (408 tests); next WI 10 (gate rewire: Makefile docs-check → docs check-all, pre-commit stage 3, CI; live hand-edit block demo)
 
 <!-- BACKLOG:ITEM:B11 -->
 ## B11. Code-consistency monitor integration into SecureTrace — **OPEN**

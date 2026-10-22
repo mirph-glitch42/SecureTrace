@@ -1,0 +1,24 @@
+{
+  "docs": {
+    "backlog": {
+      "doc": "BACKLOG.md",
+      "doc_sha256": "c336af05a9aae20ffa3276578c964f72144f37bac45d6e9ef369c88ae8d8ad96",
+      "store": "data/backlog.json",
+      "store_sha256": "06f3515818fa854d38c7dbf5424712888b961a28dc38a550313542e30f45960f"
+    },
+    "lessons": {
+      "doc": "LESSONS_LEARNED.md",
+      "doc_sha256": "3a33ea10f9201f810fd1e01e18a682e2633fdea7d82ec02a5690390d518bb9c3",
+      "store": "data/lessons.json",
+      "store_sha256": "e45d29e1d9b803a4082f170e583a172ea060d9a300f0e2b5b451ffc17cf810f9"
+    },
+    "registry": {
+      "doc": "algorithms/INDEX.md",
+      "doc_sha256": "e524967f65091764ed57b2c2659a64ac18deded684f1dda70e1c68f1816856b2",
+      "store": "data/algorithms.json",
+      "store_sha256": "392c378452e268f20179f3f1c95d98a9a64415c30fbbd728c9b37720be252094"
+    }
+  },
+  "manifest_version": 1,
+  "renderer_version": "0.1.0"
+}

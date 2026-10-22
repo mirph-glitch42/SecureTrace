@@ -60,31 +60,6 @@ def store_t1() -> dict:
     }
 
 
-def strip_generated_header(text: str) -> str:
-    """Drop the generated header block (and its following separator blank line)."""
-    lines = text.split("\n")
-    begin = next(i for i, line in enumerate(lines) if line.startswith("<!-- GENERATED:BEGIN"))
-    end = next(i for i in range(begin, len(lines)) if lines[i].startswith("<!-- GENERATED:END"))
-    del lines[begin : end + 1]
-    if begin < len(lines) and lines[begin] == "":
-        del lines[begin]
-    return "\n".join(lines)
-
-
-def shift_index_numbers(text: str, delta: int) -> str:
-    """Add *delta* to the start/end line-number cells of the TSV index block."""
-    lines = text.split("\n")
-    begin = next(i for i, line in enumerate(lines) if line.startswith("<!-- INDEX:BEGIN"))
-    end = next(i for i in range(begin, len(lines)) if lines[i].startswith("<!-- INDEX:END"))
-    for i in range(begin + 1, end):
-        cells = lines[i].split("\t")
-        if len(cells) == 6 and cells[4].isdigit() and cells[5].isdigit():
-            cells[4] = str(int(cells[4]) + delta)
-            cells[5] = str(int(cells[5]) + delta)
-            lines[i] = "\t".join(cells)
-    return "\n".join(lines)
-
-
 # --------------------------------------------------------------------- T1 / C1 / C2
 
 
@@ -170,28 +145,19 @@ def test_generated_header_contract():
 
 
 def test_roundtrip_real_backlog_golden():
-    """T2: parse → render reproduces the committed BACKLOG.md (modulo header).
+    """T2: parse → render reproduces the committed BACKLOG.md byte-for-byte.
 
-    The rendered doc's TSV line numbers describe the *rendered* layout
-    (is_fresh must hold on the file that exists), so the only differences
-    from the grandfathered committed file are the generated header block and
-    the TSV numbers it shifts. Strip the block, shift the numbers back, and
-    the bytes must be identical (12/12 items, all fields lossless).
+    Since the WI 9 migration the committed doc carries the generated
+    no-hand-edit header, and its TSV line numbers describe the rendered
+    layout (is_fresh must hold on the file that exists), so the roundtrip
+    is exact: parse → render must equal the committed bytes (12/12 items,
+    all fields lossless).
     """
     real = REAL_BACKLOG.read_text(encoding="utf-8")
     store = parse_backlog(real)
     assert [item["id"] for item in store["items"]] == [f"B{n}" for n in range(1, 13)]
-    assert store["updated"] == "2026-10-21"
-    rendered = render_backlog(store)
-
-    def index_begin(text: str) -> int:
-        return next(
-            i for i, line in enumerate(text.split("\n")) if line.startswith("<!-- INDEX:BEGIN")
-        )
-
-    offset = index_begin(rendered) - index_begin(real)
-    assert offset == 8  # 7 generated header lines + 1 separator blank line
-    assert shift_index_numbers(strip_generated_header(rendered), -offset) == real
+    assert store["updated"] == "2026-10-22"
+    assert render_backlog(store) == real
 
 
 def test_parse_real_backlog_b10_shape():

@@ -1,0 +1,1947 @@
+{
+  "doc": "lessons",
+  "intro": [
+    "Authoritative record of lessons learned during the development of this system:",
+    "the situation, the pitfall, and the correct solution for each lesson.",
+    "Managed by the `learned-lesson-tracker` skill — do not edit the index block or",
+    "the entry markers by hand; use `scripts/manage_lessons.py` (init / add / sync /",
+    "check / next-id). The index below is machine-readable (TSV between",
+    "`LLT:INDEX:BEGIN`/`LLT:INDEX:END` markers) and lists every entry with its",
+    "line range."
+  ],
+  "lessons": [
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Wiring SBOM generation into the Makefile and CI for the SecureTrace bootstrap (B1). The PyPI package is named cyclonedx-bom, so the natural guess for the entrypoint was cyclonedx-bom."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Invoking cyclonedx-bom fails with command-not-found; the package installs the binary as cyclonedx-py. A Makefile variable or CI step written from the package name silently breaks SBOM generation."
+        },
+        {
+          "name": "Solution",
+          "value": "Set the Makefile CDX variable to cyclonedx-py and use that name in CI. Add a smoke check (cyclonedx-py --version) to setup-ci so the mismatch is caught at setup time."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Makefile setup target runs `$(CDX) --version`; CI setup-ci step runs the same"
+        },
+        {
+          "name": "References",
+          "value": "requirements-dev.in; Makefile (CDX variable); https://pypi.org/project/cyclonedx-bom/"
+        }
+      ],
+      "id": "LLT-0001",
+      "title": "cyclonedx CLI binary is cyclonedx-py, not cyclonedx-bom"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "architecture"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Configuring SecureTrace gates (B1): pre-commit hooks and GitHub Actions must run the backlog-manager / learned-lesson-tracker / algorithm-records-keeper index scripts, but those scripts live in the machine-local skill directory (~/.lmstudio/skills/...)."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A hook or CI job that calls the skill path breaks on every other checkout, on CI runners, and on fresh machines; the gate becomes environment-specific and silently unenforceable."
+        },
+        {
+          "name": "Solution",
+          "value": "Vendor the three scripts into scripts/ (backlog_index.py, manage_lessons.py, algorithm_index.py) with a provenance note in each docstring, and make hooks, Makefile, and CI all reference the vendored copies. Skill updates require a deliberate re-vendoring change."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "hooks/, Makefile, and .github/ reference only scripts/; CI runs on a clean runner which would fail otherwise"
+        },
+        {
+          "name": "References",
+          "value": "scripts/backlog_index.py; scripts/manage_lessons.py; scripts/algorithm_index.py"
+        }
+      ],
+      "id": "LLT-0002",
+      "title": "skill scripts must be vendored into the repo for CI and hooks"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "environment"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Batch shell work during B1 bootstrap, e.g. iterating over 'pair' strings with set -- $pair in zsh."
+        },
+        {
+          "name": "Pitfall",
+          "value": "In zsh, unquoted variable expansion is NOT word-split by default, so for-loop / set -- $var constructs silently produce a single token and loops misbehave with no error."
+        },
+        {
+          "name": "Solution",
+          "value": "Use explicit per-item commands, or split deliberately with ${(z)var} / ${=var}; prefer one command per call when scripting from an agent."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "prefer explicit invocations in agent shell work; zsh -c one-liners per item"
+        },
+        {
+          "name": "References",
+          "value": "zsh EXPAND_SH_WORD_SPLIT man entry"
+        }
+      ],
+      "id": "LLT-0003",
+      "title": "zsh does not word-split unquoted variables"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "security"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B1 bootstrap: .gitleaks.toml originally had only an [allowlist] section; pre-commit/pre-push/CI secret gates all passed while deliberately planted PEM private keys were committed unblocked."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A gitleaks config file (v8.30.1) does not merge with the built-in ruleset: if the config defines no [[rules]], gitleaks runs with ZERO rules and can never detect anything. The gate looks green while providing no protection — worse than no gate, because it creates false confidence. Verified empirically: a title-only config suppressed a PEM key that the default config detected."
+        },
+        {
+          "name": "Solution",
+          "value": "Vendor the official gitleaks v8.30.1 default config as .gitleaks-defaults.toml and make .gitleaks.toml use [extend] path=.gitleaks-defaults.toml plus a path-scoped [allowlist]. Re-prove the gate after ANY config change: plant a known secret, expect the commit to be blocked, then remove the plant."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "After any .gitleaks* change, run a red drill: stage a PEM private key, verify the hook blocks it, then remove the plant. Also verify an allowlisted path (tests/) still passes."
+        },
+        {
+          "name": "References",
+          "value": ".gitleaks.toml; .gitleaks-defaults.toml; hooks/pre-commit"
+        }
+      ],
+      "id": "LLT-0004",
+      "title": "gitleaks custom config WITHOUT rules is a no-op scanner (zero rules)"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B1 bootstrap: CI quality job ran pip install --require-hashes -r requirements-dev.txt on a fresh runner and failed, while the same install passed in the local .venv."
+        },
+        {
+          "name": "Pitfall",
+          "value": "pip-tools 7.6.2 depends on setuptools (and pip) without pinning them. pip-compile treats pip/setuptools as 'unsafe' and skips pinning them UNLESS --allow-unsafe is given. Locally the venv already had setuptools installed, so the unpinned requirement was satisfied and the install passed; on a clean runner nothing satisfies it and --require-hashes aborts. A lockfile that only installs in the environment that generated it is not a lockfile."
+        },
+        {
+          "name": "Solution",
+          "value": "Add --allow-unsafe to the pip-compile invocations (Makefile lock target) so pip and setuptools are pinned with hashes, declare setuptools>=84 in requirements-dev.in for explicitness, and after every make lock verify the lockfile installs in a FRESH venv: python3 -m venv /tmp/x && /tmp/x/bin/pip install --require-hashes -r requirements-dev.txt."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "make lock uses --allow-unsafe; fresh-venv install check is part of the lock-change checklist; CI is the ultimate fresh-venv check but is slow, so mirror it locally."
+        },
+        {
+          "name": "References",
+          "value": "Makefile (lock target); requirements-dev.in; requirements-dev.txt"
+        }
+      ],
+      "id": "LLT-0005",
+      "title": "pip --require-hashes fails on clean runners when a transitive dep is unpinned"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B1 bootstrap: CI security job (gitleaks-action scanning SHA^..SHA) failed with 'unknown revision' on both push and PR events, with zero actual leaks."
+        },
+        {
+          "name": "Pitfall",
+          "value": "actions/checkout defaults to a shallow clone (depth 1). gitleaks resolves the range SHA^..SHA, which requires the parent commit to exist locally; a depth-1 checkout has no parent, so the scan dies before scanning anything. The failure is invisible as a secret issue — it looks like a generic job failure."
+        },
+        {
+          "name": "Solution",
+          "value": "Set fetch-depth: 0 on the CI security job checkout (committed in ci.yml). Keep any future full-history git tooling (gitleaks detect, git log -p consumers) on the same unshallowed checkout."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When adding CI steps that use git history ranges, ensure the checkout step is unshallowed (fetch-depth: 0) in the same change."
+        },
+        {
+          "name": "References",
+          "value": ".github/workflows/ci.yml (security job)"
+        }
+      ],
+      "id": "LLT-0006",
+      "title": "gitleaks full-history scan needs fetch-depth 0 on CI"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "process"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "SecureTrace bootstrap: after wiring local hooks and CI, we needed evidence that the gates reject bad input — not just that they run. A deliberate red-drill proves the pipeline catches what slips past local hooks."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Red-drills are easy to do unsafely: running --no-verify commits on main, or forgetting to clean up, leaves the repo or its CI history in a broken state."
+        },
+        {
+          "name": "Solution",
+          "value": "Do red-drills in a throwaway worktree + branch only. The deliberate 'git commit --no-verify' / 'push --no-verify' is the whole point — prove CI catches what local hooks missed. Then: always restore main green, close the drill PR unmerged, and delete the branch."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Before any red-drill: (1) confirm you are in a dedicated worktree/branch, (2) plan the cleanup (close PR unmerged + delete branch) before starting, (3) verify main is green afterwards."
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0007",
+      "title": "Red-drill protocol for proving gates actually catch failures"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "SecureTrace bootstrap: SonarCloud's 'SonarCloud Code Analysis' check was red on every commit since the gitleaks defaults were vendored (307c419). 34 open issues: 16x BLOCKER secrets:S6334 in .gitleaks-defaults.toml and 4x MAJOR pythonsecurity:S8707 in vendored CLI scripts."
+        },
+        {
+          "name": "Pitfall",
+          "value": "(1) secrets:S6334 flags sample tokens inside vendored scanner rule-definition files as live-secret BLOCKERs, red-ing the quality gate. (2) pythonsecurity:S8707 (path traversal via LLM-supplied CLI args) misapplies to local CLI tools whose caller already has full filesystem access. (3) The SonarCloud API is a limited subset — /api/api 404s, and the issue-transition endpoint is NOT at /api/issues/dotransition."
+        },
+        {
+          "name": "Solution",
+          "value": "Exclude vendored scanner configs in sonar-project.properties (sonar.exclusions=.gitleaks-defaults.toml) as the durable fix, AND triage the findings via API with justification comments: 16 -> falsepositive, 4 -> wontfix. Working transition call: POST https://sonarcloud.io/api/issues/do_transition with params issue=<key>, transition=falsepositive|wontfix, comment=<justification> — note the param is 'transition' (not 'transitionKey') and takes bare values like 'falsepositive' (not 'setfalsepositive')."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Before scripting SonarCloud API calls, verify the endpoint name and parameter names against a live 400-response (the error message enumerates allowed values). When vendoring tool configs that contain sample secrets, add them to both the local scanner allowlist and sonar-project.properties, and triage with documented justification rather than code changes."
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0008",
+      "title": "SonarCloud mis-flags vendored scanner configs and local CLIs; its API is a limited subset"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Verifying scripts/backlog_index.py (vendored from the backlog-manager skill) for the B3 ex-post-facto backfill: testing what happens to a backlog item's row priority when the file uses the bulleted priority form."
+        },
+        {
+          "name": "Pitfall",
+          "value": "PRIORITY_RE is ^\\s*\\*\\*Priority:\\*\\*\\s*(.+?)\\s*$ — it matches only lines that START with **Priority:**. The bulleted form `- **Priority:** High` (used by this repo's BACKLOG.md and by the skill's own references/item-anatomy.md) never matches, so the row priority silently falls back to `Low` and an out-of-vocabulary value on a bulleted line (e.g. `- **Priority:** Urgent`) is NOT rejected. Only the unbulleted form (the skill's references/example-backlog.md) is parsed and vocabulary-checked."
+        },
+        {
+          "name": "Solution",
+          "value": "Verified all three cases (P9a/P9b/P9c) against the pinned script and documented the behavior as DEV(7) in algorithms/line-index-sync.md with test rows. For new backlogs, either write priority on an unbulleted line (the form the parser actually reads) or accept `Low` as the row value. The vendored script is logic-identical to the skill original (diffed; line-wrapping only), so this is the skill's own behavior; a fix is a separate doc-first change with its own backlog item (B3 preserves it as pinned)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Treat 'document the pinned behavior' as the default in ex-post-facto backfills; never fix the algorithm during backfill (skill anti-abuse rule)."
+        },
+        {
+          "name": "References",
+          "value": "algorithms/line-index-sync.md DEV(7) and tests 9a-9c; scripts/backlog_index.py parse_priority; skill backlog-manager references/item-anatomy.md vs references/example-backlog.md"
+        }
+      ],
+      "id": "LLT-0009",
+      "title": "Priority regex silently misses bulleted `- **Priority:** X` lines"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Mapping verified behavior of scripts/manage_lessons.py (B3 backfill) for the lessons-record algorithm document: which edits make `check` report the index stale."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Assuming every edit to an entry invalidates the index is wrong in one direction: the index records only line ranges plus six fields (title/category/severity/status/recorded). Rewriting Context/Pitfall/Solution on the same line does NOT trigger staleness (`check` exit 0 — verified L19d), so the record can silently drift from its prose. A line-count change (L19a) or an indexed-field change (L19c) DOES trigger staleness (exit 1). Also DATE_RE is format-only: `--recorded 2026-99-99` is accepted, `2026-1-1` rejected (L7a/L7b)."
+        },
+        {
+          "name": "Solution",
+          "value": "Documented as DEV(3)/DEV(4) in algorithms/lessons-record.md with verified test rows L7a/L19a/L19c/L19d. Treat same-line body edits as the wording fixes guard G7 allows in place; rely on `check` (exit 1) as the drift detector for geometry and indexed fields, which is exactly what the docs-check gate runs."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "After editing a lesson entry's body, re-run `manage_lessons.py check` in the same session; do not assume `check` catches prose edits — it intentionally does not."
+        },
+        {
+          "name": "References",
+          "value": "algorithms/lessons-record.md DEV(3)/DEV(4) and test rows L7a/L19a/L19c/L19d; scripts/manage_lessons.py expected_index_rows/index_is_fresh"
+        }
+      ],
+      "id": "LLT-0010",
+      "title": "Lessons-index staleness covers geometry + indexed fields, not body content"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "environment"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Verifying CRLF behavior of the vendored skill scripts (backlog/lessons index) during the B3 backfill: determining whether CRLF files break check/sync and which code line is responsible."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Reasoning about `splitlines()` vs `split(\"\\n\")` to predict CRLF behavior is a red herring: `Path.read_text()`/`open().read()` (text mode) apply universal newlines, so CRLF becomes LF AT READ TIME, before any splitting. The observable behavior is: a fresh `check`/`sync` exits 0 and performs no write, so an on-disk CRLF file survives byte-identical; any actual write (add, stale sync) emits LF. The splitter choice only matters on already-normalized strings."
+        },
+        {
+          "name": "Solution",
+          "value": "Verified with byte-level checks (L20a/L20b): CRLF file passes `check`; `sync` prints 'already current' and leaves the bytes untouched; `add`/stale-`sync` normalize to LF. Documented as DEV(5) in algorithms/line-index-sync.md (test P12) and algorithms/lessons-record.md (L20a/L20b); the B3 package port keeps text-mode reads, so behavior is unchanged."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Measure line endings with `read_bytes()`, never `read_text()`; when predicting script behavior on CRLF input, start from 'universal newlines at read time', not from the line-splitting code."
+        },
+        {
+          "name": "References",
+          "value": "algorithms/line-index-sync.md DEV(5) and test 12; algorithms/lessons-record.md DEV(5) and L20a/L20b"
+        }
+      ],
+      "id": "LLT-0011",
+      "title": "Universal-newline reads make CRLF handling differ from code appearance"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-18"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B3 GREEN phase: three tests that put an unbulleted '**Priority:** X' line on the LAST line of a fixture file failed against the faithful port of scripts/backlog_index.py. Verified empirically against the pinned script (git show HEAD:scripts/backlog_index.py): build_rows calls parse_item_heading/parse_priority with (start-1, stop-1), so the 0-indexed window lines[start-1 : stop-1] excludes the section's last line - for the final section, the file's last line. A fixture with the priority line last indexed as Low with exit 0 even for the out-of-vocabulary value 'Urgent'."
+        },
+        {
+          "name": "Pitfall",
+          "value": "The last line of every section body (the file's last line for the final section) is never scanned for the item heading or the priority value. Consequences: (1) an unbulleted '**Priority:** X' on the last line is silently indexed as Low - even an out-of-vocabulary value is NOT rejected (exit 0); (2) a '## <ID>. <title> - **STATUS**' heading on the last line is not parsed. Root cause: build_rows passes stop-1 as the exclusive stop of a window that should include stop. The quirk is latent in typical files because sections normally end with a blank line before the next marker, so it rarely bites."
+        },
+        {
+          "name": "Solution",
+          "value": "B3 mirrors the pinned behavior exactly (skill anti-abuse: document actual behavior, do not fix the algorithm during backfill). Fixed the test fixtures to place a body line after the priority line, and added test_priority_on_final_line_not_scanned_quirk pinning the last-line behavior (out-of-vocab value on the last line -> row Low, no error). Documented as DEV(8) in algorithms/line-index-sync.md section 2.5. A proper fix (include the last line in the scan window) is a separate doc-first change, out of B3 scope."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When writing behavioral tests for parsers with bounded scan windows, verify the window endpoints against the pinned implementation empirically with edge-position fixtures (first/last line of a section); do not assume 'the section contains the line' implies 'the window scans the line'."
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0012",
+      "title": "backlog scan window excludes the final line of a section (off-by-one)"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B4: generating golden SSP/SAP/SAR/POAM renderings for tests/rmf. The golden manifest includes a git_head field derived from the fixture tree."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Generating goldens from a fixture tree inside a git checkout bakes the enclosing repo's real HEAD SHA into the manifest; the goldens then mismatch on any other checkout/CI because the sentinel never triggers. The first golden set failed exactly this way."
+        },
+        {
+          "name": "Solution",
+          "value": "Copy the fixture out of the repo (e.g. /tmp) and generate goldens from that out-of-repo copy so git_head degrades to the documented 'no-git' sentinel. The committed goldens assert git_head == 'no-git'."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Generate golden fixtures only from an out-of-repo copy; keep a test asserting the 'no-git' sentinel in the golden manifest."
+        },
+        {
+          "name": "References",
+          "value": "tests/fixtures/rmf/golden/; algorithms/rmf-evidence-bundle.md (C1 determinism)"
+        }
+      ],
+      "id": "LLT-0013",
+      "title": "Golden files generated inside the repo bake the real git HEAD into the manifest"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B4: adding the 'rmf build' subcommand to the securetrace CLI dispatch in src/securetrace/__main__.py."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Reading args.rmf_command unconditionally at dispatch time crashes every non-rmf subcommand (e.g. 'algorithms check') because the attribute only exists on the namespace when the rmf subparser matched. Two dispatch regression tests caught it."
+        },
+        {
+          "name": "Solution",
+          "value": "Guard dispatch with 'args.command == \"rmf\"' before touching the sub-command attribute; keep regression tests pinning each sibling subcommand's dispatch."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "In argparse dispatch, only touch args.<sub> after confirming args.command == '<parent>'; add a dispatch regression test per sibling subcommand when adding a subcommand."
+        },
+        {
+          "name": "References",
+          "value": "src/securetrace/__main__.py; tests/test_cli.py (dispatch tests)"
+        }
+      ],
+      "id": "LLT-0014",
+      "title": "Unguarded args.<sub>_command access in argparse dispatch crashes sibling subcommands"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B4: fixture tests/fixtures/rmf/mini-repo/dist/sbom.json is the SB-01 control's evidence file in the 21-file corpus."
+        },
+        {
+          "name": "Pitfall",
+          "value": "The root .gitignore 'dist/' rule matches the fixture's nested dist/ directory, so git add -A silently skipped the file. Local tests passed (file present on disk) but CI resolved the corpus to 20 files and 6 golden-dependent tests failed (run 39219696994)."
+        },
+        {
+          "name": "Solution",
+          "value": "Add explicit negation rules after 'dist/' (!tests/fixtures/rmf/mini-repo/dist/ then !tests/fixtures/rmf/mini-repo/dist/sbom.json), commit the file, verify with git check-ignore -v and git ls-files. Fixed in 0541d2f; CI run 39224391744 green."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Bare directory ignore rules (dist/, build/, artifacts/) can shadow nested test fixtures: after adding a fixture, verify tracking with git check-ignore -v <path> and git ls-files; prefer negation rules over moving the fixture out of its contract path."
+        },
+        {
+          "name": "References",
+          "value": ".gitignore; tests/fixtures/rmf/mini-repo/dist/sbom.json; commit 0541d2f"
+        }
+      ],
+      "id": "LLT-0015",
+      "title": "Repo-level 'dist/' gitignore rule silently drops nested test fixture files from the commit"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "environment"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Polling GitHub Actions run status via curl + python in zsh after pushes."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Two silent failures: (1) an unquoted URL containing '?' is glob-expanded by zsh ('no matches found'), curl never runs, and the loop keeps re-reading a stale response file for minutes reporting no error; (2) GitHub API JSON can contain raw control characters, so strict json.loads raises and a polling loop swallows the failure. Both produced long silent no-op poll loops."
+        },
+        {
+          "name": "Solution",
+          "value": "Quote every URL in zsh; parse API responses with json.load(f, strict=False); use a fresh response path per iteration (or verify freshness) so stale files are never mistaken for live status."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Always quote URLs in shell commands; json.load(strict=False) for GitHub API responses; assert a live-only field per poll iteration."
+        },
+        {
+          "name": "References",
+          "value": "GitHub REST API; LLT-0003 (zsh word splitting)"
+        }
+      ],
+      "id": "LLT-0016",
+      "title": "zsh globbing and strict JSON parsing silently break curl API polling loops"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "debugging"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 release.yml carried a duplicate `attestations:` key under `permissions`; ~13 ephemeral workflow runs all started with the fallback name (file path) and 0 jobs, and local YAML validation never flagged it."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Ruby Psych and PyYAML silently accept duplicate mapping keys, so local yaml-check passes; the GitHub Actions workflow parser (yaml.v3) hard-fails the whole workflow definition, producing runs named after the file with zero jobs."
+        },
+        {
+          "name": "Solution",
+          "value": "Keep exactly one key per mapping; add a strict duplicate-key check over .github/workflows/*.yml to both pre-commit and CI so local green means GitHub green."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Duplicate-key lint for workflow files in pre-commit and CI."
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0017",
+      "title": "Duplicate YAML mapping keys: local parsers tolerate, GitHub hard-fails"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "debugging"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 debugging: every push produced a run named after the workflow file path with zero jobs."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A run whose name is the file path (fallback), with 0 jobs, firing on every push means the workflow definition failed to parse, not that a job failed; hunting for job logs is a dead end because none exist."
+        },
+        {
+          "name": "Solution",
+          "value": "Quick check: GET /repos/{o}/{r}/actions/workflows/<file> returns the parsed name and state; if name is the file path the definition is broken, so fix the YAML and re-push."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0018",
+      "title": "Fallback-name workflow run with 0 jobs means a definition parse error"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 originally planned provenance creation with `gh attestation create`."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Current gh CLI has no `attestation create` subcommand (only download, trusted-root, verify); the plan looked plausible but could not run."
+        },
+        {
+          "name": "Solution",
+          "value": "Create provenance attestations in-workflow with the SHA-pinned `actions/attest` (v4, provenance + multi-subject) and capture the bundle via `steps.attest.outputs.bundle-path`."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0019",
+      "title": "gh attestation create does not exist; use actions/attest"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "security"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 verify step identity pinning."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Passing both `--signer-repo` and `--signer-workflow` uses the repo-level (broader) match and silently ignores the workflow-level pin, weakening the identity check with no warning."
+        },
+        {
+          "name": "Solution",
+          "value": "Never pass both; pin exactly `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` for a workflow-specific identity."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0020",
+      "title": "gh attestation verify: --signer-repo silently shadows --signer-workflow"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "dependencies"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Pinned sigstore/cosign-installer to SHA 6f9f177... and set input `cosign-release: v2.6.5`; an earlier draft used `COSIGN_VERSION`."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Action input names differ across major versions and unknown inputs are silently ignored; `COSIGN_VERSION` (v1-era) against a v3+ action installs an unpinned version instead of the intended one, breaking reproducibility."
+        },
+        {
+          "name": "Solution",
+          "value": "Fetch the action.yml at the exact pinned SHA before relying on an input name (cosign-installer v3+: `cosign-release`); treat input-accepted-but-no-effect as a red flag."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0021",
+      "title": "Verify action input names against the action.yml at the pinned SHA"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 publish step."
+        },
+        {
+          "name": "Pitfall",
+          "value": "`gh release create` has no `--verify` flag; the tag-verification flag is `--verify-tag`, and the wrong flag fails with a confusing unknown-flag error."
+        },
+        {
+          "name": "Solution",
+          "value": "Use `gh release create <tag> --verify-tag`; `--verify` belongs to `gh release verify`."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0022",
+      "title": "gh release create uses --verify-tag, not --verify"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "debugging"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 release.yml authoring."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Non-ASCII characters in .github/workflows files are a known GitHub workflow parse-failure trigger; the file still parses locally and the failure appears as fallback-name, 0-job runs."
+        },
+        {
+          "name": "Solution",
+          "value": "Keep workflow YAML strictly ASCII (no em-dashes, no unicode arrows); put typographic niceties in docs only."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0023",
+      "title": "Keep workflow YAML pure ASCII"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "security"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 final verify loop; run 39245874727 hit a 0.4 s race."
+        },
+        {
+          "name": "Pitfall",
+          "value": "`gh release verify` looks up the GitHub-created release attestation (subject = tag object digest `sha1:<tagsha>`, predicate `release`, initiator `github`), created asynchronously after publish; a verify within ~1 s can fail with `no attestations for tag`. Distinct from artifact provenance attestations (subject `sha256:<file>`)."
+        },
+        {
+          "name": "Solution",
+          "value": "Wrap `gh release verify` + `verify-asset` in a bounded retry loop with backoff (10 attempts x 30 s); first-attempt success is timing luck, the loop makes the flow robust."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0024",
+      "title": "gh release verify is async: GitHub-created release attestations lag"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 attestation evidence collection."
+        },
+        {
+          "name": "Pitfall",
+          "value": "`GET /repos/{o}/{r}/attestations` returns an empty list and `?ref=` 404s; there is no GET-by-id endpoint, and list entries may omit an `id` field."
+        },
+        {
+          "name": "Solution",
+          "value": "Look up by subject digest: `GET /repos/{o}/{r}/attestations/sha256:<hex>` for artifact provenance, `sha1:<tag-object-sha>` for tag/release attestations; use `initiator`/`predicate` for identity, not `id`."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0025",
+      "title": "GitHub attestations list API is keyed by subject digest"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "environment"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 closeout: after deleting tag v0.1.0 and release 417220556, ~8 attempts over ~10 min to recreate tag `v0.1.0` all failed (GH013 `creations being restricted` / `422 Reference update failed`) while new names (`probe-tag-check`, `v0.2.9-probe`) worked."
+        },
+        {
+          "name": "Pitfall",
+          "value": "REST `rulesets` and GraphQL `repository.rulesets` both report empty and there is no user-level ruleset endpoint to inspect, so the block is invisible; tag deletion is also coupled to release existence (422 until the release is deleted first)."
+        },
+        {
+          "name": "Solution",
+          "value": "Probe with a fresh name to confirm the block is name-specific, then ship the identical hardening under the next version tag and bump the package version to keep artifact names consistent with the tag; record the block in the backlog instead of burning time hunting the ruleset."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0026",
+      "title": "GitHub can invisibly block re-creation of a specific tag name"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B5 version bump 0.1.0 to 0.1.1 broke `test_golden_renderings` by exactly one byte."
+        },
+        {
+          "name": "Pitfall",
+          "value": "`manifest.json` golden embeds `generated_by: securetrace <__version__>` (src/securetrace/rmf/deliverables.py:616), so every version bump breaks the golden by one character."
+        },
+        {
+          "name": "Solution",
+          "value": "Regenerate goldens through the test own code path (`collect_evidence` + `package` on a `tests/fixtures/rmf/mini-repo` fixture copy); only `manifest.json` should change, SSP/SAP/SAR/POAM stay byte-identical."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0027",
+      "title": "RMF golden manifest embeds the live package version"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B8: the strict workflow-YAML checker (scripts/check_workflow_yaml.py) needs a custom exception carrying the duplicate-key label and line, while staying catchable as yaml.YAMLError."
+        },
+        {
+          "name": "Pitfall",
+          "value": "yaml.YAMLError is a plain Exception-style class: calling it with keyword arguments (problem=..., problem_mark=...) raises TypeError, so a custom error built directly on it crashes at the moment it is raised."
+        },
+        {
+          "name": "Solution",
+          "value": "Subclass yaml.MarkedYAMLError and call super().__init__(context=None, context_mark=None, problem='...', problem_mark=None) — that signature accepts those kwargs, and the subclass remains an instance of yaml.YAMLError for except-clauses."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Before subclassing a library exception type, check the constructor signature of the class actually subclassed (the concrete one, not the base)."
+        },
+        {
+          "name": "References",
+          "value": "scripts/check_workflow_yaml.py (DuplicateKeyError); algorithms/workflow-yaml-strict-parse.md"
+        }
+      ],
+      "id": "LLT-0028",
+      "title": "yaml.YAMLError takes no constructor kwargs — subclass yaml.MarkedYAMLError instead"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "data"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B8: the duplicate-key checker message names the colliding key; workflow top-level keys include `on:` (LLT-0017/LLT-0023)."
+        },
+        {
+          "name": "Pitfall",
+          "value": "PyYAML implements YAML 1.1 and resolves bare on/yes/true scalars to boolean True: reporting the constructed key object yields 'duplicate key True' instead of 'duplicate key on', misdirecting the user to the wrong construct."
+        },
+        {
+          "name": "Solution",
+          "value": "Take the label from the source scalar node — key_node.value when the key node is a yaml.nodes.ScalarNode — and fall back to str(constructed) only for non-scalar keys (flow collections)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When echoing YAML keys or values back to users, prefer the node's source text over the constructed Python object."
+        },
+        {
+          "name": "References",
+          "value": "scripts/check_workflow_yaml.py (StrictLoader.construct_mapping); tests/scripts/test_workflow_yaml.py"
+        }
+      ],
+      "id": "LLT-0029",
+      "title": "PyYAML resolves YAML 1.1 on/yes/true to bool — report keys from source text, not constructed value"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "process"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B7/B8 closeout audit: algorithms/rmf-evidence-bundle.md METADATA table says 'Status | draft' (line 23) while the algorithms/INDEX.md registry row says implemented (version 0.2.0 matches in both)."
+        },
+        {
+          "name": "Pitfall",
+          "value": "The tempting fix is editing the closed doc's status cell to 'implemented' — but the ALRK immutable-history guard forbids rewriting closed documents, and the registry is the canonical status record (INDEX.md rule 3); silently amending the doc papers over the mismatch instead of recording it."
+        },
+        {
+          "name": "Solution",
+          "value": "Treat the registry row as canonical; record the divergence as a lesson (this entry) instead of editing the closed doc; if a metadata correction is genuinely needed, publish a new version with a status-history line rather than amending in place."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "On any status mismatch between an algorithm doc and the registry, trust the registry (INDEX.md rule 3); never amend closed docs in place."
+        },
+        {
+          "name": "References",
+          "value": "algorithms/rmf-evidence-bundle.md (METADATA line 23); algorithms/INDEX.md"
+        }
+      ],
+      "id": "LLT-0030",
+      "title": "ALRK registry status is canonical — do not amend a closed doc to match a stale METADATA cell"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B7: after each increment (fixes plus WONTFIX/FALSE-POSITIVE triage), the SonarCloud Code Analysis check and New Code gate on the analyzed commit stayed red although the issues were handled."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Assuming triage or a code fix updates the gate verdict on the same commit — it does not; the verdict is computed from the issue state at that analysis. Only the next push (a new analysis) re-evaluates the gate."
+        },
+        {
+          "name": "Solution",
+          "value": "After triage or fixes, push a follow-up commit to trigger a fresh analysis and read the check run on the NEW sha; verify freshness first by confirming api/projects/search revision matches the new commit (LLT-0008 for the API subset)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When a SonarCloud verdict contradicts the issue state, first confirm the analysis revision is the commit you think it is — never read a stale gate."
+        },
+        {
+          "name": "References",
+          "value": "B7 closeout (BACKLOG.md); SonarCloud API api/projects/search"
+        }
+      ],
+      "id": "LLT-0031",
+      "title": "SonarCloud gate verdicts are per-analysis — triage/fixes do not re-evaluate an already-analyzed commit"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "debugging"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "Marker parsing in src/securetrace/backlog/index.py: _marker_on_line returns (kind, item_id) with item_id None for reserved kinds (HEADER/QUEUE/CONSTRAINTS); the scan loop once unpacked it as (kind, row_id)."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Unpacking a positional tuple into names implying a different second element: the reserved-section branch silently produced row_id=None and downstream use raised AttributeError — and the path is only exercised via backlog_index.py --check (not pytest), so the test suite stayed green."
+        },
+        {
+          "name": "Solution",
+          "value": "Name unpack targets after what the helper actually returns (kind, item_id) and derive the always-present field conditionally: row_id = item_id if kind.startswith('ITEM:') else kind (index.py L148-150)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When unpacking a tuple whose second element can be None, read the helper's docstring before naming the target, and ensure the None path is exercised by a gate check, not only by tests."
+        },
+        {
+          "name": "References",
+          "value": "src/securetrace/backlog/index.py (_marker_on_line + scan loop L148-150)"
+        }
+      ],
+      "id": "LLT-0032",
+      "title": "Tuple-unpack aliasing: helper's optional second element unpacked as a required one crashes on reserved paths"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-19"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B7 increments 4/7/8: three consecutive rewrites of record.py FIELD_RE and index.py PRIORITY_RE were each gate-green locally, yet the first two remained flagged by SonarCloud S8786."
+        },
+        {
+          "name": "Pitfall",
+          "value": "S8786 (ReDoS/super-linear regex) is decided by shape, not measured complexity: the same linear-time language is flagged or passes depending on form. Flagged: \\S*(?:\\s+\\S+)* (star-led), (?:\\S+(?:\\s+\\S+)*)? (quantified group nested in a quantified group), .+ after \\s* (dot quantifier adjacent to a star). Passed: \\S+(?:\\s+\\S+)* (HEADING_RE), (?a:\\d){4}, and even lazy .*? with no quantified neighbor (BEGIN_RE, never flagged). Local ruff/pytest gates cannot see this rule at all."
+        },
+        {
+          "name": "Solution",
+          "value": "Rewrite using only sub-shapes with passing precedent (\\S+-led non-empty value, no nested quantified groups, no dot adjacent to a star); split an 'empty-or-value' capture into two regexes (non-empty + dedicated empty match) instead of an optional nested group (FIELD_RE + FIELD_EMPTY_RE); verify against the live API before declaring fixed — api/projects/search revision must match the commit, then look up the issue keys in api/issues/search."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Treat every S8786 fix as a hypothesis: gate-green locally, then confirm CLOSED/FIXED via the SonarCloud issues API before closing the backlog item."
+        },
+        {
+          "name": "References",
+          "value": "B7 closeout (BACKLOG.md); src/securetrace/lessons/record.py (FIELD_RE/FIELD_EMPTY_RE); src/securetrace/backlog/index.py (PRIORITY_RE); LLT-0008"
+        }
+      ],
+      "id": "LLT-0033",
+      "title": "Sonar S8786 is shape-sensitive, not just complexity-sensitive — verify via live API; prefer proven-passing sub-shapes"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-20"
+        },
+        {
+          "name": "Category",
+          "value": "dependencies"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 4 closeout (2026-10-20): commit 14e78f6 pushed with a green local gate; the CI security job (gitleaks + pip-audit + SBOM) failed hours later, while the identical lockfile had passed on 7137b83 earlier the same day. certifi, a transitive dep (requests -> pip-audit), was locked at 2026.7.22; GHSA-6q48-6c7w-9gw2 was published with fix version 2026.10.19, and pip-audit failed the audit."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A security-job failure on a previously green commit is time-dependent external drift (a new advisory), not a regression in the pushed change — the diagnosis starts with the job log, not the diff. And the obvious fix does not work: re-running a plain 'make lock' leaves the vulnerable pin in place, because pip-compile prefers already-locked versions (minimal-diff resolution), so the vulnerable certifi==2026.7.22 survived the re-lock."
+        },
+        {
+          "name": "Solution",
+          "value": "Delete the stale 'certifi==2026.7.22' stanza (with its hashes) from requirements-dev.txt, re-run 'make lock' so pip-compile re-resolves certifi to 2026.10.19 with fresh hashes, reinstall the venv with --require-hashes, verify 'make dependency-audit' is clean and 'make gate' is green, then commit as a separate chore(deps) change and re-run CI."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When the security job fails on a commit that previously passed, assume a newly published advisory first. To fix a CVE in a locked transitive dep, do not trust a plain re-lock: remove the vulnerable pin (or add a floor constraint in the .in manifest) and THEN re-lock, then re-audit in a hash-verified install."
+        },
+        {
+          "name": "References",
+          "value": "LLT-0005"
+        }
+      ],
+      "id": "LLT-0034",
+      "title": "New CVE on a locked transitive dep fails security CI even for previously green commits; a plain re-lock will not bump it"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-20"
+        },
+        {
+          "name": "Category",
+          "value": "process"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 5 (TDD lessons parser/renderer), session 2: RED confirmed, then the implementation was written in one pass but never executed before the context handoff. The handoff itself flagged it as KNOWN BROKEN (section 4.4): the parse loop contained a dead if-False expression calling a nonexistent function, an fm_name helper with a function-local import re, and a title that was never captured."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Writing the full implementation after the tests and deferring the first test run turns a one-line fix into a cross-session archaeology task: the next agent must re-derive what is broken from prose, and the dead code ships one commit closer to reality. A handoff document can describe the breakage, but it is still a second context doing the work of the first."
+        },
+        {
+          "name": "Solution",
+          "value": "Run the test suite immediately after each module is written, before any further scaffolding: in WI 5 the first green run came the moment the suite was actually executed, and the remaining failures were real grammar bugs (blank-line section terminators) the tests exposed. Rule: no code is 'done' until it has been executed against its tests in the same session it was written; a handoff must never contain a module that has not yet been run."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "TDD red-to-green discipline includes the green: after writing each implementation file, run its test file before writing the next one or the next handoff; treat 'written but not run' as a blocking state, and list it explicitly as such in any handoff."
+        },
+        {
+          "name": "References",
+          "value": "B10 WI 5 handoff section 4.4 (known-broken parse loop); src/securetrace/docs/lessons_doc.py"
+        }
+      ],
+      "id": "LLT-0035",
+      "title": "handing off an implementation that was never run leaves dead code that outlives the session"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-20"
+        },
+        {
+          "name": "Category",
+          "value": "debugging"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 5: parse_lessons for LESSONS_LEARNED.md. The entry-section field loop (marker, heading, blank, field lines, blank separator, next marker) initially advanced until the next ENTRY_MARKER, mirroring the legacy record core whose _parse_fields merely skips non-matching lines inside the section span. First green attempt failed 11 tests including the synthetic roundtrip: the parser rejected its own rendered output."
+        },
+        {
+          "name": "Pitfall",
+          "value": "The legacy core tolerates non-field lines inside a section (it scans a span and keeps only FIELD_RE matches), so copying its stop condition (next marker) into a strict parser makes the scan swallow the blank separator line and report it as 'not a field line'. The strict grammar must treat the blank line as the section terminator: stop the field loop on a blank line or a marker, then require the blank to be followed by the next entry marker (or EOF for the last entry). The roundtrip test (parse after render) is what caught it - a parser that cannot read its own renderer's output is not an inverse."
+        },
+        {
+          "name": "Solution",
+          "value": "In _parse_entry_section the field loop stops on a blank line or an entry marker and returns the first line past the fields; the outer loop then enforces 'blank separator + next marker' (or EOF) before appending the entry. All 20 WI 5 tests green, including the T3 golden byte-compare against the real 34-entry file and the synthetic roundtrip identity."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When porting a lenient legacy parser into a strict one, enumerate every terminator of the strict grammar (blank line, marker, EOF) and write the loop condition from that list; keep a roundtrip test (parse o render == identity) as the inverse check, since it fails on exactly this class of terminator bug."
+        },
+        {
+          "name": "References",
+          "value": "src/securetrace/docs/lessons_doc.py; src/securetrace/lessons/record.py (parse_entries span scan); LLT-0012 (scan-window off-by-one, related but distinct)"
+        }
+      ],
+      "id": "LLT-0036",
+      "title": "strict section scans must stop at the blank separator, not only at the next marker"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-20"
+        },
+        {
+          "name": "Category",
+          "value": "data"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 6 (registry parser/renderer). The real algorithms/INDEX.md declares 'Keep sorted by slug' (rule 1 + intro blockquote), yet its row order placed line-index-sync before lessons-record — visually adjacent and plausibly sorted, but code-point sorted() puts lessons-record first ('e' < 'i'). No legacy check, CI check, or eyeball caught it; it surfaced only when schema.validate_registry (rows must be slug-sorted) met the live file in the T4 golden roundtrip."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A declared ordering invariant (sorted registry, increasing ids) is only as strong as the check that enforces it. An order that looks sorted to the eye can violate code-point sort order, and the drift persists silently through every commit that does not touch the affected rows."
+        },
+        {
+          "name": "Solution",
+          "value": "Close the invariant with a schema assertion (validate_registry rejects unsorted rows and duplicate slugs) and pin the canonical order with the golden roundtrip (T4: parse → render == committed bytes). When the live file violates a declared invariant, normalize the file (grandfathered manual edit here: swap the two rows) before running the golden — do not relax the schema to match the data."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When a document gains a 'keep X sorted/unique/increasing' rule, land the enforcing check (schema assertion or CI gate) in the same change; verify 'looks sorted' with an explicit sorted() comparison, never by eye."
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0037",
+      "title": "A declared invariant without an enforcing check silently rots (eyeball-sorted registry was not code-point-sorted)"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-20"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 7 (check diagnostics). The spec test table T6 row says 'diagnosis is store drift, distinct from T5', but the normative §3 pseudocode returns STORE_DRIFT_OR_DOC_DRIFT in the 'store hash moved AND doc mismatches' case — exactly the T6 scenario (store edited after render, doc stale). The first T6 test pinned (1, STORE_DRIFT) and went red against the pseudocode-faithful implementation. The implementation was correct; the test was wrong: the prose paraphrase was ambiguous between two distinct exit-1 diagnoses, the pseudocode was unambiguous."
+        },
+        {
+          "name": "Pitfall",
+          "value": "When a spec carries both a prose test table and normative pseudocode, the table wording can be ambiguous ('store drift' names a family, not a constant). A test pinning the prose reading instead of the pseudocode constant creates a false RED against a correct implementation and pressures the implementer to weaken the implementation (or the spec) to fit the test — exactly the spec-implementation divergence the record exists to prevent."
+        },
+        {
+          "name": "Solution",
+          "value": "Treat the pseudocode as the normative contract for diagnosis/exit-code behavior and write tests against the exact closed-vocabulary constant: T6 (store moved, doc stale) is STORE_DRIFT_OR_DOC_DRIFT, distinct from T5's DOC_MODIFIED_OUTSIDE_APP, as the pseudocode states. Fix the test to the pseudocode reading, and make the doc unambiguous — v0.1.4 status history now states which diagnosis T6 receives and §5.3 lists all three exit-1 diagnoses."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When a spec defines behavior with prose plus pseudocode, tests pin the exact constant from the pseudocode. If a test expectation conflicts with a spec-faithful implementation, re-derive the expectation from the pseudocode before touching the implementation — the implementation that follows the pseudocode is the one that is right."
+        },
+        {
+          "name": "References",
+          "value": "algorithms/deterministic-doc-pipeline.md §3 pseudocode + §6 T5/T6 rows (v0.1.4); tests/docs/test_integrity.py::test_check_store_drift; LLT-0037 (declared invariant without an enforcing check, related discipline)"
+        }
+      ],
+      "id": "LLT-0038",
+      "title": "Test expectations must pin the exact diagnosis constant from the normative pseudocode, not the prose paraphrase in the spec test table"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-21"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "low"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 8 (CLI command layer, D14: the `verb: …` success line is printed only after a successful commit). Two tests in tests/test_cli_docs.py capture a mutation verb's stdout: the first `capsys.readouterr()` call pinned the verb line, and a second call was supposed to assert that nothing else was printed after the commit. Both second reads returned `''` — the assertion was vacuous: the tests would have stayed green even if the code printed extra lines, because the buffer had already been drained by the first read."
+        },
+        {
+          "name": "Pitfall",
+          "value": "pytest's `capsys.readouterr()` drains the captured buffer: every call after the first returns an empty string. A test that reads once to pin expected output and then reads again to assert absence or exactness is asserting against `''`, not against real behavior. The failure mode is silent — the suite is green while the assertion tests nothing."
+        },
+        {
+          "name": "Solution",
+          "value": "Capture exactly once and assert multiple times from that single snapshot: `out = capsys.readouterr().out; assert out.startswith(…); assert out.count(…) == 1`, or compare against the full expected text. The two buggy tests were rewritten to a single capture with all assertions derived from it (tests/test_cli_docs.py, B10 WI 8)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When a test must assert both what was printed and what was *not* printed under capsys, take one `readouterr()` and derive every assertion from that one string. If `readouterr()` appears twice in one test, the second call is vacuous — merge them into a single capture."
+        },
+        {
+          "name": "References",
+          "value": "tests/test_cli_docs.py (B10 WI 8, capsys assertions); pytest CaptureFixture.readouterr docs (buffer is drained on each call); LLT-0038 (pinning exact expected values, related testing discipline)"
+        }
+      ],
+      "id": "LLT-0039",
+      "title": "capsys.readouterr() drains the captured buffer, so a second call always returns empty"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-21"
+        },
+        {
+          "name": "Category",
+          "value": "security"
+        },
+        {
+          "name": "Severity",
+          "value": "high"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "SonarCloud flagged 9 S8707 (LLM path-traversal) findings on main — cli_docs.py ×2 and docs/integrity.py ×7: user-supplied store/doc/manifest paths flowed into file I/O with no containment against the workspace base. S8707 is a new 2026 LLM-security rule class that treats agent-driven code as untrusted input."
+        },
+        {
+          "name": "Pitfall",
+          "value": "The tempting fix — sanitizing each sink — drifts as new commands are added, and because the taint flow runs through the command layer, fixing only the integrity.py sinks would still leave the boundary open. N per-sink checks is N places to maintain; one missed is a real escape."
+        },
+        {
+          "name": "Solution",
+          "value": "Contain once, at the CLI trust boundary: docs/paths.py::resolve_within(raw, base) validates every CLI-supplied path against the workspace base before any I/O; PathEscapeError (a ValueError) maps to _fail → exit 2 in the command layer. Core modules stay path-agnostic; no Sonar suppressions; paths.py is pure pathlib (T9 bans os in the docs core). 18 tests in tests/docs/test_paths.py pin escape rejection."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "Any new CLI command that accepts a path must route it through resolve_within before I/O (CONSISTENCY.md CC-010; ALRK C6). Review boundary checks, not per-sink checks."
+        },
+        {
+          "name": "References",
+          "value": "CONSISTENCY.md CC-010; algorithms/deterministic-doc-pipeline.md v0.1.6 (C6); tests/docs/test_paths.py; commit 650a466"
+        }
+      ],
+      "id": "LLT-0040",
+      "title": "Path traversal (S8707): validate CLI-supplied paths at the trust boundary, not at each sink"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-21"
+        },
+        {
+          "name": "Category",
+          "value": "tooling"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "SonarCloud analysis of main raised a SonarPython warning: files that look like test code were detected but sonar.tests was not configured, so rules targeting production code were not executed on them. Test files under tests/ were only heuristically classified; the warning was the last blocker for a clean Sonar closeout of the B10 CI remediation (Hi-Priority user request, 2026-10-21)."
+        },
+        {
+          "name": "Pitfall",
+          "value": "Relying on the SonarPython heuristic test detection silently mis-scopes the analysis: the engine warns and skips production-code rules on test-looking files. The second trap is verification: the SonarCloud settings API (api/settings/values) returned an empty key list both before and after the fix, so dashboard/API settings can neither show nor prove the property; the cloud analysis is driven by the sonar-project.properties file in the repo root, not by UI settings."
+        },
+        {
+          "name": "Solution",
+          "value": "Added sonar.tests=tests (directory form: paths to test files, or directories containing test files) to sonar-project.properties at the repo root, with an explanatory comment (commit 7618e1c). Verified post-push (a601b74) via the Sonar API: the analysis re-ran cleanly: python:S3776 = 0 open, the quality-gate issues condition passed, no findings on tests/** files (explicit test classification applied test rules without surfacing new findings), and tests/test_cli.py is in the analyzed tree with ncloc. The repo properties file demonstrably drives the analysis (its exclusion settings match the observed file tree)."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "When onboarding any language or project to SonarCloud, set the test-classification property (sonar.tests or the language-specific equivalent) explicitly in the repo sonar-project.properties from the first analysis; verify the effect via the issues API and the check-run summary, not the settings API."
+        },
+        {
+          "name": "References",
+          "value": "sonar-project.properties (sonar.tests=tests); commits 7618e1c, a601b74; LLT-0040 (same Sonar closeout); SonarCloud api/issues/search verification 2026-10-21"
+        }
+      ],
+      "id": "LLT-0041",
+      "title": "SonarPython test-file classification: set sonar.tests explicitly in sonar-project.properties"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-22"
+        },
+        {
+          "name": "Category",
+          "value": "testing"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "B10 WI 9 migrated the real docs into data/ stores; the committed docs now carry the 7-line C4 generated header at the top. test_parse_rejects_stale_index (tests/docs/test_lessons_doc.py) tampered the real LESSONS_LEARNED.md by inserting a line at a fixed index (line 4), which was body text pre-migration."
+        },
+        {
+          "name": "Pitfall",
+          "value": "After the header landed, that index fell inside the generated-header block, so the parser rejected the doc for a different reason ('generated header block contains a non-comment line') instead of the stale index the test was meant to verify — the test failed on the wrong diagnosis and had to be re-anchored."
+        },
+        {
+          "name": "Solution",
+          "value": "Tamper tests on real docs anchor the mutation at a stable content marker (e.g. the first body line) rather than a fixed line offset near the top; the doc top is pipeline-owned (generated header) and its geometry may legitimately change."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0042",
+      "title": "Tamper tests anchored at a fixed line offset break when a doc gains a header"
+    }
+  ],
+  "schema_version": 1
+}
