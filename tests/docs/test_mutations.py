@@ -22,6 +22,7 @@ from securetrace.docs.mutations import (
     add_lesson,
     append_backlog_progress,
     refresh_backlog_status,
+    set_lessons_intro,
     upsert_backlog_item,
     upsert_registry_row,
 )
@@ -355,6 +356,34 @@ def test_add_input_not_mutated() -> None:
     add_lesson(store, new)
     assert store == frozen_store
     assert new == frozen_new
+
+
+# --------------------------------------------------------------------- set_lessons_intro (D15)
+
+
+def test_set_intro_replaces_intro_lines_and_keeps_lessons() -> None:
+    store = lessons_store(1)
+    out = set_lessons_intro(store, ["New intro line one.", "New intro line two."])
+    assert out is not store
+    assert out["intro"] == ["New intro line one.", "New intro line two."]
+    assert out["lessons"] == store["lessons"]
+    assert store["intro"] == ["Intro one.", "Intro two."]  # input store unmutated
+
+
+def test_set_intro_result_passes_validate_store() -> None:
+    out = set_lessons_intro(lessons_store(1), ["Single line."])
+    from securetrace.docs.schema import validate_store
+
+    assert validate_store(out) is None
+
+
+@pytest.mark.parametrize(
+    "bad_intro",
+    [[], [""], ["a\tb"], ["ok", 3], "not-a-list", None],
+)
+def test_set_intro_rejects_bad_input(bad_intro) -> None:
+    with pytest.raises(InvalidInput):
+        set_lessons_intro(lessons_store(1), bad_intro)
 
 
 # --------------------------------------------------------------------- upsert_registry_row

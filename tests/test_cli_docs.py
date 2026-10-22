@@ -35,6 +35,7 @@ from securetrace.cli_docs import (
     run_check,
     run_check_all,
     run_lessons_add,
+    run_lessons_set_intro,
     run_lessons_show,
     run_migrate,
     run_render,
@@ -406,6 +407,40 @@ def test_lessons_add_supersedes_missing_exit2(
     err = capsys.readouterr().err
     assert "securetrace:" in err
     assert "LLT-0099" in err
+
+
+def test_lessons_set_intro_updates_store_and_renders(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    scene_all(tmp_path)
+    intro = ["First new intro line.", "Second new intro line."]
+    code = run_lessons_set_intro("data/lessons.json", intro)
+    assert code == 0
+    out = capsys.readouterr().out
+    assert out == (
+        "intro: updated (data/lessons.json)\n"
+        + render_line("LESSONS_LEARNED.md", "data/lessons.json", "data/manifest.json")
+        + "\n"
+    )
+    store = read_store(tmp_path, "lessons.json")
+    assert store["intro"] == intro
+    assert (tmp_path / "LESSONS_LEARNED.md").read_text(encoding="utf-8") == render_lessons(store)
+
+
+def test_lessons_set_intro_empty_list_exit2(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    scene_all(tmp_path)
+    assert run_lessons_set_intro("data/lessons.json", []) == 2
+    err = capsys.readouterr().err
+    assert err.startswith("securetrace: ")
+    # the store and the rendered doc must be untouched by the rejected input
+    assert read_store(tmp_path, "lessons.json")["intro"] == ["Intro one.", "Intro two."]
+    assert (tmp_path / "LESSONS_LEARNED.md").read_text(encoding="utf-8") == render_lessons(
+        read_store(tmp_path, "lessons.json")
+    )
 
 
 def test_lessons_show_single_and_not_found(

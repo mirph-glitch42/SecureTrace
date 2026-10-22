@@ -10,9 +10,9 @@
 
 Authoritative record of lessons learned during the development of this system:
 the situation, the pitfall, and the correct solution for each lesson.
-Managed by the `learned-lesson-tracker` skill — do not edit the index block or
-the entry markers by hand; use `scripts/manage_lessons.py` (init / add / sync /
-check / next-id). The index below is machine-readable (TSV between
+Managed by the `learned-lesson-tracker` skill — do not edit the rendered
+document by hand; use the `securetrace lessons` CLI (add / set-intro / show /
+render / check). The index below is machine-readable (TSV between
 `LLT:INDEX:BEGIN`/`LLT:INDEX:END` markers) and lists every entry with its
 line range.
 

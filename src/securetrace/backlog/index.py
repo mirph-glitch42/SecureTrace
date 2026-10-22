@@ -2,7 +2,9 @@
 
 Works on plain text only (no file I/O, no printing): malformed documents
 raise :class:`securetrace.errors.FormatError`. File I/O, user-facing
-messages, and exit codes live in :mod:`securetrace.cli`.
+messages, and exit codes live in the command layer
+(:mod:`securetrace.cli_docs` for the store document verbs, :mod:`securetrace.cli`
+for the RMF bundle).
 
 This module is a faithful port of the pinned ``scripts/backlog_index.py``
 (spec: ``algorithms/line-index-sync.md``), including the intentional

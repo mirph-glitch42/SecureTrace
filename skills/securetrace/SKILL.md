@@ -35,9 +35,11 @@ naming the CLI path that changes it.
   path a command accepts is resolved against the workspace base before any
   I/O; a path that would escape (a `../` chain, or an absolute path outside
   the repo) is rejected with exit 2 (contract C6, rule CC-010).
-- **Transition (until B10 WI 10):** the hooks/Makefile/CI still run the
-  legacy markdown-index checks via the `scripts/` wrappers; both surfaces
-  must stay green. New work must use the store-based surface.
+- **Gates are on the store surface (B10 WI 10):** `make docs-check`
+  (pre-commit stage 3 and CI quality) runs `securetrace docs check-all`
+  plus the ALRK TSV-index checks; `make docs-render` re-renders all three
+  store docs and syncs the ALRK indexes. The legacy `scripts/backlog_index.py`
+  and `scripts/manage_lessons.py` wrappers no longer exist.
 
 ## Repository map (what lives where)
 
@@ -53,7 +55,7 @@ naming the CLI path that changes it.
 | `algorithms/<slug>.md` | algorithm documents (design records, doc-before-code) | `@algorithm-records-keeper` conventions; registry rows via `securetrace algorithms upsert` |
 | `CONSISTENCY.md` | consistency registry (rules CC-001+; code-consistency-monitor) | agent — updated on every enforcement and every exception |
 | `src/securetrace/` | the tool package (pure core + command layer) | tests (1:1 mirror in `tests/`) |
-| `scripts/` | thin CLI wrappers for hooks/Makefile/CI | vendored, surface pinned by tests |
+| `scripts/` | vendored helpers for hooks/Makefile/CI (ALRK TSV indexes, workflow YAML, changed tests) | surface pinned by tests |
 | `hooks/` | git hooks (pre-commit, commit-msg, pre-push) | `core.hooksPath` |
 | `Makefile` | the single gate entrypoint | mirrored by `hooks/` + `.github/workflows/` |
 | `docs/dow-requirements.md` | DoW/DoD RMF + Software Acquisition Pathway requirements (the "why") | research record |
@@ -93,6 +95,8 @@ command), 2 = malformed file or rejected input.**
   [--recorded YYYY-MM-DD] [--supersedes LLT-NNNN] [--prevention …]
   [--references …]` — append a lesson, then commit. `--id` defaults to the
   next free id (the old `next-id` verb is gone).
+- `securetrace lessons set-intro <store> --text TEXT` — replace the
+  document's intro lines (blank lines dropped), then commit the render.
 - `securetrace lessons show <store> [--id LLT-0039]` — canonical JSON,
   verbatim.
 - `securetrace lessons render <store>` / `securetrace lessons check
@@ -132,24 +136,15 @@ Severity: low, medium, high.
   (deterministic, zero network; default outdir `artifacts/rmf/<today>`).
   `make rmf-bundle` wraps it.
 
-### Deprecated — legacy markdown-index surface (until B10 WI 10)
+## scripts/ helpers (what hooks, Makefile, and CI actually call)
 
-The legacy verbs — `backlog sync|check`, `lessons init|add|sync|check|next-id`,
-`algorithms sync|check` — are **no longer `securetrace` subcommands**
-(argparse rejects them with `invalid choice`, exit 2). They survive only in
-the vendored `scripts/` wrappers, which the hooks/Makefile/CI still invoke
-during the transition (B10 WI 10 rewires the gates to `docs check-all` and
-removes them). **Use the store-based surface for all new work.**
+Hooks/Makefile/CI invoke the vendored helpers — never machine-local skill
+paths (LLT-0002). The pipeline-doc surface is the store-based CLI above;
+these helpers cover the remaining gate duties:
 
-## scripts/ wrappers (what hooks, Makefile, and CI actually call)
-
-Hooks/Makefile/CI invoke the vendored wrappers — never machine-local skill
-paths (LLT-0002). During the B10 WI 8→10 transition they expose the legacy
-markdown-index surface:
-
-- `scripts/backlog_index.py <BACKLOG.md> [--check]`
-- `scripts/manage_lessons.py {init,add,sync,check,next-id} …`
-- `scripts/algorithm_index.py <doc.md> [--check]`
+- `scripts/algorithm_index.py <doc.md> [--check]` — sync (default) or check
+  (`--check`) the ALRK TSV line index inside an `algorithms/*.md` prose doc
+  (exit 0 ok / 1 stale / 2 malformed); used by `make docs-check` / `make docs-render`
 - `scripts/check_workflow_yaml.py [FILE…]` — strict-parse workflow YAML and
   hard-fail on duplicate mapping keys (default: `.github/workflows/*.yml`
   and `*.yaml`)
@@ -173,14 +168,15 @@ a gate failure blocks commit/push/CI.
 | CI `security` | Actions | gitleaks (full history) + pip-audit + CycloneDX SBOM |
 | Release | Actions (tag `v*`) | gate → sdist + wheel → cosign keyless signing + SLSA provenance → immutable GitHub release with release attestation |
 
-Note (transition): `docs-check` currently runs the legacy index checks
-(`scripts/backlog_index.py --check`, `scripts/manage_lessons.py check`,
-`scripts/algorithm_index.py --check` per `algorithms/*.md`); B10 WI 10
-rewires it to `securetrace docs check-all`.
+`docs-check` runs `securetrace docs check-all` (the three pipeline docs in
+sync) plus `scripts/algorithm_index.py --check` per `algorithms/*.md` prose
+doc (ALRK TSV indexes fresh); `docs-render` is the repair path —
+`securetrace docs render-all` + the same loop in sync mode (B10 WI 10).
 
 Useful targets: `make setup` (fresh clone: venv + pinned deps + hooks),
 `make lock` (regenerate pinned hashed lockfiles), `make sbom`,
-`make dependency-audit`, `make rmf-bundle`, `make help` (everything).
+`make dependency-audit`, `make rmf-bundle`, `make docs-render` (repair
+drifted docs), `make help` (everything).
 
 ## Document contracts (the parts that must stay true)
 

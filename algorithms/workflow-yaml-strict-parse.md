@@ -19,12 +19,12 @@ REFERENCES	233	239
 |---|---|
 | Name | Workflow-YAML Strict Parse (duplicate mapping-key detection for CI workflows) |
 | Slug | workflow-yaml-strict-parse |
-| Version | 0.2.0 |
+| Version | 0.2.1 |
 | Status | implemented |
 | Author | SecureTrace (mirph-glitch42) |
 | Created | 2026-10-19 |
-| Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-19): initial draft (document-before-code, B8)<br>0.2.0 (2026-10-19): implemented — `scripts/check_workflow_yaml.py` (B8 WI 4); wired into Makefile `workflow-check`, pre-commit stage 4, and the CI quality step (B8 WI 5) |
+| Last modified | 2026-10-22 |
+| Status history | 0.1.0 (2026-10-19): initial draft (document-before-code, B8)<br>0.2.0 (2026-10-19): implemented — `scripts/check_workflow_yaml.py` (B8 WI 4); wired into Makefile `workflow-check`, pre-commit stage 4, and the CI quality step (B8 WI 5)<br>0.2.1 (2026-10-22): §5.5 house-style example updated — `scripts/backlog_index.py` / `scripts/manage_lessons.py` were removed in B10 WI 10; the retained vendored helper (`scripts/algorithm_index.py`) is cited instead (doc-only, behavior-identical) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
 | Implementation location | `scripts/check_workflow_yaml.py` (strict-parse core + CLI); wired via Makefile `workflow-check`, pre-commit stage 4, and the CI quality step |
 | Time complexity | O(N) per file (N = YAML node count) — one parse pass, duplicate scan linear in pairs |
@@ -204,7 +204,7 @@ Contrast: plain `yaml.safe_load` on the same text silently returns `permissions:
 
 ### 5.5 Language notes
 
-Python 3.12 reference: subclass `yaml.SafeLoader`, override `construct_mapping`, raise a `DuplicateKeyError` (`yaml.YAMLError` subclass with `label`/`line` attributes). CLI follows the `scripts/` house style: `argparse`, a `main(argv=None) -> int` entrypoint with `sys.exit(main())`, explicit exit codes 0/1/2, `✓`/`✗` line output — matching `scripts/backlog_index.py`, `scripts/manage_lessons.py`, `scripts/algorithm_index.py`.
+Python 3.12 reference: subclass `yaml.SafeLoader`, override `construct_mapping`, raise a `DuplicateKeyError` (`yaml.YAMLError` subclass with `label`/`line` attributes). CLI follows the `scripts/` house style: `argparse`, a `main(argv=None) -> int` entrypoint with `sys.exit(main())`, explicit exit codes 0/1/2, `✓`/`✗` line output — matching `scripts/algorithm_index.py` (the retained vendored helper).
 
 <!-- SECTION:TESTS -->
 ## 6. Test cases and sample data

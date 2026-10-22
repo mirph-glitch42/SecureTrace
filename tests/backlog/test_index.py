@@ -15,8 +15,9 @@ B3):
   out-of-vocabulary value there is not rejected.
 
 The pure core works on plain text and raises ``FormatError`` (exit 2);
-file I/O, messages, and exit codes live in ``securetrace.cli`` and are
-tested in ``tests/test_cli.py``.
+file I/O, messages, and exit codes live in ``securetrace.cli_docs`` (document
+verbs) and ``securetrace.cli`` (RMF) and are tested in ``tests/test_cli_docs.py``
+and ``tests/test_cli.py``.
 """
 
 from __future__ import annotations

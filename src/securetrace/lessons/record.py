@@ -3,7 +3,9 @@
 Works on plain text only (no file I/O, no printing): malformed records raise
 :class:`securetrace.errors.FormatError`, rejected ``add`` input raises
 :class:`securetrace.errors.InvalidInput`. File I/O, user-facing messages,
-and exit codes live in :mod:`securetrace.cli`.
+and exit codes live in the command layer
+(:mod:`securetrace.cli_docs` for the store document verbs, :mod:`securetrace.cli`
+for the RMF bundle).
 
 Faithful port of the pinned ``scripts/manage_lessons.py``
 (spec: ``algorithms/lessons-record.md``), including the verified quirks:
@@ -93,8 +95,8 @@ TEMPLATE_INTRO = """# Lessons Learned
 Authoritative record of lessons learned during the development of this system:
 the situation, the pitfall, and the correct solution for each lesson.
 Managed by the `learned-lesson-tracker` skill — do not edit the index block or
-the entry markers by hand; use `scripts/manage_lessons.py` (init / add / sync /
-check / next-id). The index below is machine-readable (TSV between
+the entry markers by hand; use the `securetrace lessons` CLI (add / set-intro /
+show / render / check). The index below is machine-readable (TSV between
 `LLT:INDEX:BEGIN`/`LLT:INDEX:END` markers) and lists every entry with its
 line range.
 """

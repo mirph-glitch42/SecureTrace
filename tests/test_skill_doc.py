@@ -22,10 +22,9 @@ SKILL_FILE = SKILL_DIR / "SKILL.md"
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 # Every command / contract an agent must be able to find in the guide.
-# B10 WI 8: the legacy markdown-index verbs (backlog sync, lessons sync/
-# next-id, algorithms sync) left the CLI dispatch — the guide now pins the
-# store-based surface instead. The scripts/ wrappers stay referenced because
-# hooks/Makefile/CI still invoke them until B10 WI 10.
+# B10 WI 10: the legacy markdown-index surface (scripts/backlog_index.py,
+# scripts/manage_lessons.py, the sync/next-id verbs) is retired — the guide
+# pins the store-based surface and the remaining scripts/ helpers only.
 REQUIRED_REFERENCES = (
     "securetrace backlog upsert",
     "securetrace backlog progress",
@@ -33,6 +32,7 @@ REQUIRED_REFERENCES = (
     "securetrace backlog render",
     "securetrace backlog check",
     "securetrace lessons add",
+    "securetrace lessons set-intro",
     "securetrace lessons show",
     "securetrace lessons render",
     "securetrace lessons check",
@@ -47,8 +47,7 @@ REQUIRED_REFERENCES = (
     "make setup",
     "make gate",
     "make rmf-bundle",
-    "scripts/backlog_index.py",
-    "scripts/manage_lessons.py",
+    "make docs-render",
     "scripts/algorithm_index.py",
     "scripts/check_workflow_yaml.py",
     "BACKLOG.md",

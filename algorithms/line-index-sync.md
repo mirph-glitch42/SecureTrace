@@ -4,12 +4,12 @@
 id	start_line	end_line
 INDEX_BLOCK	3	13
 METADATA	15	37
-THEORY	38	180
-PSEUDOCODE	181	256
-WALKTHROUGH	257	304
-IMPLEMENTATION	305	388
-TESTS	389	428
-REFERENCES	429	438
+THEORY	38	187
+PSEUDOCODE	188	265
+WALKTHROUGH	266	313
+IMPLEMENTATION	314	397
+TESTS	398	438
+REFERENCES	439	449
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,15 +19,15 @@ REFERENCES	429	438
 |---|---|
 | Name | Line-Index Sync (marker scan, delta computation, idempotent TSV rewrite) |
 | Slug | line-index-sync |
-| Version | 0.1.3 |
+| Version | 0.1.4 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
-| Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4)<br>0.1.2 (2026-10-19): `PRIORITY_RE` value pattern described in the linear non-lazy form (`.+`; the consumer strips before the map lookup and the error text, so the capture is bit-identical) — behavior-identical (B7 increment 7)<br>0.1.3 (2026-10-19): `PRIORITY_RE` value pattern described as a single non-whitespace token `(\S+)` with a trailing `\s*$` after the live API kept flagging `.\+` — unpinned degenerate inputs (whitespace-only or multi-word values) now index as `Low` instead of erroring (B7 increment 8) |
+| Last modified | 2026-10-22 |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4)<br>0.1.2 (2026-10-19): `PRIORITY_RE` value pattern described in the linear non-lazy form (`.+`; the consumer strips before the map lookup and the error text, so the capture is bit-identical) — behavior-identical (B7 increment 7)<br>0.1.3 (2026-10-19): `PRIORITY_RE` value pattern described as a single non-whitespace token `(\S+)` with a trailing `\s*$` after the live API kept flagging `.\+` — unpinned degenerate inputs (whitespace-only or multi-word values) now index as `Low` instead of erroring (B7 increment 8)<br>0.1.4 (2026-10-22): implementation consolidated into the `securetrace` package (B3) and `scripts/backlog_index.py` + `scripts/manage_lessons.py` removed (B10 WI 10) — Implementation location, DEV(1)/DEV(2) resolutions, §3 provenance, §6 test citations, §7 references updated to the current surface (behavior-identical) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
-| Implementation location | <br>`scripts/backlog_index.py:L51-L237` (reference implementation, richest format)<br>`scripts/algorithm_index.py:L38-L150` (same core, `id/start_line/end_line` format)<br>`scripts/manage_lessons.py:L334-L390` (same delta core, third format — see `lessons-record`) |
+| Implementation location | <br>`src/securetrace/algorithms/registry.py:L66-L195` (consolidated pure core — `find_index_block`, `find_sections`, `build_rows`, `render`, `index_rows`, `synced_text`, `is_fresh`)<br>`src/securetrace/backlog/index.py:L89-L316` (backlog-format adapter — item/reserved-id checks, richest format)<br>`src/securetrace/lessons/record.py:L146` + `L367-L430` (lessons-format adapter — `find_index_block` + delta core; see `lessons-record`)<br>`scripts/algorithm_index.py:L76-L127` (retained CLI wrapper — `check`/`sync`, pinned messages + exit codes) |
 | Time complexity | O(L) per operation (L = physical line count) — observed, matches ideal |
 | Space complexity | O(L) for `sync` (new line list + rewritten text); O(S) for row model (S = section count) |
 | Determinism | deterministic |
@@ -130,15 +130,22 @@ the ideal; no hidden quadratic term.
 
 Backfilled against `ad0fc9f`; observed gaps between ideal and actual:
 
-1. **Triplication.** The core exists in three independent copies
-   (`backlog_index.py`, `algorithm_index.py`, `manage_lessons.py`) with
-   different row formats. Deliberate vendoring decision (LLT-0002) to keep
-   hooks/CI self-contained; consolidation into the `securetrace` package is
-   backlog B3 (this change set).
-2. **`fail()` exits the process** from inside parse functions
-   (`sys.exit(2)`), i.e. error handling is a side effect rather than a
-   returned/raised value. Tests must therefore run the scripts as
-   subprocesses. B3 moves this to an exception hierarchy.
+1. **Triplication — resolved (B3, closed out in B10 WI 10).** The core is now
+   one module (`src/securetrace/algorithms/registry.py`) with per-format
+   adapters (`src/securetrace/backlog/index.py`,
+   `src/securetrace/lessons/record.py`); `scripts/backlog_index.py` and
+   `scripts/manage_lessons.py` were removed in B10 WI 10, leaving
+   `scripts/algorithm_index.py` as the only vendored copy (a thin CLI wrapper
+   over the pure core). The original triplication was a deliberate vendoring
+   decision (LLT-0002) to keep hooks/CI self-contained.
+2. **`fail()` exits the process — resolved (B3).** The pinned reference
+   implementation called `sys.exit(2)` from inside parse functions, i.e. error
+   handling was a side effect rather than a raised value, so tests had to run
+   the scripts as subprocesses. B3 moved this to an exception hierarchy (the
+   core raises `securetrace.errors.FormatError` / `InvalidInput`; the command
+   layer maps them to the pinned exit codes), and the core is now tested
+   in-process (`tests/backlog/test_index.py`); the retained CLI is still
+   pinned via subprocess (`tests/scripts/test_skill_scripts.py`).
 3. **A second index block is body text — not an error, and not inert.**
    `find_index_block` stops at the first END marker; a second BEGIN/END pair
    later in the file becomes part of the last section's span, which changes
@@ -181,9 +188,11 @@ Backfilled against `ad0fc9f`; observed gaps between ideal and actual:
 <!-- SECTION:PSEUDOCODE -->
 ## 3. Pseudocode
 
-Faithful to `scripts/backlog_index.py` at `ad0fc9f` (algorithm variant is
-identical except `find_sections` has no item/reserved-id checks and rows carry
-no title/status/priority). Quirks are flagged `# DEV:` and map to §2.5.
+Faithful to the pinned reference implementation at `ad0fc9f`
+(`scripts/backlog_index.py`, since consolidated into
+`securetrace.backlog.index`) — the algorithm variant is identical except
+`find_sections` has no item/reserved-id checks and rows carry no
+title/status/priority. Quirks are flagged `# DEV:` and map to §2.5.
 
 ```
 find_index_block(lines) -> (b, e)
@@ -389,24 +398,25 @@ CONSTRAINTS@24; B1 has `## B1. Bootstrap — **OPEN**` and a bulleted
 <!-- SECTION:TESTS -->
 ## 6. Test cases and sample data
 
-All sample data is synthetic (the fixtures below are lifted from
-`tests/scripts/test_skill_scripts.py`, which exercises the pinned
-implementation via subprocess).
+All sample data is synthetic (the fixtures below are lifted from the current
+suite: `tests/backlog/test_index.py` — in-process tests of the pure core —
+and `tests/scripts/test_skill_scripts.py` — subprocess pins of the retained
+CLI wrapper).
 
 | # | Name | Input (sample data) | Expected output | Why it matters |
 |---|---|---|---|---|
-| 1 | roundtrip: sync then check (existing, `test_backlog_index_roundtrip`) | 27-line fixture: block at lines 3–5; HEADER/QUEUE/`ITEM:B1`/CONSTRAINTS sections; B1 heading `## B1. Bootstrap — **OPEN**`, `- **Priority:** High` (bulleted) | `sync` exit 0, prints `index updated (5 entries)`; `--check` exit 0, prints `index OK (5 entries)`; rows as traced in §4.2 (B1 priority `Low` per DEV(7); the test asserts exit codes only) | happy path; pins row geometry and idempotence |
-| 2 | staleness after body edit (existing, same test) | case-1 fixture + one appended line inside B1 | `--check` exit 1, stderr `index STALE -- rerun without --check`; `sync` then `--check` exit 0 again | the gate must actually detect drift |
-| 3 | missing markers (existing, `test_backlog_index_rejects_missing_markers`) | `# Backlog\n\nno markers at all\n` | exit 2, stderr `missing <!-- INDEX:BEGIN --> / <!-- INDEX:END --> markers` | error model: no block |
-| 4 | roundtrip: algorithm variant (existing, `test_algorithm_index_roundtrip`) | block + `SECTION:METADATA`/`THEORY`/`TESTS` | `sync` 0; `--check` 0; after appending a theory line, `--check` 1; resync 0 | second format of the same core |
+| 1 | roundtrip: sync then check (existing, `tests/backlog/test_index.py::test_index_rows_geometry` / `test_synced_text_block_content` / `test_sync_is_idempotent`) | 27-line fixture: block at lines 3–5; HEADER/QUEUE/`ITEM:B1`/CONSTRAINTS sections; B1 heading `## B1. Bootstrap — **OPEN**`, `- **Priority:** High` (bulleted) | `index_rows` returns 5 rows (INDEX_BLOCK + 4 sections); `synced_text` rewrites the block (byte-identical on re-run); rows as traced in §4.2 (B1 priority `Low` per DEV(7)) | happy path; pins row geometry and idempotence |
+| 2 | staleness after body edit (existing, `tests/backlog/test_index.py::test_body_edit_makes_index_stale`) | case-1 fixture + one appended line inside B1 | `is_fresh` False after the edit; `synced_text` then `is_fresh` True again | the gate must actually detect drift |
+| 3 | missing markers (existing, `tests/backlog/test_index.py::test_missing_markers_rejected`) | `# Backlog\n\nno markers at all\n` | raises `FormatError`: `missing <!-- INDEX:BEGIN --> / <!-- INDEX:END --> markers` (the command layer maps this to exit 2) | error model: no block |
+| 4 | roundtrip: algorithm variant (existing, `tests/scripts/test_skill_scripts.py::test_algorithm_index_roundtrip`) | block + `SECTION:METADATA`/`THEORY`/`TESTS` | `sync` 0; `--check` 0; after appending a theory line, `--check` 1; resync 0 | second format of the same core |
 | 5 | single item (proposed, verified) | minimal fixture: block + one `ITEM:B1` with heading `## B1. Work — **OPEN**` + bulleted `- **Priority:** High` | `sync` 0; `--check` 0; exactly 2 rows; the B1 row reads `B1\tWork\tOPEN\tLow\t…` (priority `Low` per DEV(7)) | minimal valid input (G5); row content asserted, not just the exit code |
 | 6 | duplicate marker (proposed, verified) | two `<!-- BACKLOG:QUEUE -->` lines | exit 2, stderr `duplicate section marker: QUEUE` | uniqueness guard |
 | 7 | reserved item id (proposed, verified) | `<!-- BACKLOG:ITEM:HEADER -->` | exit 2, stderr `item id HEADER is reserved for a section name` | reserved-id guard |
 | 8 | marker inside block (proposed, verified) | `<!-- BACKLOG:HEADER -->` on line 4 (between BEGIN and END) | exit 2, stderr `marker at line 4 is at or inside the index block` | geometry invariant |
-| 9a | bulleted priority out of vocabulary (existing, `test_bulleted_priority_is_ignored_quirk`) | `- **Priority:** Urgent` (bulleted) | **accepted**: row priority `Low`, no error | DEV(7) — the vocabulary guard never sees bulleted lines (LLT-0009) |
-| 9b | unbulleted priority out of vocabulary (existing, `test_unbulleted_priority_out_of_vocabulary_rejected`) | `**Priority:** Urgent` + a trailing body line (the priority line is NOT the file's last line — DEV(8)) | `FormatError`: `priority 'Urgent' is not one of High, Medium, Low (G9)` | vocabulary guard (unbulleted form only — DEV(7)) |
-| 9c | unbulleted priority in vocabulary (existing, `test_unbulleted_priority_in_vocabulary_parsed`) | `**Priority:** High` + a trailing body line (NOT the file's last line — DEV(8)) | B1 row priority `High` | the only form `PRIORITY_RE` parses |
-| 9d | unbulleted priority on the file's last line (existing, `test_priority_on_final_line_not_scanned_quirk`) | `**Priority:** Urgent` as the file's last line | **accepted**: B1 row priority `Low`, no error | DEV(8) — the scan window excludes the section's last line (LLT-0012) |
+| 9a | bulleted priority out of vocabulary (existing, `tests/backlog/test_index.py::test_bulleted_priority_is_ignored_quirk`) | `- **Priority:** Urgent` (bulleted) | **accepted**: row priority `Low`, no error | DEV(7) — the vocabulary guard never sees bulleted lines (LLT-0009) |
+| 9b | unbulleted priority out of vocabulary (existing, `tests/backlog/test_index.py::test_unbulleted_priority_out_of_vocabulary_rejected`) | `**Priority:** Urgent` + a trailing body line (the priority line is NOT the file's last line — DEV(8)) | `FormatError`: `priority 'Urgent' is not one of High, Medium, Low (G9)` | vocabulary guard (unbulleted form only — DEV(7)) |
+| 9c | unbulleted priority in vocabulary (existing, `tests/backlog/test_index.py::test_unbulleted_priority_in_vocabulary_parsed`) | `**Priority:** High` + a trailing body line (NOT the file's last line — DEV(8)) | B1 row priority `High` | the only form `PRIORITY_RE` parses |
+| 9d | unbulleted priority on the file's last line (existing, `tests/backlog/test_index.py::test_priority_on_final_line_not_scanned_quirk`) | `**Priority:** Urgent` as the file's last line | **accepted**: B1 row priority `Low`, no error | DEV(8) — the scan window excludes the section's last line (LLT-0012) |
 | 10 | status normalization (proposed, verified) | heading `## B1. Work — **IN PROGRESS**` | row status `IN_PROGRESS` | `IN PROGRESS` → `IN_PROGRESS` mapping |
 | 11 | idempotence (proposed, verified) | case-1 fixture, `sync` twice | second `sync` output byte-identical; `--check` 0 | §2.3 idempotence proof |
 | 12 | CRLF handling (proposed, verified) | case-1 fixture with CRLF endings | read via universal newlines (CRLF→LF); any actual write emits LF; a fresh `--check` performs no write, so an on-disk CRLF file stays untouched | DEV(5); the mechanism is text-mode `open().read()`, not `splitlines` alone (LLT-0011) |
@@ -429,8 +439,9 @@ a laptop-class machine (claimed, unverified).
 <!-- SECTION:REFERENCES -->
 ## 7. References
 
-- `scripts/backlog_index.py`, `scripts/algorithm_index.py`, `scripts/manage_lessons.py` at `mirph-glitch42/SecureTrace@ad0fc9f` (pinned implementations).
-- `tests/scripts/test_skill_scripts.py` — contract tests pinning exit codes and roundtrip behavior.
+- Pinned reference implementations at `mirph-glitch42/SecureTrace@ad0fc9f` (`scripts/backlog_index.py`, `scripts/algorithm_index.py`, `scripts/manage_lessons.py` — the first and last removed in B10 WI 10).
+- Current implementation: `src/securetrace/algorithms/registry.py` (pure core), `src/securetrace/backlog/index.py` (backlog-format adapter), `src/securetrace/lessons/record.py` (lessons-format adapter), `scripts/algorithm_index.py` (retained CLI wrapper).
+- `tests/backlog/test_index.py` — in-process contract tests of the pure core; `tests/scripts/test_skill_scripts.py` — subprocess pins of the retained CLI (exit codes + roundtrip).
 - Skill `backlog-manager` (guards G3/G5/G9), `algorithm-records-keeper` (guards G5/G8 — template, ex-post-facto workflow), `learned-lesson-tracker` (index format).
 - `algorithms/lessons-record.md` — the third format that reuses the delta core.
 - `LESSONS_LEARNED.md` LLT-0002 (vendoring decision behind the triplication, DEV(1)).

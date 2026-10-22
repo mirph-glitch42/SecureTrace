@@ -145,22 +145,22 @@ CATALOG: tuple[ControlSpec, ...] = (
         "Deterministic work records (backlog)",
         (BACKLOG_DOC,),
         "backlog index check",
-        "Restore BACKLOG.md and regenerate its index (securetrace backlog sync).",
+        "Restore BACKLOG.md from the store (securetrace backlog render data/backlog.json).",
     ),
     ControlSpec(
         "ST-02",
         "Quality-control / lessons history",
         (LESSONS_DOC,),
         "lessons record check",
-        "Restore LESSONS_LEARNED.md and regenerate its index (securetrace lessons sync).",
+        "Restore LESSONS_LEARNED.md from the store (securetrace lessons render data/lessons.json).",
     ),
     ControlSpec(
         "ST-03",
         "Algorithm / design records",
         ("algorithms/INDEX.md",),
         "per-doc index check",
-        "Restore algorithms/INDEX.md and each algorithm document's index "
-        "(securetrace algorithms sync).",
+        "Restore algorithms/INDEX.md from the store (securetrace algorithms render "
+        "data/algorithms.json); re-run make docs-render for the prose-doc TSV indexes.",
     ),
     ControlSpec(
         "ST-04",

@@ -12,7 +12,7 @@
       "slug": "deterministic-doc-pipeline",
       "status": "draft",
       "summary": "Store-as-truth + pure renderer + sha256 integrity check: the three pipeline docs become a function of canonical-JSON data; out-of-band edits are diagnosed, not just detected (B10)",
-      "version": "0.1.7"
+      "version": "0.1.8"
     },
     {
       "file": "lessons-record.md",

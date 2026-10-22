@@ -13,7 +13,7 @@ GITLEAKS ?= gitleaks
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-ci lock format format-check lint docs-check workflow-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate rmf-bundle
+.PHONY: help setup setup-ci lock format format-check lint docs-check docs-render workflow-check build test test-changed secret-scan-staged secret-scan dependency-audit sbom package gate rmf-bundle
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -46,12 +46,18 @@ format-check: ## Verify formatting without mutating (CI gate)
 lint: ## Lint code (ruff)
 	$(RUFF) check src tests scripts
 
-docs-check: ## Verify skill documents are well-formed and indexes are fresh
-	$(PYTHON) scripts/backlog_index.py BACKLOG.md --check
-	$(PYTHON) scripts/manage_lessons.py check LESSONS_LEARNED.md
+docs-check: ## Verify the store-rendered docs are in sync and ALRK TSV indexes are fresh
+	$(PYTHON) -m securetrace docs check-all
 	@for f in algorithms/*.md; do \
 	  [ "$$f" = "algorithms/INDEX.md" ] && continue; \
 	  $(PYTHON) scripts/algorithm_index.py "$$f" --check || exit 1; \
+	done
+
+docs-render: ## Re-render store docs (backlog/lessons/registry) and sync ALRK TSV indexes
+	$(PYTHON) -m securetrace docs render-all
+	@for f in algorithms/*.md; do \
+	  [ "$$f" = "algorithms/INDEX.md" ] && continue; \
+	  $(PYTHON) scripts/algorithm_index.py "$$f" || exit 1; \
 	done
 
 workflow-check: ## Strict-parse .github/workflows YAML — hard-fail on duplicate mapping keys (B8)

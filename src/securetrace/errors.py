@@ -3,9 +3,11 @@
 The pure core modules (``securetrace.backlog.index``,
 ``securetrace.algorithms.registry``, ``securetrace.lessons.record``) work on
 plain text and signal problems with exceptions instead of printing or exiting;
-the command layer (``securetrace.cli``) maps them onto the pinned exit codes:
+the command layer (``securetrace.cli_docs`` for the store document verbs,
+``securetrace.cli`` for the RMF bundle) maps them onto the pinned exit codes:
 
-- ``StaleIndex``   → exit 1 (index out of sync with the body; fix with ``sync``)
+- ``StaleIndex``   → exit 1 (index out of sync with the body; fix with
+  ``render`` / ``make docs-render``)
 - ``FormatError``  → exit 2 (malformed document, or an internal invariant failed)
 - ``InvalidInput`` → exit 2 (command input rejected by a guard, G4–G9)
 

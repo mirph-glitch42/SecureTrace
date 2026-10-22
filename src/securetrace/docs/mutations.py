@@ -35,6 +35,7 @@ __all__ = [
     "add_lesson",
     "append_backlog_progress",
     "refresh_backlog_status",
+    "set_lessons_intro",
     "upsert_backlog_item",
     "upsert_registry_row",
 ]
@@ -296,6 +297,33 @@ def add_lesson(store: dict, lesson: dict) -> dict:
     _set_field(new_lesson, "Status", "active")
     _apply_supersedes(new_lesson, lessons)
     lessons.append(new_lesson)
+    validate_store(out)
+    return out
+
+
+def set_lessons_intro(store: dict, intro: list[str]) -> dict:
+    """Return a NEW lessons store with the ``intro`` lines replaced (D15).
+
+    *intro* must be a non-empty list of non-empty, tab-free strings; the
+    schema gate (``schema.validate_store``) then re-validates the whole
+    store, so the mutation can never leave a store behind that ``check``
+    would call malformed. Lessons and every other field are untouched.
+
+    Raises:
+        InvalidInput: *intro* is not a list of non-empty, tab-free strings.
+        SchemaError: the resulting store fails ``schema.validate_store``.
+    """
+    if not isinstance(intro, list) or not intro:
+        raise InvalidInput("intro must be a non-empty list of lines")
+    for line in intro:
+        if not isinstance(line, str):
+            raise InvalidInput("intro lines must be strings")
+        if not line:
+            raise InvalidInput("intro lines must be non-empty")
+        if "\t" in line:
+            raise InvalidInput("intro lines must not contain tabs")
+    out = copy.deepcopy(store)
+    out["intro"] = copy.deepcopy(intro)
     validate_store(out)
     return out
 

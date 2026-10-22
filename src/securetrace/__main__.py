@@ -2,7 +2,7 @@
 
 Usage:
     securetrace backlog {upsert,progress,show,render,check} <store> …
-    securetrace lessons {add,show,render,check} <store> …
+    securetrace lessons {add,set-intro,show,render,check} <store> …
     securetrace algorithms {upsert,show,render,check} <store> …
     securetrace docs {render-all,check-all} [--manifest FILE]
     securetrace migrate <doc> [--kind K] [--store FILE] [--force] [--manifest FILE]
@@ -130,6 +130,11 @@ def _add_lessons(sub: argparse._SubParsersAction) -> None:
     add.add_argument("--prevention", default=None, help="prevention note")
     add.add_argument("--references", default=None, help="references")
     _store_options(add)
+
+    si = lsub.add_parser("set-intro", help="replace the intro lines, then commit the render")
+    si.add_argument("store", help=_LESSONS_STORE_HELP)
+    si.add_argument("--text", required=True, help="the new intro text (blank-line separated)")
+    _store_options(si)
 
     sh = lsub.add_parser("show", help=_SHOW_HELP)
     sh.add_argument("store", help=_LESSONS_STORE_HELP)
@@ -286,6 +291,15 @@ def _run_lessons(args: argparse.Namespace) -> int:
         return cli_docs.run_lessons_add(
             args.store,
             lesson,
+            doc_path=args.doc,
+            manifest_path=args.manifest,
+            prog="securetrace",
+        )
+    if args.lessons_command == "set-intro":
+        intro = [line for line in args.text.splitlines() if line.strip()]
+        return cli_docs.run_lessons_set_intro(
+            args.store,
+            intro,
             doc_path=args.doc,
             manifest_path=args.manifest,
             prog="securetrace",

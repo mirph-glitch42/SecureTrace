@@ -6,7 +6,7 @@
 # Stages (fast → slow):
 #   1. format-check   ruff format --check on src/tests/scripts
 #   2. lint           ruff check on src/tests/scripts
-#   3. docs-check     BACKLOG.md / LESSONS_LEARNED.md / algorithms/*.md indexes fresh + valid
+#   3. docs-check     store-rendered docs (BACKLOG/LESSONS/INDEX) in sync + ALRK TSV indexes fresh
 #   4. workflow-check strict-parse .github/workflows YAML (duplicate mapping keys, B8)
 #   5. secrets        gitleaks over staged changes
 #   6. tests          fast subset: tests for changed modules (full suite runs on pre-push/CI)
@@ -26,7 +26,7 @@ make -s format-check
 step "2/6 lint (ruff check)"
 make -s lint
 
-step "3/6 docs-check (backlog / lessons / algorithms)"
+step "3/6 docs-check (store docs in sync + ALRK TSV indexes)"
 make -s docs-check
 
 step "4/6 workflow-check (duplicate YAML keys in .github/workflows)"

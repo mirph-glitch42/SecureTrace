@@ -55,6 +55,7 @@ from securetrace.docs.lessons_doc import parse_lessons
 from securetrace.docs.mutations import (
     add_lesson,
     append_backlog_progress,
+    set_lessons_intro,
     upsert_backlog_item,
     upsert_registry_row,
 )
@@ -74,6 +75,7 @@ __all__ = [
     "run_check",
     "run_check_all",
     "run_lessons_add",
+    "run_lessons_set_intro",
     "run_lessons_show",
     "run_migrate",
     "run_render",
@@ -411,6 +413,45 @@ def run_lessons_add(
         return failed
     new_lesson = out["lessons"][-1]
     print(f"add: recorded {new_lesson['id']} — {new_lesson['title']} ({sp})")
+    print(_render_line(doc, sp, man))
+    return 0
+
+
+def run_lessons_set_intro(
+    store_path: str | Path,
+    intro: list[str],
+    *,
+    doc_path: str | Path | None = None,
+    manifest_path: str | Path | None = None,
+    prog: str = PROG,
+) -> int:
+    """``lessons set-intro``: replace the intro lines, commit, report (D15).
+
+    *intro* is the full replacement list of intro lines (non-empty, tab-free;
+    the mutation rejects anything else). The lessons list itself is untouched.
+
+    Returns:
+        0: intro updated + rendered (stdout: intro line + render line).
+        2: path escapes the workspace base, store unreadable, rejected intro,
+          schema violation, failed commit (stderr: ``securetrace: {msg}``).
+    """
+    kind = "lessons"
+    try:
+        sp, doc, man = _resolve(kind, store_path, doc_path, manifest_path)
+    except ValueError as exc:
+        return _fail(prog, str(exc))
+    try:
+        store = _read_store(sp)
+    except _StoreReadError as exc:
+        return _fail(prog, str(exc))
+    try:
+        out = set_lessons_intro(store, intro)
+    except (InvalidInput, SchemaError) as exc:
+        return _fail(prog, str(exc))
+    failed = _commit(kind, out, sp, doc, man, prog)
+    if failed is not None:
+        return failed
+    print(f"intro: updated ({sp})")
     print(_render_line(doc, sp, man))
     return 0
 

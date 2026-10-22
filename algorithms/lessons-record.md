@@ -9,7 +9,7 @@ PSEUDOCODE	211	384
 WALKTHROUGH	385	467
 IMPLEMENTATION	468	595
 TESTS	596	657
-REFERENCES	658	666
+REFERENCES	658	667
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,15 +19,15 @@ REFERENCES	658	666
 |---|---|
 | Name | Lessons Record (append-only entry log with a derived self-describing TSV index) |
 | Slug | lessons-record |
-| Version | 0.1.4 |
+| Version | 0.1.5 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
-| Last modified | 2026-10-19 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4)<br>0.1.3 (2026-10-19): cited `FIELD_RE` value pattern resynced to the nested-optional linear form (`(?:\S+(?:\s+\S+)*)?` — empty allowed, trailing whitespace excluded, internal whitespace preserved) — behavior-identical (B7 increment 7)<br>0.1.4 (2026-10-19): field-line match split into `FIELD_RE` (non-empty value: `\S+(?:\s+\S+)*`) + `FIELD_EMPTY_RE` (empty value) after the live API kept flagging the nested-optional form — empty-value capture preserved via the second regex (B7 increment 8) |
+| Last modified | 2026-10-22 |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): cited digit classes synced to the ASCII-scoped form (`(?a:\d)`) — behavior-identical (B7 increment 1)<br>0.1.2 (2026-10-19): cited `HEADING_RE`/`FIELD_RE` value patterns synced to the linear-time form (`\S+(?:\s+\S+)*` / `\S*(?:\s+\S+)*`) — behavior-identical (B7 increment 4)<br>0.1.3 (2026-10-19): cited `FIELD_RE` value pattern resynced to the nested-optional linear form (`(?:\S+(?:\s+\S+)*)?` — empty allowed, trailing whitespace excluded, internal whitespace preserved) — behavior-identical (B7 increment 7)<br>0.1.4 (2026-10-19): field-line match split into `FIELD_RE` (non-empty value: `\S+(?:\s+\S+)*`) + `FIELD_EMPTY_RE` (empty value) after the live API kept flagging the nested-optional form — empty-value capture preserved via the second regex (B7 increment 8)<br>0.1.5 (2026-10-22): implementation consolidated into the `securetrace` package (B3) and `scripts/manage_lessons.py` removed (B10 WI 10) — Implementation location + §7 references updated to the current surface (pure core `src/securetrace/lessons/record.py`, store mutation `src/securetrace/docs/mutations.py`, commit `src/securetrace/docs/integrity.py`, command layer `src/securetrace/cli_docs.py`; behavior-identical) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
-| Implementation location | <br>`scripts/manage_lessons.py:L79-L134` (constants, vocabularies, exceptions, `Entry`) — `L158` (`atomic_write`) — `L173-L313` (`find_index_block`, `parse_entries`, `check_consistency`, `structural_errors`) — `L334-L390` (delta core: `expected_index_rows`, `index_is_fresh`, `regenerate`) — `L409-L467` (`build_template`, `render_entry`, `max_id`, `cmd_init`, `validate_add_args`) — `L492-L605` (`cmd_add`, `cmd_sync`, `cmd_check`, `cmd_next_id`) — `L607-L674` (`build_parser`, `main`) |
+| Implementation location | <br>`src/securetrace/lessons/record.py` — pure core: marker/field regexes `L61-L66`, `Entry` `L106` / `NewLesson` `L117` / `AddResult` `L139`, `find_index_block` `L146`, `parse_entries` `L254`, `check_consistency` `L333`, `structural_errors` `L342`, delta core `expected_index_rows` `L367` / `index_is_fresh` `L405` / `regenerate` `L415`, `build_template` `L432`, `render_entry` `L452`, `max_id` `L476` / `next_id` `L481`, `add_lesson` `L579`<br>`src/securetrace/docs/mutations.py` — store mutations over `data/lessons.json` (incl. `set_lessons_intro` `L304`) + `validate_store`<br>`src/securetrace/docs/integrity.py` — atomic writes (`_write_text` `L359`) + manifest commit (replaces the script's `atomic_write`)<br>`src/securetrace/cli_docs.py` — command layer (`run_lessons_add` `L380` / `run_lessons_set_intro` `L420` / `show` `L459`) over the store<br>`src/securetrace/__main__.py` — argparse dispatch |
 | Time complexity | O(L) per operation (L = physical line count); supersession cross-check O(E²), E = entry count — observed, matches ideal |
 | Space complexity | O(L) for `add`/`sync` (new line list); O(E) for the entry model |
 | Determinism | deterministic, except `add` defaults `Recorded` to the host's current date when `--recorded` is omitted |
@@ -658,9 +658,10 @@ machine (claimed, unverified).
 <!-- SECTION:REFERENCES -->
 ## 7. References
 
-- `scripts/manage_lessons.py` at `mirph-glitch42/SecureTrace@ad0fc9f` (pinned implementation, 674 lines).
-- `tests/scripts/test_skill_scripts.py` — existing contract tests (subprocess-based; pin init/add roundtrip and `next-id`).
+- Pinned reference implementation at `mirph-glitch42/SecureTrace@ad0fc9f` (`scripts/manage_lessons.py`, 674 lines — removed in B10 WI 10).
+- Current implementation: `src/securetrace/lessons/record.py` (pure core), `src/securetrace/docs/mutations.py` + `src/securetrace/docs/integrity.py` (store mutation + atomic commit over `data/lessons.json`), `src/securetrace/cli_docs.py` (command layer), `src/securetrace/__main__.py` (dispatch).
+- `tests/lessons/test_record.py` (in-process core contract: parse, validate, add, `next-id`, supersession) + `tests/docs/test_mutations.py` (store mutations incl. `set_lessons_intro`) + `tests/test_cli_docs.py` (command layer: add/show/render/check and `docs check-all`).
 - Skill `learned-lesson-tracker`: `references/entry-anatomy.md` (the file/field contract), `references/guards.md` (G1–G9; the script enforces G4–G8), `references/template.md`, `references/example-lessons.md`.
 - `algorithms/line-index-sync.md` — the shared delta core (third format here); cross-referenced deviations DEV(1)/(3)/(5)/(6).
 - `LESSONS_LEARNED.md` — LLT-0002 (vendoring decision), LLT-0009 (priority-regex mismatch, sibling format), LLT-0010 (staleness semantics, DEV(4)), LLT-0011 (universal-newline reads, DEV(5)).
-- `Makefile` `docs-check` gate — runs `manage_lessons.py check LESSONS_LEARNED.md` in CI.
+- `Makefile` `docs-check` gate — runs `securetrace docs check-all` (the lessons half is `securetrace lessons check data/lessons.json`) in CI and pre-commit; repair path is `make docs-render` (`securetrace lessons render data/lessons.json`).

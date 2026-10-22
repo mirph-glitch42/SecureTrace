@@ -69,15 +69,20 @@ Invariants:
 
 1. **No bypass** — hooks are committed (`hooks/`, wired via `core.hooksPath`);
    a gate failure blocks commit/push/CI, full stop.
-2. **Frozen index formats** — the TSV index blocks in `BACKLOG.md`,
-   `LESSONS_LEARNED.md`, `algorithms/*.md` are the contract between the
-   `scripts/` wrappers, the `securetrace` package API (B3), and CI.
-   Roundtrip tests in `tests/scripts/` plus the package tests pin the behavior.
-3. **Vendored skill scripts** — `scripts/{backlog_index,manage_lessons,algorithm_index}.py`
-   were vendored from `~/.lmstudio/skills/…` (provenance in docstrings) so that
-   hooks and CI never depend on machine-local paths; B3 turned them into thin
-   wrappers over `securetrace.cli`, preserving the exact CLI surface, messages,
-   and exit codes. See LESSONS_LEARNED.md LLT-0002.
+2. **Frozen index formats** — the TSV index block in `algorithms/*.md` prose
+   docs is the contract between `scripts/algorithm_index.py`, the
+   `securetrace` package (B3), and CI; `BACKLOG.md`, `LESSONS_LEARNED.md`,
+   and `algorithms/INDEX.md` are pure renders of the `data/*.json` stores
+   (B10) with their own integrity check (`securetrace docs check-all`).
+   Package tests + `tests/scripts/` pin the behavior.
+3. **Vendored skill scripts** — `scripts/algorithm_index.py` was vendored
+   from `~/.lmstudio/skills/…` (provenance in its docstring) so that hooks
+   and CI never depend on machine-local paths; it is a thin wrapper over the
+   pure core `securetrace.algorithms.registry`, preserving the exact CLI
+   surface, messages, and exit codes. `scripts/backlog_index.py` /
+   `scripts/manage_lessons.py` were removed in B10 WI 10 — their surface is
+   the store pipeline (`securetrace.cli_docs`) over the B3 cores. See
+   LESSONS_LEARNED.md LLT-0002.
 4. **Pinned, hashed dependencies** — `requirements*.in` → `pip-compile
    --generate-hashes` → `requirements*.txt`; CI installs with `--require-hashes`.
 5. **Conventional Commits** enforced locally (commit-msg) — release workflow

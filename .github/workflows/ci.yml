@@ -38,7 +38,7 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Docs check (backlog / lessons / algorithms)
+      - name: Docs check (store docs in sync + ALRK TSV indexes)
         run: make docs-check
 
       - name: Workflow-YAML strict parse (duplicate mapping keys)

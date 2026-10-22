@@ -42,8 +42,9 @@ thin wrappers. **Adding a gate means adding it to all three in the same change.*
 ## Repository layout
 
 ```
-├── BACKLOG.md            # work queue — machine-indexed (scripts/backlog_index.py)
-├── LESSONS_LEARNED.md    # lessons record — machine-indexed (scripts/manage_lessons.py)
+├── BACKLOG.md            # work queue — rendered from data/backlog.json (`securetrace backlog render`)
+├── LESSONS_LEARNED.md    # lessons record — rendered from data/lessons.json (`securetrace lessons render`)
+├── data/                 # canonical-JSON stores (backlog/lessons/registry) + manifest.json — source of truth
 ├── algorithms/           # ALGORITHM DOCUMENTS (registry INDEX.md + <slug>.md docs)
 ├── src/securetrace/      # CODE (backlog/ lessons/ algorithms/ rmf/ pipeline/)
 ├── scripts/              # gate + index scripts used by hooks/Makefile/CI
