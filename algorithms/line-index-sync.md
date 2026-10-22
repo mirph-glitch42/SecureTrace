@@ -7,9 +7,9 @@ METADATA	15	37
 THEORY	38	187
 PSEUDOCODE	188	265
 WALKTHROUGH	266	313
-IMPLEMENTATION	314	397
-TESTS	398	438
-REFERENCES	439	449
+IMPLEMENTATION	314	398
+TESTS	399	440
+REFERENCES	441	451
 <!-- INDEX:END -->
 
 <!-- SECTION:METADATA -->
@@ -19,15 +19,15 @@ REFERENCES	439	449
 |---|---|
 | Name | Line-Index Sync (marker scan, delta computation, idempotent TSV rewrite) |
 | Slug | line-index-sync |
-| Version | 0.1.4 |
+| Version | 0.1.5 |
 | Status | backfilled |
 | Author | SecureTrace bootstrap (mirph-glitch42) |
 | Created | 2026-10-18 |
 | Last modified | 2026-10-22 |
-| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4)<br>0.1.2 (2026-10-19): `PRIORITY_RE` value pattern described in the linear non-lazy form (`.+`; the consumer strips before the map lookup and the error text, so the capture is bit-identical) — behavior-identical (B7 increment 7)<br>0.1.3 (2026-10-19): `PRIORITY_RE` value pattern described as a single non-whitespace token `(\S+)` with a trailing `\s*$` after the live API kept flagging `.\+` — unpinned degenerate inputs (whitespace-only or multi-word values) now index as `Low` instead of erroring (B7 increment 8)<br>0.1.4 (2026-10-22): implementation consolidated into the `securetrace` package (B3) and `scripts/backlog_index.py` + `scripts/manage_lessons.py` removed (B10 WI 10) — Implementation location, DEV(1)/DEV(2) resolutions, §3 provenance, §6 test citations, §7 references updated to the current surface (behavior-identical) |
+| Status history | 0.1.0 (2026-10-18): backfilled from `ad0fc9f`<br>0.1.1 (2026-10-19): `find_sections` marker match described as two alternation-free regexes + reserved-kind validation — behavior-identical (B7 increment 4)<br>0.1.2 (2026-10-19): `PRIORITY_RE` value pattern described in the linear non-lazy form (`.+`; the consumer strips before the map lookup and the error text, so the capture is bit-identical) — behavior-identical (B7 increment 7)<br>0.1.3 (2026-10-19): `PRIORITY_RE` value pattern described as a single non-whitespace token `(\S+)` with a trailing `\s*$` after the live API kept flagging `.\+` — unpinned degenerate inputs (whitespace-only or multi-word values) now index as `Low` instead of erroring (B7 increment 8)<br>0.1.4 (2026-10-22): implementation consolidated into the `securetrace` package (B3) and `scripts/backlog_index.py` + `scripts/manage_lessons.py` removed (B10 WI 10) — Implementation location, DEV(1)/DEV(2) resolutions, §3 provenance, §6 test citations, §7 references updated to the current surface (behavior-identical)<br>0.1.5 (2026-10-22): S8707 path-containment guard added to the retained CLI wrapper (`_resolve_within_cwd` — an LLM-supplied path must resolve inside the invocation's working directory; escaping → exit 2) — §5.2 edge case, §6 test 14, Implementation location re-cited; pure-core behavior unchanged (B12) |
 | Pinned to | `mirph-glitch42/SecureTrace@ad0fc9f` (2026-10-18) |
 | Languages | Python 3 (reference implementation); algorithm is language-agnostic |
-| Implementation location | <br>`src/securetrace/algorithms/registry.py:L66-L195` (consolidated pure core — `find_index_block`, `find_sections`, `build_rows`, `render`, `index_rows`, `synced_text`, `is_fresh`)<br>`src/securetrace/backlog/index.py:L89-L316` (backlog-format adapter — item/reserved-id checks, richest format)<br>`src/securetrace/lessons/record.py:L146` + `L367-L430` (lessons-format adapter — `find_index_block` + delta core; see `lessons-record`)<br>`scripts/algorithm_index.py:L76-L127` (retained CLI wrapper — `check`/`sync`, pinned messages + exit codes) |
+| Implementation location | <br>`src/securetrace/algorithms/registry.py:L66-L195` (consolidated pure core — `find_index_block`, `find_sections`, `build_rows`, `render`, `index_rows`, `synced_text`, `is_fresh`)<br>`src/securetrace/backlog/index.py:L89-L316` (backlog-format adapter — item/reserved-id checks, richest format)<br>`src/securetrace/lessons/record.py:L146` + `L367-L430` (lessons-format adapter — `find_index_block` + delta core; see `lessons-record`)<br>`scripts/algorithm_index.py:L69-L151` (retained CLI wrapper — `_resolve_within_cwd` S8707 path-containment guard, `check`/`sync`, pinned messages + exit codes) |
 | Time complexity | O(L) per operation (L = physical line count) — observed, matches ideal |
 | Space complexity | O(L) for `sync` (new line list + rewritten text); O(S) for row model (S = section count) |
 | Determinism | deterministic |
@@ -346,6 +346,7 @@ CONSTRAINTS@24; B1 has `## B1. Bootstrap — **OPEN**` and a bulleted
 | File without trailing newline | preserved (no newline added) | `had_trailing_newline` flag |
 | CRLF line endings | `sync` normalizes to LF | `splitlines` + `"\n".join` — DEV(5) |
 | Second BEGIN/END pair later in file | body text: last row's end line changes → `--check` stale (exit 1) until sync; `sync` rewrites first block only, pair survives | `find_index_block` stops at first END — DEV(3) |
+| Doc path escapes the working directory (absolute or `..`) | error, exit 2, stderr `build_index: path escapes the working directory: {path}` | S8707 — the CLI path is LLM-supplied untrusted input; `_resolve_within_cwd` rejects before any file I/O (wrapper level; the pure core is unchanged) |
 
 ### 5.3 Invariants and how to test them
 
@@ -421,6 +422,7 @@ CLI wrapper).
 | 11 | idempotence (proposed, verified) | case-1 fixture, `sync` twice | second `sync` output byte-identical; `--check` 0 | §2.3 idempotence proof |
 | 12 | CRLF handling (proposed, verified) | case-1 fixture with CRLF endings | read via universal newlines (CRLF→LF); any actual write emits LF; a fresh `--check` performs no write, so an on-disk CRLF file stays untouched | DEV(5); the mechanism is text-mode `open().read()`, not `splitlines` alone (LLT-0011) |
 | 13 | second index pair (proposed, verified) | fresh file (synced, `--check` 0), then a second BEGIN/END pair appended after the last section | `--check` exit 1 (stale — last row's end line changed); `sync` 0; `--check` 0 again; the second pair survives as body text | DEV(3) — not an error, and not inert |
+| 14 | path containment (existing, `tests/scripts/test_skill_scripts.py::test_path_escaping_cwd_is_rejected`) | cwd = empty temp dir; target doc outside it (absolute path, sync and check modes) plus relative `../escape-target.md` | all three: exit 2, stderr `build_index: path escapes the working directory`; nothing outside the working directory is read or written | S8707 — untrusted LLM-supplied CLI input must not reach file I/O |
 
 ### 6.1 Property tests (optional but preferred)
 

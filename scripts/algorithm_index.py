@@ -13,6 +13,11 @@ Exit codes: 0 = ok (or index written), 1 = index stale (--check),
 - ``{path}: index STALE -- rerun without --check`` → stderr, 1 (no prog prefix)
 - structural/semantic errors → stderr ``{prog}: {msg}`` (one line each), 2
 
+The doc path is LLM-supplied CLI input (S8707): it is canonicalized and must
+resolve inside the working directory the tool is invoked from. Escaping paths
+(absolute or ``..`` traversal) are rejected as a structural error (exit 2)
+before any file I/O.
+
 Usage:
     python3 scripts/algorithm_index.py <doc.md>          # rewrite the index in place
     python3 scripts/algorithm_index.py <doc.md> --check  # verify only; exit 1 if stale
@@ -61,6 +66,21 @@ def _write_text(path: Path, text: str) -> None:
         raise
 
 
+def _resolve_within_cwd(raw: str | Path) -> Path:
+    """Canonicalize a LLM-supplied doc path and keep it inside the working dir.
+
+    S8707 guard: the path comes from CLI input (agent/LLM supplied), so it is
+    resolved and refused if it lands outside the directory the tool was
+    invoked from. Rejection surfaces as the pinned exit-2 structural-error
+    message (``{prog}: {msg}``) via :class:`FormatError` — no file I/O occurs.
+    """
+    base = Path.cwd().resolve()
+    resolved = (base / Path(raw)).resolve()
+    if resolved != base and base not in resolved.parents:
+        raise FormatError(f"path escapes the working directory: {raw}")
+    return resolved
+
+
 def _fail(prog: str, msg: str) -> int:
     """Print ``{prog}: {msg}`` to stderr; the caller returns the exit code."""
     print(f"{prog}: {msg}", file=sys.stderr)
@@ -81,8 +101,8 @@ def check(path: Path, prog: str = PROG) -> int:
         1: index stale (``{path}: index STALE -- rerun without --check`` on stderr)
         2: unreadable file or structural error (``{prog}: …`` on stderr)
     """
-    path = Path(path)
     try:
+        path = _resolve_within_cwd(path)
         text = _read_text(path)
         rows = registry.index_rows(text)
     except FormatError as exc:
@@ -100,8 +120,8 @@ def sync(path: Path, prog: str = PROG) -> int:
         0: index written (``{path}: index updated (N entries)`` on stdout)
         2: unreadable file or structural error (``{prog}: …`` on stderr)
     """
-    path = Path(path)
     try:
+        path = _resolve_within_cwd(path)
         text = _read_text(path)
         rows = registry.index_rows(text)
         new_text = registry.synced_text(text)

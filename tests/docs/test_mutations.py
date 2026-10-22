@@ -382,8 +382,9 @@ def test_set_intro_result_passes_validate_store() -> None:
     [[], [""], ["a\tb"], ["ok", 3], "not-a-list", None],
 )
 def test_set_intro_rejects_bad_input(bad_intro) -> None:
+    store = lessons_store(1)
     with pytest.raises(InvalidInput):
-        set_lessons_intro(lessons_store(1), bad_intro)
+        set_lessons_intro(store, bad_intro)
 
 
 # --------------------------------------------------------------------- upsert_registry_row

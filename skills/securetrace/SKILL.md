@@ -47,7 +47,7 @@ naming the CLI path that changes it.
 |---|---|---|
 | `data/backlog.json` | **Store** — source of truth for the backlog (canonical JSON) | `securetrace backlog …` |
 | `data/lessons.json` | **Store** — source of truth for the lessons record | `securetrace lessons …` |
-| `data/registry.json` | **Store** — source of truth for the algorithm registry | `securetrace algorithms …` |
+| `data/algorithms.json` | **Store** — source of truth for the algorithm registry | `securetrace algorithms …` |
 | `data/manifest.json` | per-doc `store_sha256` + `doc_sha256` + renderer version | refreshed by every committing verb |
 | `BACKLOG.md` | rendered backlog (work queue + evidence) — **generated, do not hand-edit** | `securetrace backlog render` |
 | `LESSONS_LEARNED.md` | rendered lessons record — **generated, do not hand-edit** | `securetrace lessons render` |
@@ -106,11 +106,11 @@ Category vocabulary: debugging, architecture, testing, performance,
 security, dependencies, tooling, environment, process, data, other.
 Severity: low, medium, high.
 
-### algorithms — `data/registry.json` → `algorithms/INDEX.md`
+### algorithms — `data/algorithms.json` → `algorithms/INDEX.md`
 
 - `securetrace algorithms upsert <store> --slug S --name N --version V
-  --status draft|implemented|superseded --file F --summary S` — add or
-  update a registry row, then commit.
+  --status draft|implemented|backfilled|deprecated --file F --summary S`
+  — add or update a registry row, then commit.
 - `securetrace algorithms show <store> [--slug S]` /
   `securetrace algorithms render <store>` /
   `securetrace algorithms check <store>` — as above.
@@ -144,7 +144,11 @@ these helpers cover the remaining gate duties:
 
 - `scripts/algorithm_index.py <doc.md> [--check]` — sync (default) or check
   (`--check`) the ALRK TSV line index inside an `algorithms/*.md` prose doc
-  (exit 0 ok / 1 stale / 2 malformed); used by `make docs-check` / `make docs-render`
+  (exit 0 ok / 1 stale / 2 malformed); used by `make docs-check` / `make docs-render`.
+  `<doc.md>` is untrusted LLM-supplied input (S8707): it must resolve inside the
+  working directory the tool is invoked from — escaping paths (absolute or `..`)
+  are rejected with exit 2 (`build_index: path escapes the working directory: …`)
+  before any file I/O
 - `scripts/check_workflow_yaml.py [FILE…]` — strict-parse workflow YAML and
   hard-fail on duplicate mapping keys (default: `.github/workflows/*.yml`
   and `*.yaml`)

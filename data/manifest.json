@@ -2,21 +2,21 @@
   "docs": {
     "backlog": {
       "doc": "BACKLOG.md",
-      "doc_sha256": "260b31a80625c8a0355479b6a4eadf9cdde54cb255d734e1ca305556cfdac4d8",
+      "doc_sha256": "7610c61a8bc02e21f3127ad9bec79bcf441b9765b5326e40e37a2388ac60e17e",
       "store": "data/backlog.json",
-      "store_sha256": "110a38af88ba335d4786cf7866c016974a48c5660bbfc1b37c7976f9ea9c01ee"
+      "store_sha256": "c9cc3a938e89e6b46ce66714558e14e35a9b29c90ef87bd6f19ae30216f36fb2"
     },
     "lessons": {
       "doc": "LESSONS_LEARNED.md",
-      "doc_sha256": "f8bb3a6d6a1cd2cccfa353c352e28e7da29d24691e46228bc1273c426e38e3ff",
+      "doc_sha256": "6249467cdfc8499f796748e86dfa00c343a4eac7b90e8cfd034c163969fb0ff5",
       "store": "data/lessons.json",
-      "store_sha256": "1a7bd19116cb2c1d6227cecd2fc80ee34195031d6d04d012fdb1cd177eb598d6"
+      "store_sha256": "18d6bfe4fd4207e1792ef79b3ecd6a6fcd6ffc4c39c1f964d0c0163af0d011df"
     },
     "registry": {
       "doc": "algorithms/INDEX.md",
-      "doc_sha256": "b8f2581cbfb5866bd27336cdcea505af0c4bff0e307082ea6d0622b8806210b0",
+      "doc_sha256": "073ae9317c5c5a14ce6ebff438222cd6f07553399b98603d231259faaca1cc8f",
       "store": "data/algorithms.json",
-      "store_sha256": "2fe23278133e5137c5e9d25120c7a7dd198368b21f1278310f930617c1c95e54"
+      "store_sha256": "6864f24bc9aa2b478a7ee01553c3fba694d34c842619f59445e8ab3978092ecc"
     }
   },
   "manifest_version": 1,

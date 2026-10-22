@@ -72,7 +72,7 @@ def _render_row(row: dict) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
-def render_registry(store: object) -> str:
+def render_registry(store: dict) -> str:
     """Render a validated ``registry`` store to the ``algorithms/INDEX.md`` text (pure).
 
     The document is: title, blank, the generated no-hand-edit header, blank,

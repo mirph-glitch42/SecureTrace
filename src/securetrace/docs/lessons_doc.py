@@ -52,7 +52,7 @@ _PLACEHOLDER_INDEX_ROW = "\t".join(["LLT_INDEX_BLOCK", "—", "—", "—", "—
 # --------------------------------------------------------------------- render
 
 
-def render_lessons(store: object) -> str:
+def render_lessons(store: dict) -> str:
     """Render a validated ``lessons`` store to the ``LESSONS_LEARNED.md`` text (pure).
 
     The document is: title, blank, the generated no-hand-edit header, blank,

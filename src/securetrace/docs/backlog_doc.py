@@ -74,7 +74,7 @@ def _render_field(name: str, lines: list[str]) -> list[str]:
     return [f"- **{name}:** {lines[0]}", *lines[1:]]
 
 
-def render_backlog(store: object) -> str:
+def render_backlog(store: dict) -> str:
     """Render a validated ``backlog`` store to the ``BACKLOG.md`` text (pure).
 
     The document is: title, blank, the generated no-hand-edit header, blank,
@@ -250,7 +250,7 @@ def parse_backlog(text: str) -> dict:
         cursor += 1
     if cursor >= len(lines) or not lines[cursor].startswith("<!-- INDEX:BEGIN"):
         raise FormatError("the index block must follow the title (and optional generated header)")
-    begin, end = find_index_block(lines)
+    _, end = find_index_block(lines)
     sections = find_sections(lines, end)
     items = _check_section_order(sections)
     if not is_fresh(text):

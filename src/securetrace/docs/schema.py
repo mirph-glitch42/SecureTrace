@@ -33,10 +33,10 @@ __all__ = [
 
 SCHEMA_VERSION = 1
 
-DATE_RE = re.compile(r"^(?:\d{4})-(?:\d{2})-(?:\d{2})$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 UPDATED_LINE_RE = re.compile(r"\*\*Updated:\*\*[ \t]*(\d{4}-\d{2}-\d{2})[ \t]*$")
 BACKLOG_ITEM_ID_RE = re.compile(r"^B\d+$")
-LESSON_ID_RE = re.compile(r"^LLT-(?:\d{4})$")
+LESSON_ID_RE = re.compile(r"^LLT-\d{4}$")
 REGISTRY_SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 REGISTRY_VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 REGISTRY_FILE_RE = re.compile(r"^[A-Za-z0-9._/-]+\.md$")

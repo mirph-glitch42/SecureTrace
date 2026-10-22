@@ -1941,6 +1941,52 @@
       ],
       "id": "LLT-0042",
       "title": "Tamper tests anchored at a fixed line offset break when a doc gains a header"
+    },
+    {
+      "fields": [
+        {
+          "name": "Recorded",
+          "value": "2026-10-22"
+        },
+        {
+          "name": "Category",
+          "value": "environment"
+        },
+        {
+          "name": "Severity",
+          "value": "medium"
+        },
+        {
+          "name": "Status",
+          "value": "active"
+        },
+        {
+          "name": "Context",
+          "value": "WI 10 closeout (2026-10-22): the CI `quality` job on b99915d failed with `No module named securetrace` inside `make docs-check`. Locally `make setup` runs `pip install --no-deps -e .` (editable install), which masked the failure; `make setup-ci` installs pinned deps only. The test suite still passed in CI because pyproject's `[tool.pytest.ini_options]` sets `pythonpath = [\"src\"]`, but the direct `\\ -m securetrace …` invocations in the docs-check/docs-render/rmf-bundle Makefile targets do not inherit that."
+        },
+        {
+          "name": "Pitfall",
+          "value": "A Makefile target that invokes a package via `python -m` works in any environment where the package is installed, but fails where only the dependencies are installed. The pytest pythonpath ini option masks the problem in tests, and a local editable install masks it everywhere — so the bug only surfaces on a clean CI runner (and in release.yml, which runs setup-ci + make gate — same latent bug)."
+        },
+        {
+          "name": "Solution",
+          "value": "Prefix the package invocations with `PYTHONPATH=src` in the Makefile (docs-check, docs-render, rmf-bundle) — mirroring pytest's `pythonpath=[\"src\"]`. Treat `setup-ci` as 'deps only, no package': any target that imports the package must install it or set PYTHONPATH explicitly. Verify a new gate target under the CI-style environment (deps only), not just under a local editable install."
+        },
+        {
+          "name": "Supersedes",
+          "value": "—"
+        },
+        {
+          "name": "Prevention",
+          "value": "—"
+        },
+        {
+          "name": "References",
+          "value": "—"
+        }
+      ],
+      "id": "LLT-0043",
+      "title": "CI installs deps only — direct `python -m` invocations need PYTHONPATH=src"
     }
   ],
   "schema_version": 1
