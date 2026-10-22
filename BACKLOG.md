@@ -2,21 +2,22 @@
 
 <!-- INDEX:BEGIN format=tsv version=1 -->
 id	title	status	priority	start_line	end_line
-INDEX_BLOCK	-	-	-	3	20
-HEADER	-	-	-	22	28
-QUEUE	-	-	-	29	37
-B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	38	77
-B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	78	106
-B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	107	145
-B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	146	186
-B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	187	223
-B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	224	262
-B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	263	308
-B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	309	346
-B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	347	381
-B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	382	426
-B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	427	449
-CONSTRAINTS	-	-	-	450	458
+INDEX_BLOCK	-	-	-	3	21
+HEADER	-	-	-	23	29
+QUEUE	-	-	-	30	40
+B1	Workspace bootstrap (venv, repo, skill docs, CI/CD, gates, skeleton)	DONE	Low	41	80
+B2	Research DoW RMF + Software Acquisition Pathway into docs/dow-requirements.md	DONE	Low	81	109
+B3	Core CLI: backlog/lessons/algorithm tooling as securetrace package API	DONE	Low	110	148
+B4	RMF deliverable builder (SSP/SAP/SAR/POA&M evidence bundles from CI state)	DONE	Low	149	189
+B5	Release hardening: keyless signing + provenance for release artifacts	DONE	Low	190	226
+B6	SonarCloud quality gate: triage findings on vendored scanner config + scripts	DONE	Low	227	265
+B7	SonarCloud code-smell remediation in securetrace core (41 findings, 4 files)	DONE	Low	266	311
+B8	Workflow-YAML strict-parse gate (duplicate-key detection in pre-commit + CI)	DONE	Low	312	349
+B9	Agent-facing SKILL.md: canonical usage guide for the SecureTrace toolset	DONE	Low	350	384
+B10	Deterministic document pipeline — CLI-only store → rendered .md docs + tamper detection	IN_PROGRESS	Low	385	430
+B11	Code-consistency monitor integration into SecureTrace	OPEN	Low	431	453
+B12	Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4)	OPEN	Low	454	476
+CONSTRAINTS	-	-	-	477	485
 <!-- INDEX:END -->
 
 <!-- BACKLOG:HEADER -->
@@ -24,7 +25,7 @@ CONSTRAINTS	-	-	-	450	458
 
 Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a tier in arrival order (G9).
 
-**Queue:** B10, B11 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-21
+**Queue:** B10, B11, B12 | **In progress:** B10 | **Done:** B1, B2, B3, B4, B5, B6, B7, B8, B9 | **Updated:** 2026-10-21
 
 <!-- BACKLOG:QUEUE -->
 ## Queue (execution order)
@@ -32,6 +33,8 @@ Tracks all SecureTrace work. Order = all High, then Medium, then Low; within a t
 **B10** (deterministic document pipeline — CLI-only store → rendered docs + tamper detection)
 
 **B11** (code-consistency monitor integration into SecureTrace — Medium, **DO NOT WORK** until the user lifts the hold)
+
+**B12** (Sonar code-smell remediation in src/securetrace/docs/ — 14 findings — agent-proposed, G8, **DO NOT WORK** until the user accepts)
 
 Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF deliverable builder), **B5** (release hardening), **B6** (SonarCloud triage), **B7** (SonarCloud code-smell remediation — 41/41 FIXED), **B8** (workflow-YAML strict-parse gate), **B9** (agent-facing SKILL.md usage guide) — see their closeouts.
 
@@ -423,6 +426,7 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
   - 2026-10-20 — WI 7 done: tamper-detection `check` diagnostics (TDD red→green) — `integrity.py` per the normative §3 pseudocode: pure `check_doc` (re-render vs on-doc byte compare, discriminated by the manifest-pinned store hash), `check_paths` I/O wrapper (spec-ordered failures: store→`MALFORMED_STORE`, doc→`DOC_MISSING`, manifest→`MALFORMED_MANIFEST`), `check_message` (stderr names the exact remediation command); diagnoses `IN_SYNC`(0) / `STORE_DRIFT`, `DOC_MODIFIED_OUTSIDE_APP`, `STORE_DRIFT_OR_DOC_DRIFT`(1) / `MALFORMED_STORE`, `MALFORMED_DOC`, `MALFORMED_MANIFEST`, `DOC_MISSING`(2); T6 (store moved, doc stale) = `STORE_DRIFT_OR_DOC_DRIFT`, the store-side diagnosis distinct from T5's `DOC_MODIFIED_OUTSIDE_APP` — the first test pinned the prose paraphrase instead of the pseudocode constant, corrected per spec (LLT-0038); ALRK doc → v0.1.4 (§5.3 lists all three exit-1 diagnoses, status history, index regen 8 entries) + registry row; `tests/docs/test_integrity.py` +22 tests (T5 doc flip, T6 store drift, T7 duplicate id, malformed store/doc/manifest, missing doc, unknown kind, file-level precedence, message wording); 300 tests green; commit `82544c7`; CI green (SonarCloud/quality/security 3× success); next WI 8 (CLI wiring: `upsert/progress/add/show/render/check` + `docs render-all|check-all` + `migrate`)
   - 2026-10-21 — WI 8 done: store-based CLI command layer (TDD red→green) — `src/securetrace/docs/mutations.py` pure mutation core (`upsert_backlog_item`/`append_backlog_progress`/`add_lesson`/`upsert_registry_row`/`refresh_backlog_status`; no clock/IO, auto-covered by the T9 AST guard), `src/securetrace/cli_docs.py` command layer (agent design decisions D11 `migrate` resolves a missing given doc path → kind default while printing the given path, D13 `show` verbatim via `sys.stdout.write(canonical_json(...))`, D14 verb line only after a successful commit — flagged in ALRK v0.1.5 status history as pending user review), `src/securetrace/__main__.py` dispatch re-pointed to the store-based surface (positional `store` path, `--doc`/`--manifest` overrides, exit 0/1/2 per verb); legacy verbs `backlog sync`/`lessons sync|next-id`/`algorithms sync` now rejected exit 2 — dual-surface coexists with the `scripts/` wrappers until WI 10 (CONSISTENCY.md exception G3); `tests/test_cli_docs.py` (53 tests incl. `test_migrate_registry_rows` D11 pin + single-capture capsys assertions — LLT-0039); SKILL repoint `skills/securetrace/SKILL.md` (store-based surface, ⚠️ no-manual-editing for pipeline docs, repo map gains `data/*.json` + manifest + CONSISTENCY.md) + guard `tests/test_skill_doc.py` 29 references (32 tests); ALRK doc → v0.1.5 (§5.1 module layout + `mutations.py`/`cli_docs.py`, §5.3 command-layer contract block, status history, TSV index regen 8 entries) + registry row 0.1.5; `make gate` green (390 tests); next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
   - 2026-10-21 — CI remediation (D-new-8 closeout): all 51 SonarCloud new-code findings on main fixed in 3 commits — `650a466` S8707 path traversal: new `src/securetrace/docs/paths.py::resolve_within` containment at the CLI trust boundary (18 tests; LLT-0040; CONSISTENCY CC-010; ALRK C6), `8606918` S3776×8 complexity splits + S1192 help dedupe (S1172 resolved by commit 1's `_fail(prog, …)` usage — verified live via the Sonar API), `8a0c236` S5778 — one throwing call per `pytest.raises` body (32 hoists, 5 test files, AST-verified); `make gate` green (408 tests); closeout docs: LLT-0040, this line, ALRK v0.1.6 (C6 boundary contract + T12), CONSISTENCY CC-010 + full anchor re-verification, SKILL path-containment line; D-new-1…D-new-8 remain agent designs pending user review; CI 3× consecutive all-success on push; next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
+  - 2026-10-21 — Sonar closeout part 2 (Hi-Priority `sonar.tests` + final S3776): `sonar.tests=tests` added to `sonar-project.properties` (commit `7618e1c`) resolving the SonarPython test-classification warning — the repo properties file demonstrably drives the cloud analysis, not the SonarCloud UI/settings API (empty before and after); final S3776 survivor fixed — `run_migrate` split 22→5 via `_migrate_targets`/`_migrate_source` (commit `a601b74`; CONSISTENCY CC-002/CC-003/CC-005/CC-010 anchors re-derived); post-push verification via the Sonar API: `python:S3776` = 0 open, no findings on `tests/**` (explicit test classification), all 5 rule sets (S8707/S3776/S1192/S1172/S5778) resolved on main, quality-gate issues condition passed; LLT-0041 recorded; `make gate` green (408 tests); CI 3× consecutive all-success on `a601b74`; discovery: 14 pre-existing open Sonar code smells in `src/securetrace/docs/` (S5864×9, S1481×1, S6395×4) registered as B12 (agent-proposed, G8); next WI 9 (migrate real docs → `data/` stores + `data/manifest.json`)
 
 <!-- BACKLOG:ITEM:B11 -->
 ## B11. Code-consistency monitor integration into SecureTrace — **OPEN**
@@ -446,6 +450,29 @@ Done: **B1** (bootstrap), **B2** (DoW research), **B3** (core CLI), **B4** (RMF 
 - **Hold:** **DO NOT WORK** until the user lifts the hold (explicit instruction 2026-10-21).
 - **Progress:**
   - 2026-10-21 — registered (user request; Medium); DO NOT WORK per user instruction; `CONSISTENCY.md` created as the enforcement baseline (CC-001…CC-009 + exception G3, all locations verified file:line); ARCHITECTURE.md §3 requirement row added; consistency discipline enforced on all current work
+
+<!-- BACKLOG:ITEM:B12 -->
+## B12. Sonar code-smell remediation in src/securetrace/docs/ (14 open: S5864×9, S1481×1, S6395×4) — **OPEN**
+
+- **Source:** agent (discovered during the sonar.tests/S3776 closeout verification, 2026-10-21) — proposed, pending user review (G8)
+- **Requested:** 2026-10-21
+- **Priority:** Low (proposed — G8)
+- **Request (verbatim):** — (agent-proposed; no user request)
+- **Problem / evidence:** 14 open code smells on main, all in the B10 WI 3–8 docs/ subpackage, created 2026-10-20T17:21Z…2026-10-21T00:53Z (pre-dating the sonar.tests/S3776 commits): `python:S5864` “store does not have this method” (type inference) ×9 — registry_doc.py:93,98,101; lessons_doc.py:71,77; backlog_doc.py:102,104,105,111; `python:S1481` unused local variable `begin` ×1 — backlog_doc.py:253; `python:S6395` unnecessarily grouped regex subpattern ×4 — schema.py:36,39. Non-blocking (quality gate green; check-run “Issues: passed”) but real findings per DevSecOps (fix at source, no suppressions).
+- **Chosen approach (proposed — G8):** fix each finding at the source: S1481 — drop the unused `begin` binding; S6395 — unwrap the redundant regex groups in schema.py; S5864 — make `store[…]` type-sound (type the store parameter so SonarPython type inference resolves `__getitem__`), or route through an explicit accessor. TDD where behavior is touched; no Sonar suppressions.
+- **Work items (proposed — G8):**
+  1. S1481: remove the unused `begin` binding (backlog_doc.py:253)
+  2. S6395: simplify the schema.py:36,39 regex (remove unnecessary grouping)
+  3. S5864: fix the store typing at the 9 sites in registry_doc.py / lessons_doc.py / backlog_doc.py
+  4. Close: Sonar API re-query → 0 open project-wide; `make gate` green; CI 3× consecutive all-success; closeout docs
+- **Acceptance criteria (proposed — G8):**
+  - all 14 findings resolved (Sonar API: 0 open project-wide); no new findings
+  - `make gate` green; CI quality + security + SonarCloud 3× consecutive all-success
+  - no Sonar suppressions added
+- **Ordering:** after B11 (Medium tier first, G9).
+- **Hold:** agent-proposed (G8) — do not start until the user accepts or amends.
+- **Progress:**
+  - 2026-10-21 — registered during the sonar.tests/S3776 closeout verification (14 findings enumerated with file:line evidence from the Sonar issues API; created 2026-10-20…2026-10-21, pre-dating the sonar.tests/S3776 commits)
 
 <!-- BACKLOG:CONSTRAINTS -->
 ## Standing constraints

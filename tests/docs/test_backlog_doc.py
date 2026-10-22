@@ -176,11 +176,11 @@ def test_roundtrip_real_backlog_golden():
     (is_fresh must hold on the file that exists), so the only differences
     from the grandfathered committed file are the generated header block and
     the TSV numbers it shifts. Strip the block, shift the numbers back, and
-    the bytes must be identical (11/11 items, all fields lossless).
+    the bytes must be identical (12/12 items, all fields lossless).
     """
     real = REAL_BACKLOG.read_text(encoding="utf-8")
     store = parse_backlog(real)
-    assert [item["id"] for item in store["items"]] == [f"B{n}" for n in range(1, 12)]
+    assert [item["id"] for item in store["items"]] == [f"B{n}" for n in range(1, 13)]
     assert store["updated"] == "2026-10-21"
     rendered = render_backlog(store)
 
