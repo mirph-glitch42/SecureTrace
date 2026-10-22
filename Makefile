@@ -47,14 +47,17 @@ lint: ## Lint code (ruff)
 	$(RUFF) check src tests scripts
 
 docs-check: ## Verify the store-rendered docs are in sync and ALRK TSV indexes are fresh
-	$(PYTHON) -m securetrace docs check-all
+	# PYTHONPATH=src: `make setup-ci` installs deps only (no editable install),
+	# so direct `python -m securetrace` needs the src layout on the path — the
+	# same layout pytest already gets from pyproject's pythonpath=["src"].
+	PYTHONPATH=src $(PYTHON) -m securetrace docs check-all
 	@for f in algorithms/*.md; do \
 	  [ "$$f" = "algorithms/INDEX.md" ] && continue; \
 	  $(PYTHON) scripts/algorithm_index.py "$$f" --check || exit 1; \
 	done
 
 docs-render: ## Re-render store docs (backlog/lessons/registry) and sync ALRK TSV indexes
-	$(PYTHON) -m securetrace docs render-all
+	PYTHONPATH=src $(PYTHON) -m securetrace docs render-all
 	@for f in algorithms/*.md; do \
 	  [ "$$f" = "algorithms/INDEX.md" ] && continue; \
 	  $(PYTHON) scripts/algorithm_index.py "$$f" || exit 1; \
@@ -90,7 +93,7 @@ sbom: ## Generate CycloneDX SBOM from locked requirements
 	$(CDX) requirements --of JSON --output-file dist/sbom.json --output-reproducible
 
 rmf-bundle: ## Build the RMF evidence bundle (SSP/SAP/SAR/POA&M) into artifacts/rmf/<today>
-	$(PYTHON) -m securetrace rmf build . --outdir artifacts/rmf/$(shell date +%F)
+	PYTHONPATH=src $(PYTHON) -m securetrace rmf build . --outdir artifacts/rmf/$(shell date +%F)
 
 gate: format-check lint docs-check workflow-check build test ## Full local gate (mirror of CI quality job)
 	@echo "✓ local gate green"
