@@ -3,7 +3,7 @@
 ruff>=0.17              # format + lint in one fast tool; replaces flake8+isort+black trio
 pytest>=9.0             # test runner; ecosystem standard, zero-config for src layout
 pip-tools>=7.6          # lockfile generation; replaces hand-maintained version pins
-setuptools>=84          # transitive dep of pip-tools (unpinned there); must be pinned+hashed for --require-hashes installs on clean runners
+setuptools>=84.2.1          # transitive dep of pip-tools (unpinned there); must be pinned+hashed for --require-hashes installs on clean runners
 pip-audit>=2.10         # PyPI dependency audit; owns the advisory DB pip ships with
 cyclonedx-bom>=7.5      # CycloneDX SBOM from pinned requirements; DoW RMF supply-chain evidence
 build>=1.3              # PEP 517 sdist+wheel build for release artifacts; replaces raw hatch invocations
